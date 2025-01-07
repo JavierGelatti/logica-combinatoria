@@ -1,22 +1,11 @@
 import {Expression} from "./expression.ts";
+import {BinaryExpression} from "./binaryExpression.ts";
 
-export class Application extends Expression {
+export class Application extends BinaryExpression {
     constructor(
-        private readonly functionBeingApplied: Expression,
-        private readonly argument: Expression,
+        protected readonly functionBeingApplied: Expression,
+        protected readonly argument: Expression,
     ) {
-        super();
-    }
-
-    protected _equals(anotherObject: this): boolean {
-        return anotherObject.functionBeingApplied.equals(this.functionBeingApplied) &&
-            anotherObject.argument.equals(this.argument);
-    }
-
-    public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
-        return new Application(
-            this.functionBeingApplied.replace(subExpressionToReplace, newExpression),
-            this.argument.replace(subExpressionToReplace, newExpression),
-        );
+        super(functionBeingApplied, argument, Application);
     }
 }

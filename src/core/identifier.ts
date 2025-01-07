@@ -1,8 +1,8 @@
 import {Expression} from "./expression.ts";
 
-export class NamedIdentifier extends Expression {
+export class Identifier extends Expression {
     constructor(
-        private readonly name: string,
+        private readonly name: string | symbol,
     ) {
         super();
     }

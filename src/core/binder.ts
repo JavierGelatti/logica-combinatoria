@@ -1,17 +1,17 @@
 import {Expression} from "./expression.ts";
-import {NamedIdentifier} from "./namedIdentifier.ts";
+import {Identifier} from "./identifier.ts";
 
 export abstract class Binder extends Expression {
     protected constructor(
-        private readonly boundVariable: NamedIdentifier,
+        private readonly boundVariable: Identifier,
         private readonly expression: Expression,
-        private readonly species: { new(boundVariable: NamedIdentifier, expression: Expression): Binder },
+        private readonly species: { new(boundVariable: Identifier, expression: Expression): Binder },
     ) {
         super();
     }
 
     protected _equals(anotherObject: this): boolean {
-        const boundIdentifier = new IdentityIdentifier();
+        const boundIdentifier = new Identifier(Symbol());
         return anotherObject.boundTo(boundIdentifier).equals(this.boundTo(boundIdentifier));
     }
 
@@ -26,15 +26,5 @@ export abstract class Binder extends Expression {
             this.boundVariable,
             this.expression.replace(subExpressionToReplace, newExpression),
         );
-    }
-}
-
-class IdentityIdentifier extends Expression {
-    protected _equals(anotherObject: this): boolean {
-        return anotherObject === this;
-    }
-
-    public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
-        return this;
     }
 }

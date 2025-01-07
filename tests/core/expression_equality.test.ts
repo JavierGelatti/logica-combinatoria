@@ -1,5 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {application, exists, forall, identifier} from "../../src/core/expression_constructors.ts";
+import {application, equality, exists, forall, identifier} from "../../src/core/expression_constructors.ts";
 
 describe("expression equality", () => {
     test("a free variable is only equal to another free variable with the same name", () => {
@@ -86,5 +86,19 @@ describe("expression equality", () => {
         expect(exists1.equals(exists2)).toBe(false);
         expect(exists1.equals(exists3)).toBe(true);
         expect(exists1.equals(forall1)).toBe(false);
+    });
+
+    test("an equality is equal to another if their components are equal", () => {
+        const equality1 = equality(identifier("x"), identifier("y"));
+        const equality2 = equality(identifier("y"), identifier("x"));
+        const equality3 = equality(identifier("y"), identifier("y"));
+        const equality4 = equality(identifier("x"), identifier("x"));
+        const equality5 = equality(identifier("x"), identifier("y"));
+
+        expect(equality1.equals(equality1)).toBe(true);
+        expect(equality1.equals(equality2)).toBe(false);
+        expect(equality1.equals(equality3)).toBe(false);
+        expect(equality1.equals(equality4)).toBe(false);
+        expect(equality1.equals(equality5)).toBe(true);
     });
 });
