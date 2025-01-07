@@ -1,3 +1,3 @@
 export default {
-    base: "/combinatory-logic/"
+    base: "/logica-combinatoria/"
 }
