@@ -2,8 +2,8 @@ import {Expression} from "./expression.ts";
 
 export class BinaryExpression extends Expression {
     constructor(
-        protected readonly left: Expression,
-        protected readonly right: Expression,
+        readonly left: Expression,
+        readonly right: Expression,
         private readonly species: { new(left: Expression, right: Expression): BinaryExpression },
     ) {
         super();

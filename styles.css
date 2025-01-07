@@ -1,0 +1,89 @@
+@font-face {
+    font-family: 'KaTeX_Main';
+    src:
+        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Main-Regular.woff2') format('woff2'),
+        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Main-Regular.woff')  format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'KaTeX_Math';
+    src:
+        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Math-Italic.woff2') format('woff2'),
+        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Math-Italic.woff')  format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'KaTeX_Size1';
+    src:
+        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Size1-Regular.woff2') format('woff2'),
+        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Size1-Regular.woff')  format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.forall, .exists, .identifier, .equality, .application {
+    font-family: 'KaTeX_Size1', serif;
+    font-size: 20px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1em;
+    padding: 3px 1px;
+    /*margin: 1px;*/
+    /*border: 1px solid rgba(255, 0, 0, .5);*/
+    border-radius: 4px;
+    cursor: pointer;
+
+    --separation-margin: 3px;
+
+    &:not(:has(&:hover)):hover {
+        /*background: rgba(255, 0, 0, .5);*/
+        margin-bottom: -1px;
+        border-bottom: 1px solid red;
+    }
+
+    &:hover {
+        background: rgba(255, 0, 0, .1);
+    }
+}
+
+.parenthesis {
+    color: gray;
+    margin-bottom: 3px;
+
+    &:first-child {
+        margin-left: -3px;
+    }
+
+    &:last-child {
+        margin-right: -3px;
+    }
+}
+
+.equality > .operator {
+    line-height: calc(1em + 10px);
+    margin: 0 var(--separation-margin);
+}
+
+.application > *:not(.parenthesis) + *:not(.parenthesis) {
+    margin-left: var(--separation-margin);
+}
+
+.forall > :last-child,
+.exists > :last-child {
+    margin-left: var(--separation-margin);
+}
+
+.binder {
+    color: darkgoldenrod;
+}
+
+.identifier {
+    font-family: 'KaTeX_Math', serif;
+    font-style: italic;
+    padding: 0;
+}

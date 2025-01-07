@@ -2,7 +2,7 @@ import {Expression} from "./expression.ts";
 
 export class Identifier extends Expression {
     constructor(
-        private readonly name: string | symbol,
+        readonly name: string | symbol,
     ) {
         super();
     }
