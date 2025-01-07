@@ -28,7 +28,7 @@
 .forall, .exists, .identifier, .equality, .application {
     font-family: 'KaTeX_Size1', serif;
     font-size: 20px;
-    display: inline-flex;
+    display: flex;
     justify-content: center;
     align-items: center;
     line-height: 1em;
