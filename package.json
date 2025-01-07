@@ -1,0 +1,23 @@
+{
+  "name": "combinatory-logic",
+  "version": "1.0.0",
+  "description": "Cosas de lógica combinatoria",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite --host --port 8080",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "author": "Facundo Javier Gelatti",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitest/browser": "^2.1.8",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8",
+    "webdriverio": "^9.5.1"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1"
+  }
+}
