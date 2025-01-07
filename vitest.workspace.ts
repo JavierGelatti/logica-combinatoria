@@ -3,8 +3,15 @@ import { defineWorkspace } from 'vitest/config'
 export default defineWorkspace([
     {
         test: {
-            name: 'client-side',
-            include: ['tests/*.test.ts'],
+            name: 'core',
+            include: ['tests/core/*.test.ts'],
+            environment: "node"
+        },
+    },
+    {
+        test: {
+            name: 'dom',
+            include: ['tests/dom/*.test.ts'],
             browser: {
                 enabled: true,
                 api: {
