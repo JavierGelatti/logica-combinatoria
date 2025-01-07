@@ -18,4 +18,8 @@ export class Identifier extends Expression {
             return this;
         }
     }
+
+    isFree() {
+        return this._parent?.isFreeVariable(this) ?? true;
+    }
 }

@@ -86,7 +86,8 @@ export class EqualityView extends ExpressionView<Equality> {
 
 export class IdentifierView extends ExpressionView<Identifier> {
     domElement(): Element {
-        return createElement("span", {className: "identifier" }, [
+        const isFree = this.expression.isFree();
+        return createElement("span", { className: "identifier", classNames: isFree ? ["free"] : ["bound"] }, [
             String(this.expression.name)
         ]);
     }

@@ -83,7 +83,15 @@
 }
 
 .identifier {
-    font-family: 'KaTeX_Math', serif;
-    font-style: italic;
     padding: 0;
+
+    &.bound {
+        font-family: 'KaTeX_Math', serif;
+        font-style: italic;
+    }
+
+    &.free {
+        font-family: 'KaTeX_Size1', serif;
+        font-style: normal;
+    }
 }

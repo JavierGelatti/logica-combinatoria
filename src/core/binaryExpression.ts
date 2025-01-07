@@ -1,12 +1,13 @@
 import {Expression} from "./expression.ts";
+import {CompoundExpression} from "./compoundExpression.ts";
 
-export class BinaryExpression extends Expression {
+export class BinaryExpression extends CompoundExpression {
     constructor(
         readonly left: Expression,
         readonly right: Expression,
         private readonly species: { new(left: Expression, right: Expression): BinaryExpression },
     ) {
-        super();
+        super(left, right);
     }
 
     protected _equals(anotherObject: this): boolean {

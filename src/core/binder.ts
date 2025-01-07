@@ -1,13 +1,14 @@
 import {Expression} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
+import {CompoundExpression} from "./compoundExpression.ts";
 
-export abstract class Binder extends Expression {
+export abstract class Binder extends CompoundExpression {
     protected constructor(
         readonly boundVariable: Identifier,
         readonly body: Expression,
         private readonly species: { new(boundVariable: Identifier, expression: Expression): Binder },
     ) {
-        super();
+        super(boundVariable, body);
     }
 
     protected _equals(anotherObject: this): boolean {
@@ -26,5 +27,11 @@ export abstract class Binder extends Expression {
             this.boundVariable,
             this.body.replace(subExpressionToReplace, newExpression),
         );
+    }
+
+    isFreeVariable(variable: Identifier): boolean {
+        if (this.boundVariable.equals(variable)) return false;
+
+        return super.isFreeVariable(variable);
     }
 }
