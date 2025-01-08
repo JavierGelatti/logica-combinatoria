@@ -14,15 +14,23 @@ export abstract class Binder extends CompoundExpression {
 
     protected _equals(anotherObject: this): boolean {
         const boundIdentifier = new Identifier(Symbol());
-        return anotherObject.boundTo(boundIdentifier).equals(this.boundTo(boundIdentifier));
+        return anotherObject.applyTo(boundIdentifier).equals(this.applyTo(boundIdentifier));
     }
 
-    boundTo(boundVariableValue: Expression) {
+    applyTo(boundVariableValue: Expression) {
         return this.body.replace(this.boundVariable, boundVariableValue);
     }
 
     public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
         if (subExpressionToReplace.equals(this.boundVariable)) return this.copy();
+
+        if (newExpression.freeVariablesContain(this.boundVariable)) {
+            const newBoundVariable = this.boundVariable.withIncrementedSubscript()
+            return new this.species(
+                newBoundVariable,
+                this.body.replace(this.boundVariable, newBoundVariable),
+            ).replace(subExpressionToReplace, newExpression);
+        }
 
         return new this.species(
             this.boundVariable.copy(),

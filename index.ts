@@ -23,6 +23,17 @@ show(exists(
     )
 ));
 
+const aForAll = forall(
+    identifier("x"),
+    forall(identifier("y"),
+        application(identifier("y"), forall(identifier("y"), identifier("x")))
+    )
+);
+const argument = application(identifier("y"), identifier("y", 0));
+const result = aForAll.applyTo(argument);
+
+show(result);
+
 function show(expression: Expression) {
     document.body.append(ExpressionView.forExpression(expression).domElement());
 }

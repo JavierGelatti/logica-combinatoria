@@ -5,8 +5,8 @@ import {ForAll} from "./forAll.ts";
 import {Exists} from "./exists.ts";
 import {Equality} from "./equality.ts";
 
-export function identifier(name: string) {
-    return new Identifier(name);
+export function identifier(name: string, subscript?: number) {
+    return new Identifier(name, subscript);
 }
 
 export function application(functionBeingApplied: Expression, argument: Expression) {

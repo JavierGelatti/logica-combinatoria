@@ -42,4 +42,9 @@ export abstract class Expression {
     abstract copy(): this
 
     abstract freeVariables(): Set<Identifier>
+
+    freeVariablesContain(aVariable: Identifier) {
+        return this.freeVariables().values()
+            .some(freeVariable => freeVariable.equals(aVariable));
+    }
 }

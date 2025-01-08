@@ -91,9 +91,13 @@ export class EqualityView extends ExpressionView<Equality> {
 
 export class IdentifierView extends ExpressionView<Identifier> {
     domElement(): Element {
-        const isFree = this.expression.isFree();
+        const identifier = this.expression;
+
+        const isFree = identifier.isFree();
+        const subscriptElement = identifier.subscript !== undefined && createElement("sub", {textContent: String(identifier.subscript)});
         return createElement("span", { className: "identifier", classNames: isFree ? ["free"] : ["bound"] }, [
-            String(this.expression.name)
+            String(identifier.name),
+            ...(subscriptElement ? [subscriptElement] : [])
         ]);
     }
 }

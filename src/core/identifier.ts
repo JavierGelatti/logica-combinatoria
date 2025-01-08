@@ -5,12 +5,13 @@ import {Exists} from "./exists.ts";
 export class Identifier extends Expression {
     constructor(
         readonly name: string | symbol,
+        readonly subscript?: number
     ) {
         super();
     }
 
     protected _equals(anotherObject: this): boolean {
-        return anotherObject.name === this.name;
+        return anotherObject.name === this.name && anotherObject.subscript === this.subscript;
     }
 
     public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
@@ -22,7 +23,11 @@ export class Identifier extends Expression {
     }
 
     copy() {
-        return new Identifier(this.name) as this;
+        return new Identifier(this.name, this.subscript) as this;
+    }
+
+    withIncrementedSubscript() {
+        return new Identifier(this.name, this.subscript !== undefined ? this.subscript + 1 : 0) as this;
     }
 
     isFree() {
