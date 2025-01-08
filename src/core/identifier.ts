@@ -92,4 +92,8 @@ export class Identifier extends Expression {
     _containsOcurrenceOf(identifierDeclaration: Identifier): boolean {
         return this.declaration() === identifierDeclaration;
     }
+
+    freeVariables(): Set<Identifier> {
+        return this.isFree() ? new Set([this]) : new Set();
+    }
 }

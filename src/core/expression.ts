@@ -40,4 +40,6 @@ export abstract class Expression {
     }
 
     abstract copy(): this
+
+    abstract freeVariables(): Set<Identifier>
 }

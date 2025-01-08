@@ -1,6 +1,7 @@
 import {describe, expect, test} from "vitest";
 import {application, forall, identifier} from "../../src/core/expression_constructors.ts";
 import {Identifier} from "../../src/core/identifier.ts";
+import {Expression} from "../../src/core/expression.ts";
 
 describe("variable binding", () => {
     test("a variable without context is free", () => {
@@ -119,5 +120,20 @@ describe("variable binding", () => {
         const freeVariable = identifier("x");
 
         expect(freeVariable.declaration()).toBeUndefined();
+    });
+
+    test("an expression knows the free variables in it", () => {
+        let z1!: Identifier, z2!: Identifier;
+        const anExpression: Expression = forall(
+            identifier("x"),
+            application(
+                forall(identifier("y"),
+                    application(identifier("x"), application(identifier("y"), z1 = identifier("z")))
+                ),
+                z2 = identifier("z")
+            )
+        );
+
+        expect(anExpression.freeVariables()).toEqual(new Set([z1, z2]));
     });
 });
