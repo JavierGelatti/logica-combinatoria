@@ -76,10 +76,15 @@ export class ExistsView extends ExpressionView<Exists> {
 
 export class EqualityView extends ExpressionView<Equality> {
     domElement(): Element {
+        const leftElement = ApplicationView.forExpression(this.expression.left).domElement();
+        leftElement.setAttribute("draggable", "true");
+        const rightElement = ApplicationView.forExpression(this.expression.right).domElement();
+        rightElement.setAttribute("draggable", "true");
+        
         return createElement("span", {className: "equality" }, [
-            ApplicationView.forExpression(this.expression.left).domElement(),
+            leftElement,
             createElement("span", { className: "operator", textContent: "=" }),
-            ApplicationView.forExpression(this.expression.right).domElement(),
+            rightElement,
         ]);
     }
 }
