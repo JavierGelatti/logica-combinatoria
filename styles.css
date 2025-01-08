@@ -52,7 +52,7 @@
 }
 
 .parenthesis {
-    color: gray;
+    color: rgba(0, 0, 0, .4);
     margin-bottom: 3px;
 
     &:first-child {
