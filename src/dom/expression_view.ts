@@ -5,6 +5,7 @@ import {Exists} from "../core/exists.ts";
 import {Equality} from "../core/equality.ts";
 import {Identifier} from "../core/identifier.ts";
 import {createElement} from "./createElement.ts";
+import {Hole} from "../core/hole.ts";
 
 export abstract class ExpressionView<T extends Expression> {
     static forExpression(expression: Expression) {
@@ -18,6 +19,8 @@ export abstract class ExpressionView<T extends Expression> {
             return new ApplicationView(expression);
         } else if (expression instanceof Equality) {
             return new EqualityView(expression);
+        } else if (expression instanceof Hole) {
+            return new HoleView(expression);
         } else {
             throw new Error(`Tipo de expresión desconocida: ${expression}`)
         }
@@ -99,6 +102,12 @@ export class IdentifierView extends ExpressionView<Identifier> {
             String(identifier.name),
             ...(subscriptElement ? [subscriptElement] : [])
         ]);
+    }
+}
+
+export class HoleView extends ExpressionView<Hole> {
+    domElement(): Element {
+        return createElement("span", { className: "hole" });
     }
 }
 

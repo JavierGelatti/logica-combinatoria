@@ -4,6 +4,7 @@ import {Application} from "./application.ts";
 import {ForAll} from "./forAll.ts";
 import {Exists} from "./exists.ts";
 import {Equality} from "./equality.ts";
+import {Hole} from "./hole.ts";
 
 export function identifier(name: string, subscript?: number) {
     return new Identifier(name, subscript);
@@ -23,4 +24,8 @@ export function exists(boundVariable: Identifier, expression: Expression) {
 
 export function equality(left: Expression, right: Expression) {
     return new Equality(left, right);
+}
+
+export function hole() {
+    return new Hole();
 }

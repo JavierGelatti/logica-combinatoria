@@ -2,10 +2,15 @@ import {Expression} from "./expression.ts";
 import {BinaryExpression} from "./binaryExpression.ts";
 
 export class Application extends BinaryExpression {
-    constructor(
-        readonly functionBeingApplied: Expression,
-        readonly argument: Expression,
-    ) {
+    constructor(functionBeingApplied: Expression, argument: Expression) {
         super(functionBeingApplied, argument, Application);
+    }
+
+    get functionBeingApplied() {
+        return this.left;
+    }
+
+    get argument() {
+        return this.right;
     }
 }

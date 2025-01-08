@@ -1,14 +1,15 @@
 import {Expression} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
 import {unificationFailure, UnificationResult} from "./unificationResult.ts";
+import {Hole} from "./hole.ts";
 
 export abstract class CompoundExpression extends Expression {
-    protected readonly subexpressions: Expression[];
+    protected readonly _subexpressions: Expression[];
 
     protected constructor(...subexpressions: Expression[]) {
         super();
-        this.subexpressions = subexpressions;
-        this.subexpressions.forEach(subexpression => {
+        this._subexpressions = subexpressions;
+        this._subexpressions.forEach(subexpression => {
             subexpression.insertedInto(this);
         });
     }
@@ -30,16 +31,32 @@ export abstract class CompoundExpression extends Expression {
     protected abstract _unifyWith(anotherExpression: this): UnificationResult;
 
     protected _contains(anExpression: Expression): boolean {
-        return this.subexpressions.some(subexpression => subexpression.contains(anExpression));
+        return this._subexpressions.some(subexpression => subexpression.contains(anExpression));
     }
 
     _containsOcurrenceOf(identifierDeclaration: Identifier): boolean {
-        return this.subexpressions.some(subexpression => subexpression._containsOcurrenceOf(identifierDeclaration));
+        return this._subexpressions.some(subexpression => subexpression._containsOcurrenceOf(identifierDeclaration));
     }
 
     freeVariables(): Set<Identifier> {
-        return this.subexpressions
+        return this._subexpressions
             .map(subexpression => subexpression.freeVariables())
             .reduce((previous, current) => previous.union(current));
     }
+
+    fillHole(holeToFill: Hole, expressionToFillHole: Expression) {
+        this.assertIsDirectChild(holeToFill);
+
+        this._subexpressions[this._subexpressions.indexOf(holeToFill)] = expressionToFillHole;
+        expressionToFillHole.insertedInto(this);
+
+        this._fillHole(holeToFill, expressionToFillHole);
+    }
+
+    private assertIsDirectChild(expression: Expression) {
+        if (!this._subexpressions.includes(expression))
+            throw new Error("The expression is not a direct child");
+    }
+
+    protected abstract _fillHole(holeToFill: Hole, expressionToFillHole: Expression): void;
 }

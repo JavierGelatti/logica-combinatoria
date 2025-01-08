@@ -1,35 +1,60 @@
 import {Expression} from "./expression.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
 import {UnificationResult} from "./unificationResult.ts";
+import {Hole} from "./hole.ts";
 
 export class BinaryExpression extends CompoundExpression {
+    private _left: Expression;
+    private _right: Expression;
+
+    private readonly _species: { new(left: Expression, right: Expression): BinaryExpression };
+
     constructor(
-        readonly left: Expression,
-        readonly right: Expression,
-        private readonly species: { new(left: Expression, right: Expression): BinaryExpression },
+        left: Expression,
+        right: Expression,
+        species: { new(left: Expression, right: Expression): BinaryExpression },
     ) {
         super(left, right);
+        this._species = species;
+        this._left = left;
+        this._right = right;
+    }
+
+    get left() {
+        return this._left;
+    }
+
+    get right() {
+        return this._right;
     }
 
     protected _equals(anotherObject: this): boolean {
-        return anotherObject.left.equals(this.left) &&
-            anotherObject.right.equals(this.right);
+        return anotherObject._left.equals(this._left) &&
+            anotherObject._right.equals(this._right);
     }
 
     public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
-        return new this.species(
-            this.left.replace(subExpressionToReplace, newExpression),
-            this.right.replace(subExpressionToReplace, newExpression),
+        return new this._species(
+            this._left.replace(subExpressionToReplace, newExpression),
+            this._right.replace(subExpressionToReplace, newExpression),
         );
     }
 
     protected _unifyWith(anotherExpression: this): UnificationResult {
-        const leftUnification = this.left.unifyWith(anotherExpression.left);
-        const rightUnification = this.right.unifyWith(anotherExpression.right);
+        const leftUnification = this._left.unifyWith(anotherExpression._left);
+        const rightUnification = this._right.unifyWith(anotherExpression._right);
         return leftUnification.combinedWith(rightUnification);
     }
 
     copy() {
-        return new this.species(this.left.copy(), this.right.copy()) as this;
+        return new this._species(this._left.copy(), this._right.copy()) as this;
+    }
+
+    protected _fillHole(holeToFill: Hole, expressionToFillHole: Expression) {
+        if (holeToFill === this._left) {
+            this._left = expressionToFillHole;
+        } else if (holeToFill === this._right) {
+            this._right = expressionToFillHole;
+        }
     }
 }
