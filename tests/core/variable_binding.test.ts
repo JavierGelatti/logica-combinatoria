@@ -1,6 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, exists, forall, identifier} from "../../src/core/expression_constructors.ts";
-import {Expression} from "../../src/core/expression.ts";
+import {application, forall, identifier} from "../../src/core/expression_constructors.ts";
 import {Identifier} from "../../src/core/identifier.ts";
 
 describe("variable binding", () => {
@@ -103,5 +102,22 @@ describe("variable binding", () => {
 
         expect(variable1.isFree()).toBe(true);
         expect(variable2.isFree()).toBe(true);
+    });
+
+    test("the declaration of a bound variable is its binding occurrence", () => {
+        let variable1!: Identifier, variable2!: Identifier;
+        forall(
+            variable1 = identifier("x"),
+            forall(identifier("y"), variable2 = identifier("x"))
+        );
+
+        expect(variable1.declaration()).toBe(variable1);
+        expect(variable2.declaration()).toBe(variable1);
+    });
+
+    test("the declaration of a free variable is undefined", () => {
+        const freeVariable = identifier("x");
+
+        expect(freeVariable.declaration()).toBeUndefined();
     });
 });

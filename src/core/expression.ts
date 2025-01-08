@@ -1,4 +1,5 @@
 import {CompoundExpression} from "./compoundExpression.ts";
+import {UnificationResult} from "./unificationResult.ts";
 
 export abstract class Expression {
     protected _parent: CompoundExpression | undefined;
@@ -16,4 +17,8 @@ export abstract class Expression {
     insertedInto(newParent: CompoundExpression) {
         this._parent = newParent;
     }
+
+    public abstract unifyWith(anotherExpression: Expression): UnificationResult;
+
+    abstract _containsOcurrenceOf(identifierDeclaration: Identifier): boolean;
 }

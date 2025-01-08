@@ -1,5 +1,6 @@
 import {Expression} from "./expression.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
+import {UnificationResult} from "./unificationResult.ts";
 
 export class BinaryExpression extends CompoundExpression {
     constructor(
@@ -20,5 +21,11 @@ export class BinaryExpression extends CompoundExpression {
             this.left.replace(subExpressionToReplace, newExpression),
             this.right.replace(subExpressionToReplace, newExpression),
         );
+    }
+
+    protected _unifyWith(anotherExpression: this): UnificationResult {
+        const leftUnification = this.left.unifyWith(anotherExpression.left);
+        const rightUnification = this.right.unifyWith(anotherExpression.right);
+        return leftUnification.combinedWith(rightUnification);
     }
 }
