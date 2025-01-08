@@ -1,7 +1,6 @@
 import {Expression} from "./expression.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
 import {UnificationResult} from "./unificationResult.ts";
-import {Hole} from "./hole.ts";
 
 export class BinaryExpression extends CompoundExpression {
     private _left: Expression;
@@ -50,11 +49,11 @@ export class BinaryExpression extends CompoundExpression {
         return new this._species(this._left.copy(), this._right.copy()) as this;
     }
 
-    protected _fillHole(holeToFill: Hole, expressionToFillHole: Expression) {
-        if (holeToFill === this._left) {
-            this._left = expressionToFillHole;
-        } else if (holeToFill === this._right) {
-            this._right = expressionToFillHole;
+    protected _replaceDirectChild(childToReplace: Expression, replacement: Expression): void {
+        if (childToReplace === this._left) {
+            this._left = replacement;
+        } else if (childToReplace === this._right) {
+            this._right = replacement;
         }
     }
 }

@@ -47,4 +47,16 @@ export abstract class Expression {
         return this.freeVariables().values()
             .some(freeVariable => freeVariable.equals(aVariable));
     }
+
+    detachFromParent(): void {
+        if (this._parent === undefined) throw new Error("Cannot detach root expression");
+
+        this._parent.detachChild(this);
+    }
+
+    detachedFrom(oldParent: CompoundExpression) {
+        if (this._parent !== oldParent) throw new Error("Cannot detach from non-parent");
+
+        this._parent = undefined;
+    }
 }

@@ -2,6 +2,7 @@ import {Expression} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
 import {unificationFailure, UnificationResult} from "./unificationResult.ts";
 import {Hole} from "./hole.ts";
+import {hole} from "./expression_constructors.ts";
 
 export abstract class CompoundExpression extends Expression {
     protected readonly _subexpressions: Expression[];
@@ -45,18 +46,27 @@ export abstract class CompoundExpression extends Expression {
     }
 
     fillHole(holeToFill: Hole, expressionToFillHole: Expression) {
-        this.assertIsDirectChild(holeToFill);
-
-        this._subexpressions[this._subexpressions.indexOf(holeToFill)] = expressionToFillHole;
-        expressionToFillHole.insertedInto(this);
-
-        this._fillHole(holeToFill, expressionToFillHole);
+        this.replaceDirectChild(holeToFill, expressionToFillHole);
     }
+
+    detachChild(expressionToDetach: Expression) {
+        this.replaceDirectChild(expressionToDetach, hole());
+    }
+
+    private replaceDirectChild(childToReplace: Expression, replacement: Expression) {
+        this.assertIsDirectChild(childToReplace);
+
+        this._subexpressions[this._subexpressions.indexOf(childToReplace)] = replacement;
+        replacement.insertedInto(this);
+        childToReplace.detachedFrom(this);
+
+        this._replaceDirectChild(childToReplace, replacement);
+    }
+
+    protected abstract _replaceDirectChild(childToReplace: Expression, replacement: Expression): void;
 
     private assertIsDirectChild(expression: Expression) {
         if (!this._subexpressions.includes(expression))
             throw new Error("The expression is not a direct child");
     }
-
-    protected abstract _fillHole(holeToFill: Hole, expressionToFillHole: Expression): void;
 }

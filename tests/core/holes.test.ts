@@ -38,4 +38,22 @@ describe("holes", () => {
             rootHole.fillWith(identifier("y"));
         }).toThrowError("Cannot fill root hole");
     });
+
+    test("can detach an expression from its parent", () => {
+        let subexpression!: Expression;
+        const expression: Expression = application(subexpression = identifier("y"), identifier("x"));
+
+        subexpression.detachFromParent();
+
+        expect(expression).toEqual(application(hole(), identifier("x")));
+        expect(subexpression).toEqual(identifier("y"));
+    });
+
+    test("cannot dettach an expression without parent (i.e. root expression)", () => {
+        const rootExpression = identifier("x");
+
+        expect(() => {
+            rootExpression.detachFromParent();
+        }).toThrowError("Cannot detach root expression");
+    });
 });

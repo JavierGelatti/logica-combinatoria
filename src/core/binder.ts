@@ -2,10 +2,9 @@ import {Expression} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
 import {successfulUnification, unificationFailure, UnificationResult} from "./unificationResult.ts";
-import {Hole} from "./hole.ts";
 
 export abstract class Binder extends CompoundExpression {
-    private _boundVariable: Identifier;
+    private readonly _boundVariable: Identifier;
     private _body: Expression;
 
     private readonly _species: { new(boundVariable: Identifier, expression: Expression): Binder };
@@ -69,9 +68,9 @@ export abstract class Binder extends CompoundExpression {
         return new this._species(this._boundVariable.copy(), this._body.copy()) as this;
     }
 
-    protected _fillHole(holeToFill: Hole, expressionToFillHole: Expression) {
-        if (this._body === holeToFill) {
-            this._body = expressionToFillHole;
+    protected _replaceDirectChild(childToReplace: Expression, replacement: Expression): void {
+        if (this._body === childToReplace) {
+            this._body = replacement;
         }
     }
 }
