@@ -15,10 +15,14 @@ export class Identifier extends Expression {
 
     public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
         if (subExpressionToReplace.equals(this)) {
-            return newExpression;
+            return newExpression.copy();
         } else {
-            return this;
+            return this.copy();
         }
+    }
+
+    copy() {
+        return new Identifier(this.name) as this;
     }
 
     isFree() {

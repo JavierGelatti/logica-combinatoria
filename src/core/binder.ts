@@ -22,10 +22,10 @@ export abstract class Binder extends CompoundExpression {
     }
 
     public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
-        if (subExpressionToReplace.equals(this.boundVariable)) return this;
+        if (subExpressionToReplace.equals(this.boundVariable)) return this.copy();
 
         return new this.species(
-            this.boundVariable,
+            this.boundVariable.copy(),
             this.body.replace(subExpressionToReplace, newExpression),
         );
     }
@@ -38,5 +38,9 @@ export abstract class Binder extends CompoundExpression {
 
     protected _unifyWith(anotherExpression: this): UnificationResult {
         return this._equals(anotherExpression) ? successfulUnification() : unificationFailure();
+    }
+
+    copy() {
+        return new this.species(this.boundVariable.copy(), this.body.copy()) as this;
     }
 }

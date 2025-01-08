@@ -16,6 +16,8 @@ export abstract class Expression {
     public abstract replace(subExpressionToReplace: Expression, newExpression: Expression): Expression;
 
     insertedInto(newParent: CompoundExpression) {
+        if (this._parent !== undefined) throw new Error("The expression already had a parent");
+
         this._parent = newParent;
     }
 
@@ -36,4 +38,6 @@ export abstract class Expression {
 
         return this._parent?.commonAncestor(anotherExpression);
     }
+
+    abstract copy(): this
 }

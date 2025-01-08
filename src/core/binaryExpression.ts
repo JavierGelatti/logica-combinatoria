@@ -28,4 +28,8 @@ export class BinaryExpression extends CompoundExpression {
         const rightUnification = this.right.unifyWith(anotherExpression.right);
         return leftUnification.combinedWith(rightUnification);
     }
+
+    copy() {
+        return new this.species(this.left.copy(), this.right.copy()) as this;
+    }
 }
