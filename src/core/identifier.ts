@@ -81,6 +81,10 @@ export class Identifier extends Expression {
         return this._parent?.declarationOf(this) ?? undefined;
     }
 
+    protected _contains(_anExpression: Expression): boolean {
+        return false;
+    }
+
     _containsOcurrenceOf(identifierDeclaration: Identifier): boolean {
         return this.declaration() === identifierDeclaration;
     }

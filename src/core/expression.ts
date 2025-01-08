@@ -1,5 +1,6 @@
 import {CompoundExpression} from "./compoundExpression.ts";
 import {UnificationResult} from "./unificationResult.ts";
+import {Identifier} from "./identifier.ts";
 
 export abstract class Expression {
     protected _parent: CompoundExpression | undefined;
@@ -20,5 +21,19 @@ export abstract class Expression {
 
     public abstract unifyWith(anotherExpression: Expression): UnificationResult;
 
+    contains(anExpression: Expression): boolean {
+        return this === anExpression || this._contains(anExpression);
+    }
+
+    protected abstract _contains(anExpression: Expression): boolean;
+
     abstract _containsOcurrenceOf(identifierDeclaration: Identifier): boolean;
+
+    commonAncestor(anotherExpression: Expression): Expression | undefined {
+        if (this.contains(anotherExpression)) {
+            return this;
+        }
+
+        return this._parent?.commonAncestor(anotherExpression);
+    }
 }

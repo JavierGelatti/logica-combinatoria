@@ -29,6 +29,10 @@ export abstract class CompoundExpression extends Expression {
 
     protected abstract _unifyWith(anotherExpression: this): UnificationResult;
 
+    protected _contains(anExpression: Expression): boolean {
+        return this.subexpressions.some(subexpression => subexpression.contains(anExpression));
+    }
+
     _containsOcurrenceOf(identifierDeclaration: Identifier): boolean {
         return this.subexpressions.some(subexpression => subexpression._containsOcurrenceOf(identifierDeclaration));
     }
