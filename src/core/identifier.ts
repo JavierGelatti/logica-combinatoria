@@ -1,6 +1,7 @@
 import {Expression, Value, valueType} from "./expression.ts";
 import {successfulUnification, unificationFailure, UnificationResult} from "./unificationResult.ts";
 import {Exists} from "./exists.ts";
+import { Hole } from "./hole.ts";
 
 export class Identifier extends Expression<Value> {
     protected _type: Value = valueType;
@@ -102,5 +103,9 @@ export class Identifier extends Expression<Value> {
 
     freeVariables(): Set<Identifier> {
         return this.isFree() ? new Set([this]) : new Set();
+    }
+
+    allHoles(): Hole<any>[] {
+        return [];
     }
 }

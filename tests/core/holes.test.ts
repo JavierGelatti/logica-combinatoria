@@ -1,5 +1,13 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, forall, hole, identifier, truthHole} from "../../src/core/expression_constructors.ts";
+import {
+    application,
+    equality,
+    exists,
+    forall,
+    hole,
+    identifier,
+    truthHole,
+} from "../../src/core/expression_constructors.ts";
 import {Expression, Truth, Value} from "../../src/core/expression.ts";
 import {Hole} from "../../src/core/hole.ts";
 
@@ -55,5 +63,14 @@ describe("holes", () => {
         expect(() => {
             rootExpression.detachFromParent();
         }).toThrowError("Cannot detach root expression");
+    });
+
+    test("can find all the holes in an expression", () => {
+        let hole1!: Hole<Value>, hole2!: Hole<Value>;
+        const expression: Expression = exists(identifier("x"),
+            equality(hole1 = hole(), application(hole2 = hole(), identifier("x")))
+        );
+
+        expect(expression.allHoles()).toEqual([hole1, hole2]);
     });
 });

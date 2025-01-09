@@ -14,7 +14,7 @@ export class Hole<T extends ExpressionType> extends Expression<T> {
         return this === anotherObject;
     }
 
-    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<any> {
+    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression {
         if (subExpressionToReplace === this) {
             return newExpression.copy();
         }
@@ -46,5 +46,9 @@ export class Hole<T extends ExpressionType> extends Expression<T> {
         if (this._parent === undefined) throw new Error("Cannot fill root hole");
 
         this._parent.fillHole(this, anExpression);
+    }
+
+    allHoles(): Hole<any>[] {
+        return [this];
     }
 }

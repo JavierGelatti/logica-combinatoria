@@ -84,4 +84,6 @@ export abstract class Expression<T extends ExpressionType = ExpressionType> {
         // @ts-expect-error
         return this._type === type;
     }
+
+    abstract allHoles(): Hole<any>[]
 }
