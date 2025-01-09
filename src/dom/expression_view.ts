@@ -6,7 +6,7 @@ import {Equality} from "../core/equality.ts";
 import {Identifier} from "../core/identifier.ts";
 import {createElement} from "./createElement.ts";
 import {Hole} from "../core/hole.ts";
-import {DropEffect, makeDraggable, makeDropTarget} from "./drag_and_drop.ts";
+import {DraggableConfiguration, makeDraggable} from "./drag_and_drop.ts";
 import {animateWith} from "./animation.ts";
 
 export abstract class ExpressionView<T extends Expression = Expression> {
@@ -20,7 +20,7 @@ export abstract class ExpressionView<T extends Expression = Expression> {
         return expressionView;
     }
 
-    static forExpression<T extends ExpressionType>(expression: Expression<T>) {
+    static forExpression<T extends ExpressionType>(expression: Expression<T>): ExpressionView {
         const existingView = this.views.get(expression)?.deref();
         if (existingView !== undefined) {
             return existingView;
@@ -72,8 +72,8 @@ export abstract class ExpressionView<T extends Expression = Expression> {
 
     protected abstract _createDomElement(): HTMLElement
 
-    makeDraggable(onDrop: () => void = () => {}, dropEffect: DropEffect = "copy"): void {
-        makeDraggable(this.domElement(), onDrop, dropEffect);
+    makeDraggable(configuration?: DraggableConfiguration): void {
+        makeDraggable(this.domElement(), configuration);
     }
 }
 
@@ -137,12 +137,7 @@ export class IdentifierView extends ExpressionView<Identifier> {
 
 export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> {
     protected _createDomElement(): HTMLElement {
-        const element = createElement("span", { className: "hole" });
-        makeDropTarget(element, droppedElement => {
-            const droppedExpressionView = ExpressionView.forDomElement(droppedElement)!;
-            this.fillWith(droppedExpressionView);
-        });
-        return element;
+        return createElement("span", {className: "hole"});
     }
 
     fillWith(droppedExpressionView: ExpressionView) {

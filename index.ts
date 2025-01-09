@@ -42,37 +42,67 @@ function show(expression: Expression) {
     document.body.append(ExpressionView.forExpression(expression).domElement());
 }
 
-const editor = createElement("div", { className: "expression-editor" });
-const editorPallete = createElement("div", { className: "pallete" });
-const editorCanvas = createElement("div", { className: "canvas" });
+class ExpressionEditor {
+    private readonly _domElement: HTMLElement;
+    private _editorPallete!: HTMLElement;
+    private _editorCanvas!: HTMLElement;
 
-editor.append(editorPallete, editorCanvas);
-
-makeDropTarget(editorCanvas, droppedElement => {
-    const droppedExpression = ExpressionView.forDomElement(droppedElement)!.expression;
-    if (!droppedExpression.isRootExpression()) return;
-
-    const droppedExpressionCopy = droppedExpression.copy();
-
-    const expressionView = ExpressionView.forExpression(droppedExpressionCopy);
-    expressionView.makeDraggable(() => {
-        expressionView.domElement().remove();
-    }, "move");
-    editorCanvas.append(expressionView.domElement());
-});
-
-makeDropTarget(editorPallete, droppedElement => {
-    const droppedExpressionView = ExpressionView.forDomElement(droppedElement)!;
-    const droppedExpression = droppedExpressionView.expression;
-
-    if (!droppedExpression.isRootExpression()) {
-        const newHole = droppedExpression.detachFromParent();
-        droppedExpressionView.domElement().replaceWith(
-            ExpressionView.forExpression(newHole).domElement()
-        )
+    constructor() {
+        this._domElement = this._createDomElement();
     }
-});
 
+    domElement(): HTMLElement {
+        return this._domElement;
+    }
+
+    private _createDomElement(): HTMLElement {
+        const editor = createElement("div", { className: "expression-editor" }, [
+            this._editorPallete = createElement("div", { className: "pallete" }),
+            this._editorCanvas = createElement("div", { className: "canvas" })
+        ]);
+
+        makeDropTarget(this._editorCanvas, droppedElement => {
+            const droppedExpression = ExpressionView.forDomElement(droppedElement)!.expression;
+            if (!droppedExpression.isRootExpression()) return;
+
+            const droppedExpressionCopy = droppedExpression.copy();
+
+            const expressionView = ExpressionView.forExpression(droppedExpressionCopy);
+            expressionView.makeDraggable({ dropEffect: "move" });
+            this._editorCanvas.append(expressionView.domElement());
+        });
+
+        makeDropTarget(this._editorPallete, droppedElement => {
+            const droppedExpressionView = ExpressionView.forDomElement(droppedElement)!;
+            const droppedExpression = droppedExpressionView.expression;
+
+            if (!droppedExpression.isRootExpression()) {
+                const newHole = droppedExpression.detachFromParent();
+                droppedExpressionView.domElement().replaceWith(
+                    ExpressionView.forExpression(newHole).domElement()
+                )
+            }
+        });
+
+        return editor;
+    }
+
+    addToPallete(expression: Expression) {
+        const expressionView = ExpressionView.forExpression(expression);
+        expressionView.makeDraggable({
+            onDragStart: () => this.onPalleteExpressionPickUp(expressionView),
+            onDragEnd: () => {}
+        });
+        this._editorPallete.append(expressionView.domElement());
+    }
+
+    private onPalleteExpressionPickUp(pickedUpExpressionView: ExpressionView) {
+
+    }
+}
+
+
+const editor = new ExpressionEditor();
 [
     identifier("x"),
     identifier("y"),
@@ -83,13 +113,6 @@ makeDropTarget(editorPallete, droppedElement => {
     equality(hole(), hole()),
     forall(identifier("x"), truthHole()),
     exists(identifier("x"), truthHole())
-].forEach(showInPallete);
+].forEach(e => editor.addToPallete(e));
 
-function showInPallete(expression: Expression) {
-    const expressionView = ExpressionView.forExpression(expression);
-    expressionView.makeDraggable();
-    editorPallete.append(expressionView.domElement());
-}
-
-
-document.body.append(editor);
+document.body.append(editor.domElement());
