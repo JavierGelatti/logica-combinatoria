@@ -10,7 +10,7 @@ const mockingbird = forall(
     )
 );
 
-// show(mockingbird);
+show(mockingbird);
 
 // show(exists(
 //     identifier("x"),

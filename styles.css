@@ -52,6 +52,20 @@
         margin-bottom: -1px;
         border-bottom: 1px solid red;
     }
+
+    &.just-added {
+        animation: shake .3s;
+
+        --text-shadow: rgba(126, 126, 126, 0.2);
+    }
+}
+
+@keyframes shake {
+    0% { transform: rotate(0deg); text-shadow: 0 0 5px var(--text-shadow); }
+    25% { transform: rotate(-1deg); text-shadow: 0 0 10px var(--text-shadow); }
+    50% { transform: rotate(1deg); text-shadow: 0 0 10px var(--text-shadow); }
+    75% { transform: rotate(0deg); text-shadow: 0 0 5px var(--text-shadow); }
+    100% { transform: rotate(1deg); }
 }
 
 .hole {
@@ -59,6 +73,12 @@
     background: rgba(0, 0, 0, .2);
     min-width: .7em;
     height: 1em;
+    transition: transform .2s, opacity .2s;
+
+    &.drop-target {
+        transform: scale(1.2);
+        opacity: .8;
+    }
 }
 
 .parenthesis {

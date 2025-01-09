@@ -59,4 +59,8 @@ export abstract class Expression {
 
         this._parent = undefined;
     }
+
+    needsParenthesis() {
+        return false;
+    }
 }

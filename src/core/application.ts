@@ -13,4 +13,8 @@ export class Application extends BinaryExpression {
     get argument() {
         return this.right;
     }
+
+    needsParenthesis() {
+        return this._parent instanceof Application;
+    }
 }

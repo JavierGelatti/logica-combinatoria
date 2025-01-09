@@ -8,6 +8,13 @@ import {createElement} from "./createElement.ts";
 import {Hole} from "../core/hole.ts";
 
 export abstract class ExpressionView<T extends Expression> {
+    private static readonly modelKey = Symbol("model");
+
+    static forDomElement(element: HTMLElement): ExpressionView<Expression> | undefined {
+        // @ts-ignore
+        return element[this.modelKey];
+    }
+
     static forExpression(expression: Expression) {
         if (expression instanceof Identifier) {
             return new IdentifierView(expression);
@@ -26,25 +33,33 @@ export abstract class ExpressionView<T extends Expression> {
         }
     }
 
+    private _domElement?: HTMLElement;
+
     constructor(public readonly expression: T) {}
 
-    abstract domElement(): Element
+    domElement(): HTMLElement {
+        if (this._domElement === undefined) {
+            this._domElement = this._createDomElement();
+
+            // @ts-ignore
+            this._domElement[ExpressionView.modelKey] = this;
+
+            if (this.expression.needsParenthesis()) {
+                this._domElement.prepend(leftParenthesis());
+                this._domElement.append(rightParenthesis());
+            }
+        }
+
+        return this._domElement;
+    }
+
+    protected abstract _createDomElement(): HTMLElement
 }
 
 export class ApplicationView extends ExpressionView<Application> {
-    domElement(): Element {
+    protected _createDomElement(): HTMLElement {
         const elementForFunction = ApplicationView.forExpression(this.expression.functionBeingApplied).domElement();
         const elementForArgument = ApplicationView.forExpression(this.expression.argument).domElement();
-
-        if (this.expression.functionBeingApplied instanceof Application) {
-            elementForFunction.prepend(leftParenthesis());
-            elementForFunction.append(rightParenthesis());
-        }
-
-        if (this.expression.argument instanceof Application) {
-            elementForArgument.prepend(leftParenthesis());
-            elementForArgument.append(rightParenthesis());
-        }
 
         return createElement("span", {className: "application" }, [
             elementForFunction,
@@ -54,7 +69,7 @@ export class ApplicationView extends ExpressionView<Application> {
 }
 
 export class ForAllView extends ExpressionView<ForAll> {
-    domElement(): Element {
+    protected _createDomElement(): HTMLElement {
         return createElement("span", {className: "forall" }, [
             ...parenthesized(
                 binder("∀"),
@@ -66,7 +81,7 @@ export class ForAllView extends ExpressionView<ForAll> {
 }
 
 export class ExistsView extends ExpressionView<Exists> {
-    domElement(): Element {
+    protected _createDomElement(): HTMLElement {
         return createElement("span", {className: "exists" }, [
             ...parenthesized(
                 binder("∃"),
@@ -78,12 +93,12 @@ export class ExistsView extends ExpressionView<Exists> {
 }
 
 export class EqualityView extends ExpressionView<Equality> {
-    domElement(): Element {
+    protected _createDomElement(): HTMLElement {
         const leftElement = ApplicationView.forExpression(this.expression.left).domElement();
-        leftElement.setAttribute("draggable", "true");
+        makeDraggable(leftElement);
         const rightElement = ApplicationView.forExpression(this.expression.right).domElement();
-        rightElement.setAttribute("draggable", "true");
-        
+        makeDraggable(rightElement);
+
         return createElement("span", {className: "equality" }, [
             leftElement,
             createElement("span", { className: "operator", textContent: "=" }),
@@ -91,9 +106,8 @@ export class EqualityView extends ExpressionView<Equality> {
         ]);
     }
 }
-
 export class IdentifierView extends ExpressionView<Identifier> {
-    domElement(): Element {
+    protected _createDomElement(): HTMLElement {
         const identifier = this.expression;
 
         const isFree = identifier.isFree();
@@ -106,8 +120,19 @@ export class IdentifierView extends ExpressionView<Identifier> {
 }
 
 export class HoleView extends ExpressionView<Hole> {
-    domElement(): Element {
-        return createElement("span", { className: "hole" });
+    protected _createDomElement(): HTMLElement {
+        const element = createElement("span", { className: "hole" });
+        makeDropTarget(element, droppedExpression => {
+            const droppedExpressionCopy = droppedExpression.copy();
+            this.expression.fillWith(droppedExpressionCopy);
+            const newExpressionElement = ExpressionView.forExpression(droppedExpressionCopy).domElement();
+            newExpressionElement.classList.add("just-added");
+            newExpressionElement.addEventListener("animationend", () => {
+                newExpressionElement.classList.remove("just-added");
+            }, { once: true });
+            element.replaceWith(newExpressionElement);
+        });
+        return element;
     }
 }
 
@@ -129,4 +154,39 @@ function leftParenthesis() {
 
 function rightParenthesis() {
     return createElement("span", {className: "parenthesis", textContent: ")"});
+}
+
+function makeDraggable(element: HTMLElement) {
+    element.id = crypto.randomUUID();
+    element.setAttribute("draggable", "true");
+    element.addEventListener("dragstart", (e) => {
+        if (e.dataTransfer !== null) {
+            e.dataTransfer.setData("text/plain", element.id);
+            e.dataTransfer.dropEffect = "copy";
+        }
+    });
+}
+
+function makeDropTarget(element: HTMLElement, onDrop: (droppedExpression: Expression) => void) {
+    element.addEventListener("dragenter", (e) => {
+        element.classList.add("drop-target");
+        e.preventDefault();
+    });
+    element.addEventListener("dragover", (e) => {
+        e.preventDefault();
+    });
+    element.addEventListener("dragleave", (e) => {
+        element.classList.remove("drop-target");
+        e.preventDefault();
+    });
+    element.addEventListener("drop", (e) => {
+        element.classList.remove("drop-target");
+        const sourceElementId = e.dataTransfer!.getData("text/plain");
+        const sourceElement = document.getElementById(sourceElementId)!;
+        const sourceView = ExpressionView.forDomElement(sourceElement)!;
+
+        onDrop(sourceView.expression);
+
+        e.preventDefault();
+    });
 }
