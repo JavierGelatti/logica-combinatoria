@@ -1,5 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {application, forall, identifier} from "../../src/core/expression_constructors.ts";
+import {equality, forall, identifier} from "../../src/core/expression_constructors.ts";
 import {Expression} from "../../src/core/expression.ts";
 
 describe("containment", () => {
@@ -19,7 +19,7 @@ describe("containment", () => {
     test("an expression contains another if it's one of its parents", () => {
         let containedExpression!: Expression;
         const anExpression: Expression = forall(identifier("x"),
-            application(containedExpression = identifier("x"), identifier("y"))
+            equality(containedExpression = identifier("x"), identifier("y"))
         );
 
         expect(anExpression.contains(containedExpression)).toBe(true);

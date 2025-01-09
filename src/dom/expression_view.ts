@@ -1,4 +1,4 @@
-import {Expression} from "../core/expression.ts";
+import {Expression, ExpressionType} from "../core/expression.ts";
 import {Application} from "../core/application.ts";
 import {ForAll} from "../core/forAll.ts";
 import {Exists} from "../core/exists.ts";
@@ -17,7 +17,7 @@ export abstract class ExpressionView<T extends Expression> {
         return element[this.modelKey];
     }
 
-    static forExpression(expression: Expression): ExpressionView<Expression> {
+    static forExpression<T extends ExpressionType>(expression: Expression<T>) {
         if (expression instanceof Identifier) {
             return new IdentifierView(expression);
         } else if (expression instanceof ForAll) {
@@ -122,18 +122,20 @@ export class IdentifierView extends ExpressionView<Identifier> {
     }
 }
 
-export class HoleView extends ExpressionView<Hole> {
+export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> {
     protected _createDomElement(): HTMLElement {
         const element = createElement("span", { className: "hole" });
         makeDropTarget(element, droppedElement => {
             const droppedExpression = ExpressionView.forDomElement(droppedElement)!.expression;
-            const droppedExpressionCopy = droppedExpression.copy();
-            this.expression.fillWith(droppedExpressionCopy);
-            const newExpressionView = ExpressionView.forExpression(droppedExpressionCopy);
-            newExpressionView.makeDraggable();
-            const newExpressionElement = newExpressionView.domElement();
-            animateWith(newExpressionElement, "just-added");
-            element.replaceWith(newExpressionElement);
+            if (droppedExpression.hasType(this.expression.type())) {
+                const droppedExpressionCopy = droppedExpression.copy();
+                this.expression.fillWith(droppedExpressionCopy);
+                const newExpressionView = ExpressionView.forExpression(droppedExpressionCopy);
+                newExpressionView.makeDraggable();
+                const newExpressionElement = newExpressionView.domElement();
+                animateWith(newExpressionElement, "just-added");
+                element.replaceWith(newExpressionElement);
+            }
         });
         return element;
     }

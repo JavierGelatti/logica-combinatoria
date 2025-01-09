@@ -1,17 +1,17 @@
-import {Expression} from "./expression.ts";
+import {Expression, ExpressionType, Value} from "./expression.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
 import {UnificationResult} from "./unificationResult.ts";
 
-export class BinaryExpression extends CompoundExpression {
-    private _left: Expression;
-    private _right: Expression;
+export abstract class BinaryExpression<I extends ExpressionType, O extends ExpressionType> extends CompoundExpression<O> {
+    private _left: Expression<I>;
+    private _right: Expression<I>;
 
-    private readonly _species: { new(left: Expression, right: Expression): BinaryExpression };
+    private readonly _species: { new(left: Expression<I>, right: Expression<I>): BinaryExpression<I, O> };
 
-    constructor(
-        left: Expression,
-        right: Expression,
-        species: { new(left: Expression, right: Expression): BinaryExpression },
+    protected constructor(
+        left: Expression<I>,
+        right: Expression<I>,
+        species: { new(left: Expression<I>, right: Expression<I>): BinaryExpression<I, O> },
     ) {
         super(left, right);
         this._species = species;
@@ -32,7 +32,7 @@ export class BinaryExpression extends CompoundExpression {
             anotherObject._right.equals(this._right);
     }
 
-    public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
+    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<O> {
         return new this._species(
             this._left.replace(subExpressionToReplace, newExpression),
             this._right.replace(subExpressionToReplace, newExpression),
@@ -49,11 +49,17 @@ export class BinaryExpression extends CompoundExpression {
         return new this._species(this._left.copy(), this._right.copy()) as this;
     }
 
-    protected _replaceDirectChild(childToReplace: Expression, replacement: Expression): void {
+    protected _replaceDirectChild<S extends ExpressionType>(childToReplace: Expression<S>, replacement: Expression<S>): void {
+        // @ts-expect-error
         if (childToReplace === this._left) {
-            this._left = replacement;
-        } else if (childToReplace === this._right) {
-            this._right = replacement;
+            this._left = replacement as unknown as Expression<I>;
+            return;
+        }
+
+        // @ts-expect-error
+        if (childToReplace === this._right) {
+            this._right = replacement as unknown as Expression<I>;
+            return;
         }
     }
 }

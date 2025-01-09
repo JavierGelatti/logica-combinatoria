@@ -1,8 +1,10 @@
 import {BinaryExpression} from "./binaryExpression.ts";
-import {Expression} from "./expression.ts";
+import {Expression, Truth, truthType, Value} from "./expression.ts";
 
-export class Equality extends BinaryExpression {
-    constructor(left: Expression, right: Expression) {
+export class Equality extends BinaryExpression<Value, Truth> {
+    protected _type: Truth = truthType;
+
+    constructor(left: Expression<Value>, right: Expression<Value>) {
         super(left, right, Equality);
     }
 }

@@ -1,11 +1,11 @@
 import {describe, expect, test} from "vitest";
-import {application, forall, hole, identifier} from "../../src/core/expression_constructors.ts";
-import {Expression} from "../../src/core/expression.ts";
+import {application, equality, forall, hole, identifier, truthHole} from "../../src/core/expression_constructors.ts";
+import {Expression, Truth, Value} from "../../src/core/expression.ts";
 import {Hole} from "../../src/core/hole.ts";
 
 describe("holes", () => {
     test("can fill a hole at the left-hand position of an application", () => {
-        let theHole!: Hole;
+        let theHole!: Hole<Value>;
         const expressionWithHole: Expression = application(theHole = hole(), identifier("x"));
 
         theHole.fillWith(identifier("y"));
@@ -14,7 +14,7 @@ describe("holes", () => {
     });
 
     test("can fill a hole at the right-hand position of an application", () => {
-        let theHole!: Hole;
+        let theHole!: Hole<Value>;
         const expressionWithHole: Expression = application(identifier("x"), theHole = hole());
 
         theHole.fillWith(identifier("y"));
@@ -23,12 +23,12 @@ describe("holes", () => {
     });
 
     test("can fill a hole at the body of a binder", () => {
-        let theHole!: Hole;
-        const expressionWithHole: Expression = forall(identifier("x"), theHole = hole());
+        let theHole!: Hole<Truth>;
+        const expressionWithHole: Expression = forall(identifier("x"), theHole = truthHole());
 
-        theHole.fillWith(identifier("y"));
+        theHole.fillWith(equality(identifier("y"), identifier("y")));
 
-        expect(expressionWithHole).toEqual(forall(identifier("x"), identifier("y")));
+        expect(expressionWithHole).toEqual(forall(identifier("x"), equality(identifier("y"), identifier("y"))));
     });
 
     test("cannot fill a hole without parent (i.e. root hole)", () => {

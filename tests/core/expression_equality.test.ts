@@ -28,20 +28,20 @@ describe("expression equality", () => {
 
     describe("a forall is equal to another if their contents are equal assuming their bound variables are equal", () => {
         test("when the content is an identifier", () => {
-            const forall1 = forall(identifier("x"), identifier("x"));
-            const forall2 = forall(identifier("y"), identifier("x"));
-            const forall3 = forall(identifier("y"), identifier("y"));
+            const forall1 = forall(identifier("x"), equality(identifier("x"), identifier("x")));
+            const forall2 = forall(identifier("y"), equality(identifier("x"), identifier("x")));
+            const forall3 = forall(identifier("y"), equality(identifier("y"), identifier("y")));
 
             expect(forall1.equals(forall1)).toBe(true);
             expect(forall1.equals(forall2)).toBe(false);
             expect(forall1.equals(forall3)).toBe(true);
         });
 
-        test("when the content is an application with the bound variable in the argument", () => {
-            const forall1 = forall(identifier("x"), application(identifier("y"), identifier("x")));
-            const forall2 = forall(identifier("y"), application(identifier("y"), identifier("x")));
-            const forall3 = forall(identifier("x"), application(identifier("x"), identifier("x")));
-            const forall4 = forall(identifier("z"), application(identifier("y"), identifier("z")));
+        test("when the content is an equality with the bound variable in the right-hand side", () => {
+            const forall1 = forall(identifier("x"), equality(identifier("y"), identifier("x")));
+            const forall2 = forall(identifier("y"), equality(identifier("y"), identifier("x")));
+            const forall3 = forall(identifier("x"), equality(identifier("x"), identifier("x")));
+            const forall4 = forall(identifier("z"), equality(identifier("y"), identifier("z")));
 
             expect(forall1.equals(forall1)).toBe(true);
             expect(forall1.equals(forall2)).toBe(false);
@@ -49,11 +49,11 @@ describe("expression equality", () => {
             expect(forall1.equals(forall4)).toBe(true);
         });
 
-        test("when the content is an application with the bound variable as the function", () => {
-            const forall1 = forall(identifier("x"), application(identifier("x"), identifier("y")));
-            const forall2 = forall(identifier("y"), application(identifier("x"), identifier("y")));
-            const forall3 = forall(identifier("x"), application(identifier("x"), identifier("x")));
-            const forall4 = forall(identifier("z"), application(identifier("z"), identifier("y")));
+        test("when the content is an equality with the bound variable in the left-hand side", () => {
+            const forall1 = forall(identifier("x"), equality(identifier("x"), identifier("y")));
+            const forall2 = forall(identifier("y"), equality(identifier("x"), identifier("y")));
+            const forall3 = forall(identifier("x"), equality(identifier("x"), identifier("x")));
+            const forall4 = forall(identifier("z"), equality(identifier("z"), identifier("y")));
 
             expect(forall1.equals(forall1)).toBe(true);
             expect(forall1.equals(forall2)).toBe(false);
@@ -62,11 +62,11 @@ describe("expression equality", () => {
         });
 
         test("when the content is another forall", () => {
-            const forall1 = forall(identifier("x"), forall(identifier("y"), application(identifier("x"), identifier("y"))));
-            const forall2 = forall(identifier("x"), forall(identifier("x"), application(identifier("x"), identifier("x"))));
-            const forall3 = forall(identifier("x"), forall(identifier("y"), application(identifier("y"), identifier("y"))));
-            const forall4 = forall(identifier("y"), forall(identifier("z"), application(identifier("y"), identifier("z"))));
-            const forall5 = forall(identifier("x"), forall(identifier("y"), application(identifier("x"), identifier("x"))));
+            const forall1 = forall(identifier("x"), forall(identifier("y"), equality(identifier("x"), identifier("y"))));
+            const forall2 = forall(identifier("x"), forall(identifier("x"), equality(identifier("x"), identifier("x"))));
+            const forall3 = forall(identifier("x"), forall(identifier("y"), equality(identifier("y"), identifier("y"))));
+            const forall4 = forall(identifier("y"), forall(identifier("z"), equality(identifier("y"), identifier("z"))));
+            const forall5 = forall(identifier("x"), forall(identifier("y"), equality(identifier("x"), identifier("x"))));
 
             expect(forall1.equals(forall1)).toBe(true);
             expect(forall1.equals(forall2)).toBe(false);
@@ -77,10 +77,10 @@ describe("expression equality", () => {
     });
 
     test("an exists is equal to another if their contents are equal assuming their bound variables are equal", () => {
-        const exists1 = exists(identifier("x"), identifier("x"));
-        const exists2 = exists(identifier("y"), identifier("x"));
-        const exists3 = exists(identifier("y"), identifier("y"));
-        const forall1 = forall(identifier("x"), identifier("x"));
+        const exists1 = exists(identifier("x"), equality(identifier("x"), identifier("x")));
+        const exists2 = exists(identifier("y"), equality(identifier("x"), identifier("x")));
+        const exists3 = exists(identifier("y"), equality(identifier("y"), identifier("y")));
+        const forall1 = forall(identifier("x"), equality(identifier("x"), identifier("x")));
 
         expect(exists1.equals(exists1)).toBe(true);
         expect(exists1.equals(exists2)).toBe(false);

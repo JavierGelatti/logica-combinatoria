@@ -1,8 +1,10 @@
-import {Expression} from "./expression.ts";
+import {Expression, Value, valueType} from "./expression.ts";
 import {BinaryExpression} from "./binaryExpression.ts";
 
-export class Application extends BinaryExpression {
-    constructor(functionBeingApplied: Expression, argument: Expression) {
+export class Application extends BinaryExpression<Value, Value> {
+    protected _type: Value = valueType;
+
+    constructor(functionBeingApplied: Expression<Value>, argument: Expression<Value>) {
         super(functionBeingApplied, argument, Application);
     }
 

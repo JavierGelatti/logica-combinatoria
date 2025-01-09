@@ -1,13 +1,20 @@
-import { Expression } from "./expression";
+import {Expression, ExpressionType, Value} from "./expression";
 import { Identifier } from "./identifier";
 import {unificationFailure, UnificationResult} from "./unificationResult";
 
-export class Hole extends Expression {
+export class Hole<T extends ExpressionType> extends Expression<T> {
+    protected _type: T;
+
+    constructor(type: T) {
+        super();
+        this._type = type;
+    }
+
     protected _equals(anotherObject: this): boolean {
         return this === anotherObject;
     }
 
-    public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
+    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<any> {
         if (subExpressionToReplace === this) {
             return newExpression.copy();
         }
@@ -28,14 +35,14 @@ export class Hole extends Expression {
     }
 
     copy(): this {
-        return new Hole() as this;
+        return new Hole(this._type) as this;
     }
 
     freeVariables(): Set<Identifier> {
         return new Set();
     }
 
-    fillWith(anExpression: Expression) {
+    fillWith(anExpression: Expression<T>) {
         if (this._parent === undefined) throw new Error("Cannot fill root hole");
 
         this._parent.fillHole(this, anExpression);

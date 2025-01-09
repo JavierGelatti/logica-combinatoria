@@ -1,18 +1,20 @@
-import {Expression} from "./expression.ts";
+import {Expression, ExpressionType, Truth, truthType, Value} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
 import {successfulUnification, unificationFailure, UnificationResult} from "./unificationResult.ts";
 
-export abstract class Binder extends CompoundExpression {
-    private readonly _boundVariable: Identifier;
-    private _body: Expression;
+export abstract class Binder extends CompoundExpression<Truth> {
+    protected _type: Truth = truthType;
 
-    private readonly _species: { new(boundVariable: Identifier, expression: Expression): Binder };
+    private readonly _boundVariable: Identifier;
+    private _body: Expression<Truth>;
+
+    private readonly _species: { new(boundVariable: Identifier, expression: Expression<Truth>): Binder };
 
     protected constructor(
         boundVariable: Identifier,
-        body: Expression,
-        species: { new(boundVariable: Identifier, expression: Expression): Binder },
+        body: Expression<Truth>,
+        species: { new(boundVariable: Identifier, expression: Expression<Truth>): Binder },
     ) {
         super(boundVariable, body);
         this._species = species;
@@ -33,11 +35,11 @@ export abstract class Binder extends CompoundExpression {
         return anotherObject.applyTo(boundIdentifier).equals(this.applyTo(boundIdentifier));
     }
 
-    applyTo(boundVariableValue: Expression) {
+    applyTo(boundVariableValue: Expression<Value>) {
         return this._body.replace(this._boundVariable, boundVariableValue);
     }
 
-    public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
+    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<Truth> {
         if (subExpressionToReplace.equals(this._boundVariable)) return this.copy();
 
         if (newExpression.freeVariablesContain(this._boundVariable)) {
@@ -68,9 +70,9 @@ export abstract class Binder extends CompoundExpression {
         return new this._species(this._boundVariable.copy(), this._body.copy()) as this;
     }
 
-    protected _replaceDirectChild(childToReplace: Expression, replacement: Expression): void {
+    protected _replaceDirectChild<S extends ExpressionType>(childToReplace: Expression<S>, replacement: Expression<S>): void {
         if (this._body === childToReplace) {
-            this._body = replacement;
+            this._body = replacement as Expression<Truth>;
         }
     }
 }

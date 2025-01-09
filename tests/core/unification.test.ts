@@ -21,27 +21,27 @@ describe("unification", () => {
     test("a free variable unifies with a universally-bound variable, replacing the bound variable value with itself", () => {
         const freeVariable = identifier("x");
         let nonFreeVariable!: Identifier;
-        forall(identifier("x"), nonFreeVariable = identifier("x"));
+        forall(identifier("x"), equality(identifier("w"), nonFreeVariable = identifier("x")));
 
-        expect(nonFreeVariable.unifyWith(freeVariable)).toEqual(successfulUnification([nonFreeVariable, freeVariable]));
+        expect(nonFreeVariable.unifyWith(freeVariable)).toEqual(successfulUnification([nonFreeVariable.declaration()!, freeVariable]));
         expect(freeVariable.unifyWith(nonFreeVariable)).toEqual(unificationFailure());
     });
     
     test("a free variable does not unify with an existentially-bound variable", () => {
         const freeVariable = identifier("x");
         let nonFreeVariable!: Identifier;
-        exists(identifier("x"), nonFreeVariable = identifier("x"));
+        exists(identifier("x"), equality(identifier("w"), nonFreeVariable = identifier("x")));
 
         expect(nonFreeVariable.unifyWith(freeVariable)).toEqual(unificationFailure());
     });
 
     test("two universally-bound variables unify, replacing one with the other", () => {
         let nonFreeVariable1!: Identifier;
-        forall(identifier("x"), nonFreeVariable1 = identifier("x"));
+        forall(identifier("x"), equality(identifier("w"), nonFreeVariable1 = identifier("x")));
         let nonFreeVariable2!: Identifier;
-        forall(identifier("y"), nonFreeVariable2 = identifier("y"));
+        forall(identifier("y"), equality(identifier("w"), nonFreeVariable2 = identifier("y")));
 
-        expect(nonFreeVariable1.unifyWith(nonFreeVariable2)).toEqual(successfulUnification([nonFreeVariable1, nonFreeVariable2]));
+        expect(nonFreeVariable1.unifyWith(nonFreeVariable2)).toEqual(successfulUnification([nonFreeVariable1.declaration()!, nonFreeVariable2]));
     });
 
     test("a bound variable unifies with itself, without any replacements", () => {
@@ -49,7 +49,7 @@ describe("unification", () => {
         let nonFreeVariable2!: Identifier;
         exists(
             identifier("x"),
-            application(
+            equality(
                 nonFreeVariable1 = identifier("x"),
                 nonFreeVariable2 = identifier("x")
             )
@@ -61,15 +61,15 @@ describe("unification", () => {
     test("a compound expression unifies with a universally-bound variable, provided it does not contain the same variable", () => {
         const compoundExpression = application(identifier("x"), identifier("x"));
         let nonFreeVariable!: Identifier;
-        forall(identifier("x"), nonFreeVariable = identifier("x"));
+        forall(identifier("x"), equality(identifier("w"), nonFreeVariable = identifier("x")));
 
-        expect(nonFreeVariable.unifyWith(compoundExpression)).toEqual(successfulUnification([nonFreeVariable, compoundExpression]));
+        expect(nonFreeVariable.unifyWith(compoundExpression)).toEqual(successfulUnification([nonFreeVariable.declaration()!, compoundExpression]));
     });
 
     test("a compound expression does not unify with a universally-bound variable if it contains the same variable", () => {
         let compoundExpression!: Expression;
         let nonFreeVariable!: Identifier;
-        forall(identifier("x"), application(
+        forall(identifier("x"), equality(
             nonFreeVariable = identifier("x"),
             compoundExpression = application(identifier("x"), identifier("x"))
         ));
@@ -78,10 +78,10 @@ describe("unification", () => {
     });
 
     test("two compound expressions that are not two applications will unify iff they are equal", () => {
-        const aForall = forall(identifier("x"), identifier("x"));
-        const theSameForall = forall(identifier("y"), identifier("y"));
-        const anotherForall = forall(identifier("x"), identifier("y"));
-        const anExists = exists(identifier("x"), identifier("x"));
+        const aForall = forall(identifier("x"), equality(identifier("w"), identifier("x")));
+        const theSameForall = forall(identifier("y"), equality(identifier("w"), identifier("y")));
+        const anotherForall = forall(identifier("x"), equality(identifier("w"), identifier("y")));
+        const anExists = exists(identifier("x"), equality(identifier("w"), identifier("x")));
         const anApplication = application(identifier("x"), identifier("x"));
 
         expect(aForall.unifyWith(aForall)).toEqual(successfulUnification());
@@ -96,7 +96,10 @@ describe("unification", () => {
         let x!: Identifier, y!: Identifier, a!: Identifier, b!: Identifier;
         forall(x = identifier("x"),
             forall(y = identifier("y"),
-                anApplication = application(identifier("x"), identifier("y"))
+                equality(
+                    anApplication = application(identifier("x"), identifier("y")),
+                    identifier("w")
+                )
             )
         );
         const anotherApplication = application(a = identifier("A"), b = identifier("B"));
@@ -108,7 +111,10 @@ describe("unification", () => {
         let anApplication!: Application;
         let x!: Identifier, a!: Identifier;
         forall(x = identifier("x"),
-            anApplication = application(identifier("x"), identifier("x"))
+            equality(
+                anApplication = application(identifier("x"), identifier("x")),
+                identifier("w")
+            )
         );
         const anotherApplication = application(a = identifier("A"), identifier("A"));
 
@@ -118,7 +124,10 @@ describe("unification", () => {
     test("two applications won't unify if both parts unify incompatibly", () => {
         let anApplication!: Application;
         forall(identifier("x"),
-            anApplication = application(identifier("x"), identifier("x"))
+            equality(
+                anApplication = application(identifier("x"), identifier("x")),
+                identifier("w")
+            )
         );
         const anotherApplication = application(identifier("A"), identifier("B"));
 
@@ -128,7 +137,10 @@ describe("unification", () => {
     test("two applications won't unify if the left part fails", () => {
         let anApplication!: Application;
         forall(identifier("x"),
-            anApplication = application(identifier("x"), identifier("A"))
+            equality(
+                anApplication = application(identifier("x"), identifier("A")),
+                identifier("w")
+            )
         );
         const anotherApplication = application(identifier("B"), identifier("C"));
 
@@ -138,7 +150,10 @@ describe("unification", () => {
     test("two applications won't unify if the right part fails", () => {
         let anApplication!: Application;
         forall(identifier("x"),
-            anApplication = application(identifier("A"), identifier("x"))
+            equality(
+                anApplication = application(identifier("A"), identifier("x")),
+                identifier("w")
+            )
         );
         const anotherApplication = application(identifier("B"), identifier("C"));
 

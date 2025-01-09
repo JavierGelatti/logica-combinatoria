@@ -1,5 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {application, forall, identifier} from "../../src/core/expression_constructors.ts";
+import {application, equality, forall, identifier} from "../../src/core/expression_constructors.ts";
 import {Identifier} from "../../src/core/identifier.ts";
 import {Expression} from "../../src/core/expression.ts";
 
@@ -14,7 +14,7 @@ describe("variable binding", () => {
         let variable!: Identifier;
         forall(
             variable = identifier("x"),
-            identifier("x"),
+            equality(identifier("x"), identifier("x")),
         );
 
         expect(variable.isFree()).toBe(false);
@@ -24,7 +24,7 @@ describe("variable binding", () => {
         let variable!: Identifier;
         forall(
             identifier("x"),
-            variable = identifier("y"),
+            equality(variable = identifier("y"), identifier("x")),
         );
 
         expect(variable.isFree()).toBe(true);
@@ -34,7 +34,7 @@ describe("variable binding", () => {
         let variable!: Identifier;
         forall(
             identifier("x"),
-            variable = identifier("x"),
+            equality(variable = identifier("x"), identifier("y")),
         );
 
         expect(variable.isFree()).toBe(false);
@@ -46,7 +46,7 @@ describe("variable binding", () => {
             identifier("x"),
             forall(
                 identifier("y"),
-                variable = identifier("x")
+                equality(variable = identifier("x"), identifier("x"))
             )
         );
 
@@ -59,7 +59,7 @@ describe("variable binding", () => {
             identifier("x"),
             forall(
                 identifier("y"),
-                variable = identifier("z")
+                equality(variable = identifier("z"), identifier("z"))
             )
         );
 
@@ -81,7 +81,7 @@ describe("variable binding", () => {
         let variable1!: Identifier, variable2!: Identifier;
         forall(
             identifier("x"),
-            application(
+            equality(
                 variable1 = identifier("x"),
                 variable2 = identifier("x")
             )
@@ -95,7 +95,7 @@ describe("variable binding", () => {
         let variable1!: Identifier, variable2!: Identifier;
         forall(
             identifier("x"),
-            application(
+            equality(
                 variable1 = identifier("y"),
                 variable2 = identifier("y")
             )
@@ -109,7 +109,7 @@ describe("variable binding", () => {
         let variable1!: Identifier, variable2!: Identifier;
         forall(
             variable1 = identifier("x"),
-            forall(identifier("y"), variable2 = identifier("x"))
+            forall(identifier("y"), equality(variable2 = identifier("x"), identifier("x")))
         );
 
         expect(variable1.declaration()).toBe(variable1);
@@ -126,11 +126,14 @@ describe("variable binding", () => {
         let z1!: Identifier, z2!: Identifier;
         const anExpression: Expression = forall(
             identifier("x"),
-            application(
-                forall(identifier("y"),
-                    application(identifier("x"), application(identifier("y"), z1 = identifier("z")))
-                ),
-                z2 = identifier("z")
+            forall(identifier("y"),
+                equality(
+                    application(
+                        identifier("x"),
+                        application(identifier("y"), z1 = identifier("z"))
+                    ),
+                    z2 = identifier("z")
+                )
             )
         );
 

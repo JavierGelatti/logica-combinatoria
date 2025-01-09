@@ -1,10 +1,9 @@
-import {Expression} from "./expression.ts";
+import {Expression, ExpressionType} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
 import {unificationFailure, UnificationResult} from "./unificationResult.ts";
 import {Hole} from "./hole.ts";
-import {hole} from "./expression_constructors.ts";
 
-export abstract class CompoundExpression extends Expression {
+export abstract class CompoundExpression<T extends ExpressionType = ExpressionType> extends Expression<T> {
     protected readonly _subexpressions: Expression[];
 
     protected constructor(...subexpressions: Expression[]) {
@@ -45,17 +44,17 @@ export abstract class CompoundExpression extends Expression {
             .reduce((previous, current) => previous.union(current));
     }
 
-    fillHole(holeToFill: Hole, expressionToFillHole: Expression) {
+    fillHole<S extends ExpressionType>(holeToFill: Hole<S>, expressionToFillHole: Expression<S>) {
         this.replaceDirectChild(holeToFill, expressionToFillHole);
     }
 
-    detachChild(expressionToDetach: Expression) {
-        const replacement = hole();
+    detachChild<S extends ExpressionType>(expressionToDetach: Expression<S>): Hole<S> {
+        const replacement = new Hole(expressionToDetach.type());
         this.replaceDirectChild(expressionToDetach, replacement);
         return replacement;
     }
 
-    private replaceDirectChild(childToReplace: Expression, replacement: Expression) {
+    private replaceDirectChild<S extends ExpressionType>(childToReplace: Expression<S>, replacement: Expression<S>) {
         this.assertIsDirectChild(childToReplace);
 
         this._subexpressions[this._subexpressions.indexOf(childToReplace)] = replacement;
@@ -65,7 +64,7 @@ export abstract class CompoundExpression extends Expression {
         this._replaceDirectChild(childToReplace, replacement);
     }
 
-    protected abstract _replaceDirectChild(childToReplace: Expression, replacement: Expression): void;
+    protected abstract _replaceDirectChild<S extends ExpressionType>(childToReplace: Expression<S>, replacement: Expression<S>): void;
 
     private assertIsDirectChild(expression: Expression) {
         if (!this._subexpressions.includes(expression))

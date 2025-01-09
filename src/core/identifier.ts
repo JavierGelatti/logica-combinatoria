@@ -1,8 +1,10 @@
-import {Expression} from "./expression.ts";
+import {Expression, Value, valueType} from "./expression.ts";
 import {successfulUnification, unificationFailure, UnificationResult} from "./unificationResult.ts";
 import {Exists} from "./exists.ts";
 
-export class Identifier extends Expression {
+export class Identifier extends Expression<Value> {
+    protected _type: Value = valueType;
+
     constructor(
         readonly name: string | symbol,
         readonly subscript?: number
@@ -14,7 +16,7 @@ export class Identifier extends Expression {
         return anotherObject.name === this.name && anotherObject.subscript === this.subscript;
     }
 
-    public replace(subExpressionToReplace: Expression, newExpression: Expression): Expression {
+    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<Value> {
         if (subExpressionToReplace.equals(this)) {
             return newExpression.copy();
         } else {

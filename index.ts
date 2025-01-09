@@ -1,4 +1,4 @@
-import {application, equality, exists, forall, hole, identifier} from "./src/core/expression_constructors";
+import {application, equality, exists, forall, hole, identifier, truthHole} from "./src/core/expression_constructors";
 import {ExpressionView} from "./src/dom/expression_view";
 import {Expression} from "./src/core/expression";
 import {createElement} from "./src/dom/createElement";
@@ -28,7 +28,7 @@ show(mockingbird);
 const aForAll = forall(
     identifier("x"),
     forall(identifier("y"),
-        application(hole(), identifier("x"))
+        equality(hole(), identifier("x"))
     )
 );
 // const argument = application(identifier("y"), identifier("y", 0));
@@ -81,8 +81,8 @@ makeDropTarget(editorPallete, droppedElement => {
     identifier("M"),
     application(hole(), hole()),
     equality(hole(), hole()),
-    forall(identifier("x"), hole()),
-    exists(identifier("x"), hole())
+    forall(identifier("x"), truthHole()),
+    exists(identifier("x"), truthHole())
 ].forEach(showInPallete);
 
 function showInPallete(expression: Expression) {

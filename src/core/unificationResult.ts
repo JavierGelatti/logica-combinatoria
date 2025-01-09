@@ -8,6 +8,7 @@ export abstract class UnificationResult {
 }
 
 class UnificationFailure extends UnificationResult {
+    // noinspection JSUnusedGlobalSymbols
     declare private __unification_failure_brand__: any;
 
     combinedWith(_anotherUnification: UnificationResult): UnificationResult {

@@ -3,7 +3,14 @@ import {UnificationResult} from "./unificationResult.ts";
 import {Identifier} from "./identifier.ts";
 import {Hole} from "./hole.ts";
 
-export abstract class Expression {
+export const valueType = Symbol("valueType");
+export const truthType = Symbol("truthType");
+export type Value = typeof valueType;
+export type Truth = typeof truthType;
+export type ExpressionType = Value | Truth;
+
+export abstract class Expression<T extends ExpressionType = ExpressionType> {
+    protected abstract _type: T;
     protected _parent: CompoundExpression | undefined;
 
     equals(anotherObject: unknown): boolean {
@@ -14,7 +21,7 @@ export abstract class Expression {
 
     protected abstract _equals(anotherObject: this): boolean;
 
-    public abstract replace(subExpressionToReplace: Expression, newExpression: Expression): Expression;
+    public abstract replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<T>;
 
     insertedInto(newParent: CompoundExpression) {
         if (this._parent !== undefined) throw new Error("The expression already had a parent");
@@ -49,7 +56,7 @@ export abstract class Expression {
             .some(freeVariable => freeVariable.equals(aVariable));
     }
 
-    detachFromParent(): Hole {
+    detachFromParent(): Hole<T> {
         if (this._parent === undefined) throw new Error("Cannot detach root expression");
 
         return this._parent.detachChild(this);
@@ -67,5 +74,14 @@ export abstract class Expression {
 
     isRootExpression() {
         return this._parent === undefined;
+    }
+
+    type(): T {
+        return this._type;
+    }
+
+    hasType<S extends ExpressionType>(type: S): this is Expression<S> {
+        // @ts-expect-error
+        return this._type === type;
     }
 }
