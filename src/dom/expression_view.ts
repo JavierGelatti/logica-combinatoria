@@ -9,15 +9,29 @@ import {Hole} from "../core/hole.ts";
 import {DropEffect, makeDraggable, makeDropTarget} from "./drag_and_drop.ts";
 import {animateWith} from "./animation.ts";
 
-export abstract class ExpressionView<T extends Expression> {
+export abstract class ExpressionView<T extends Expression = Expression> {
     private static readonly modelKey = Symbol("model");
+    private static readonly views: WeakMap<Expression, WeakRef<ExpressionView>> = new WeakMap();
 
-    static forDomElement(element: HTMLElement): ExpressionView<Expression> | undefined {
-        // @ts-ignore
-        return element[this.modelKey];
+    static forDomElement(element: HTMLElement): ExpressionView | undefined {
+        const expressionView: ExpressionView | undefined = Reflect.get(element, this.modelKey);
+        if (expressionView === undefined) throw new Error("The dom element was not an expression view");
+
+        return expressionView;
     }
 
     static forExpression<T extends ExpressionType>(expression: Expression<T>) {
+        const existingView = this.views.get(expression)?.deref();
+        if (existingView !== undefined) {
+            return existingView;
+        }
+
+        const view = this._instantiateViewForExpression(expression);
+        this.views.set(expression, new WeakRef(view));
+        return view;
+    }
+
+    private static _instantiateViewForExpression(expression: Expression) {
         if (expression instanceof Identifier) {
             return new IdentifierView(expression);
         } else if (expression instanceof ForAll) {
@@ -43,8 +57,7 @@ export abstract class ExpressionView<T extends Expression> {
         if (this._domElement === undefined) {
             this._domElement = this._createDomElement();
 
-            // @ts-ignore
-            this._domElement[ExpressionView.modelKey] = this;
+            Reflect.set(this._domElement, ExpressionView.modelKey, this);
 
             this._domElement.classList.add("expression");
 
@@ -126,18 +139,23 @@ export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> 
     protected _createDomElement(): HTMLElement {
         const element = createElement("span", { className: "hole" });
         makeDropTarget(element, droppedElement => {
-            const droppedExpression = ExpressionView.forDomElement(droppedElement)!.expression;
-            if (droppedExpression.hasType(this.expression.type())) {
-                const droppedExpressionCopy = droppedExpression.copy();
-                this.expression.fillWith(droppedExpressionCopy);
-                const newExpressionView = ExpressionView.forExpression(droppedExpressionCopy);
-                newExpressionView.makeDraggable();
-                const newExpressionElement = newExpressionView.domElement();
-                animateWith(newExpressionElement, "just-added");
-                element.replaceWith(newExpressionElement);
-            }
+            const droppedExpressionView = ExpressionView.forDomElement(droppedElement)!;
+            this.fillWith(droppedExpressionView);
         });
         return element;
+    }
+
+    fillWith(droppedExpressionView: ExpressionView) {
+        const droppedExpression = droppedExpressionView.expression;
+        if (droppedExpression.hasType(this.expression.type())) {
+            const droppedExpressionCopy = droppedExpression.copy();
+            this.expression.fillWith(droppedExpressionCopy);
+            const newExpressionView = ExpressionView.forExpression(droppedExpressionCopy);
+            newExpressionView.makeDraggable();
+            const newExpressionElement = newExpressionView.domElement();
+            animateWith(newExpressionElement, "just-added");
+            this.domElement().replaceWith(newExpressionElement);
+        }
     }
 }
 
