@@ -1,4 +1,5 @@
 export type DropEffect = typeof DataTransfer.prototype.dropEffect;
+type DragEventType = "drag" | "dragend" | "dragenter" | "dragleave" | "dragover" | "dragstart" | "drop";
 
 export type DraggableConfiguration = {
     onDragStart?: () => void,
@@ -60,6 +61,58 @@ export function makeDropTarget(element: HTMLElement, onDrop: (droppedElement: HT
     }, { signal: abortController.signal });
 
     return () => {
+        abortController.abort();
+    }
+}
+
+export function makeDropTargetExpecting(
+    dropTargetElement: HTMLElement,
+    expectedDropElement: HTMLElement,
+    onDrop: () => void
+) {
+    const abortController = new AbortController();
+    const expectedElementId = expectedDropElement.id;
+
+    const enabledDropTargetClass = `drop-target-enabled-for-${expectedElementId}`;
+    dropTargetElement.classList.add(enabledDropTargetClass);
+
+    addEventListenerToTarget("dragenter", (e) => {
+        dropTargetElement.classList.add("drop-target");
+    });
+    addEventListenerToTarget("dragover", (e) => {
+        e.stopPropagation();
+    });
+    addEventListenerToTarget("dragleave", (e) => {
+        dropTargetElement.classList.remove("drop-target");
+    });
+    addEventListenerToTarget("drop", (e) => {
+        dropTargetElement.classList.remove("drop-target");
+
+        onDrop();
+
+        e.stopPropagation();
+    });
+
+    expectedDropElement.addEventListener("dragend", (e) => {
+        endInteraction();
+    }, { signal: abortController.signal });
+
+    function addEventListenerToTarget(type: DragEventType, listener: (this: HTMLElement, ev: DragEvent) => any): void {
+        dropTargetElement.addEventListener(
+            type,
+            function(event) {
+                const sourceElementId = event.dataTransfer?.getData("text/plain");
+                if (sourceElementId === expectedElementId) {
+                    listener.bind(this)(event);
+                    event.preventDefault();
+                }
+            },
+            { signal: abortController.signal }
+        );
+    }
+
+    function endInteraction() {
+        dropTargetElement.classList.remove(enabledDropTargetClass);
         abortController.abort();
     }
 }

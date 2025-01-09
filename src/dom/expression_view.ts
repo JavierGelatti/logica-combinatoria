@@ -20,15 +20,15 @@ export abstract class ExpressionView<T extends Expression = Expression> {
         return expressionView;
     }
 
-    static forExpression<T extends ExpressionType>(expression: Expression<T>): ExpressionView {
+    static forExpression<E extends Expression, V extends ExpressionView<E>>(expression: E): V {
         const existingView = this.views.get(expression)?.deref();
         if (existingView !== undefined) {
-            return existingView;
+            return existingView as V;
         }
 
         const view = this._instantiateViewForExpression(expression);
         this.views.set(expression, new WeakRef(view));
-        return view;
+        return view as unknown as V;
     }
 
     private static _instantiateViewForExpression(expression: Expression) {

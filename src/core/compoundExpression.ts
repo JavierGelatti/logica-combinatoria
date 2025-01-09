@@ -71,7 +71,7 @@ export abstract class CompoundExpression<T extends ExpressionType = ExpressionTy
             throw new Error("The expression is not a direct child");
     }
 
-    allHoles(): Hole<any>[] {
-        return this._subexpressions.flatMap(subexpression => subexpression.allHoles());
+    allHolesOfType<S extends ExpressionType>(expressionType: S): Hole<S>[] {
+        return this._subexpressions.flatMap(subexpression => subexpression.allHolesOfType(expressionType));
     }
 }

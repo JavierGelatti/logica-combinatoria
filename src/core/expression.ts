@@ -85,5 +85,5 @@ export abstract class Expression<T extends ExpressionType = any> {
         return this._type === type;
     }
 
-    abstract allHoles(): Hole<any>[]
+    abstract allHolesOfType<T extends ExpressionType>(expressionType: T): Hole<T>[]
 }

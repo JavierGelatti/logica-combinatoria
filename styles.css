@@ -76,6 +76,13 @@
     min-width: .7em;
     height: 1em;
     transition: transform .2s, opacity .2s;
+    transform: scale(.8);
+    opacity: .5;
+
+    &[class*="drop-target-enabled-for"] {
+        transform: scale(1);
+        opacity: 1;
+    }
 
     &.drop-target {
         transform: scale(1.2);
@@ -98,7 +105,7 @@
 }
 
 .equality > .operator {
-    line-height: calc(1em + 10px);
+    transform: translateY(2px);
     margin: 0 var(--separation-margin);
 }
 

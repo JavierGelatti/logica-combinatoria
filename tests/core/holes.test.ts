@@ -8,7 +8,7 @@ import {
     identifier,
     truthHole,
 } from "../../src/core/expression_constructors.ts";
-import {Expression, Truth, Value} from "../../src/core/expression.ts";
+import {Expression, Truth, truthType, Value, valueType} from "../../src/core/expression.ts";
 import {Hole} from "../../src/core/hole.ts";
 
 describe("holes", () => {
@@ -71,6 +71,16 @@ describe("holes", () => {
             equality(hole1 = hole(), application(hole2 = hole(), identifier("x")))
         );
 
-        expect(expression.allHoles()).toEqual([hole1, hole2]);
+        expect(expression.allHolesOfType(valueType)).toEqual([hole1, hole2]);
+    });
+
+    test("only finds the holes of the given type", () => {
+        const expression1: Expression = exists(identifier("x"), truthHole());
+        const expression2: Expression = forall(identifier("x"), equality(hole(), hole()));
+
+        expect(expression1.allHolesOfType(truthType).length).toEqual(1);
+        expect(expression1.allHolesOfType(valueType).length).toEqual(0);
+        expect(expression2.allHolesOfType(truthType).length).toEqual(0);
+        expect(expression2.allHolesOfType(valueType).length).toEqual(2);
     });
 });

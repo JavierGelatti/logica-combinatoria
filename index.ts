@@ -1,8 +1,8 @@
 import {application, equality, exists, forall, hole, identifier, truthHole} from "./src/core/expression_constructors";
-import {ExpressionView} from "./src/dom/expression_view";
-import {Expression} from "./src/core/expression";
+import {ExpressionView, HoleView} from "./src/dom/expression_view";
+import {Expression, valueType} from "./src/core/expression";
 import {createElement} from "./src/dom/createElement";
-import {makeDropTarget} from "./src/dom/drag_and_drop";
+import {makeDropTarget, makeDropTargetExpecting} from "./src/dom/drag_and_drop";
 
 const mockingbird = forall(
     identifier("x"),
@@ -46,6 +46,7 @@ class ExpressionEditor {
     private readonly _domElement: HTMLElement;
     private _editorPallete!: HTMLElement;
     private _editorCanvas!: HTMLElement;
+    private _editorCanvasExpressions: ExpressionView[] = [];
 
     constructor() {
         this._domElement = this._createDomElement();
@@ -68,8 +69,12 @@ class ExpressionEditor {
             const droppedExpressionCopy = droppedExpression.copy();
 
             const expressionView = ExpressionView.forExpression(droppedExpressionCopy);
-            expressionView.makeDraggable({ dropEffect: "move" });
+            expressionView.makeDraggable({
+                dropEffect: "move",
+                onDragStart: () => this.onEditorExpressionPickUp(expressionView)
+            });
             this._editorCanvas.append(expressionView.domElement());
+            this._editorCanvasExpressions.push(expressionView);
         });
 
         makeDropTarget(this._editorPallete, droppedElement => {
@@ -97,7 +102,26 @@ class ExpressionEditor {
     }
 
     private onPalleteExpressionPickUp(pickedUpExpressionView: ExpressionView) {
+        this.onEditorExpressionPickUp(pickedUpExpressionView);
+    }
 
+    private onEditorExpressionPickUp(pickedUpExpressionView: ExpressionView<Expression<any>>) {
+        const pickedUpExpressionType = pickedUpExpressionView.expression.type();
+        this._editorCanvasExpressions.forEach(expressionView => {
+            const holes = expressionView.expression.allHolesOfType(pickedUpExpressionType);
+
+            const holeViews: HoleView<any>[] = holes.map(hole => ExpressionView.forExpression(hole));
+
+            holeViews.forEach(holeView => {
+                makeDropTargetExpecting(
+                    holeView.domElement(),
+                    pickedUpExpressionView.domElement(),
+                    () => {
+                        holeView.fillWith(pickedUpExpressionView);
+                    },
+                );
+            });
+        });
     }
 }
 

@@ -1,4 +1,4 @@
-import {Expression, Value, valueType} from "./expression.ts";
+import {Expression, ExpressionType, Value, valueType} from "./expression.ts";
 import {successfulUnification, unificationFailure, UnificationResult} from "./unificationResult.ts";
 import {Exists} from "./exists.ts";
 import { Hole } from "./hole.ts";
@@ -105,7 +105,7 @@ export class Identifier extends Expression<Value> {
         return this.isFree() ? new Set([this]) : new Set();
     }
 
-    allHoles(): Hole<any>[] {
+    allHolesOfType<S extends ExpressionType>(_expressionType: S): Hole<S>[] {
         return [];
     }
 }

@@ -48,7 +48,11 @@ export class Hole<T extends ExpressionType> extends Expression<T> {
         this._parent.fillHole(this, anExpression);
     }
 
-    allHoles(): Hole<any>[] {
-        return [this];
+    allHolesOfType<S extends ExpressionType>(expressionType: S): Hole<S>[] {
+        if (this.hasType(expressionType)) {
+            return [this as unknown as Hole<S>];
+        } else {
+            return [];
+        }
     }
 }
