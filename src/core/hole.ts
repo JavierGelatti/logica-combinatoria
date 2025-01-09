@@ -23,7 +23,7 @@ export class Hole extends Expression {
         return false;
     }
 
-    _containsOcurrenceOf(_identifierDeclaration: Identifier): boolean {
+    _containsOccurrenceOf(_identifierDeclaration: Identifier): boolean {
         return false;
     }
 

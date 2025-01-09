@@ -49,7 +49,7 @@ describe("holes", () => {
         expect(subexpression).toEqual(identifier("y"));
     });
 
-    test("cannot dettach an expression without parent (i.e. root expression)", () => {
+    test("cannot detach an expression without parent (i.e. root expression)", () => {
         const rootExpression = identifier("x");
 
         expect(() => {

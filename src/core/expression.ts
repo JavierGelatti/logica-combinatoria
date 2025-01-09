@@ -29,7 +29,7 @@ export abstract class Expression {
 
     protected abstract _contains(anExpression: Expression): boolean;
 
-    abstract _containsOcurrenceOf(identifierDeclaration: Identifier): boolean;
+    abstract _containsOccurrenceOf(identifierDeclaration: Identifier): boolean;
 
     commonAncestor(anotherExpression: Expression): Expression | undefined {
         if (this.contains(anotherExpression)) {

@@ -35,8 +35,8 @@ export abstract class CompoundExpression extends Expression {
         return this._subexpressions.some(subexpression => subexpression.contains(anExpression));
     }
 
-    _containsOcurrenceOf(identifierDeclaration: Identifier): boolean {
-        return this._subexpressions.some(subexpression => subexpression._containsOcurrenceOf(identifierDeclaration));
+    _containsOccurrenceOf(identifierDeclaration: Identifier): boolean {
+        return this._subexpressions.some(subexpression => subexpression._containsOccurrenceOf(identifierDeclaration));
     }
 
     freeVariables(): Set<Identifier> {

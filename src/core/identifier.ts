@@ -63,7 +63,7 @@ export class Identifier extends Expression {
             return successfulUnification();
         } else {
             if (!(anotherExpression instanceof Identifier)) {
-                if (anotherExpression._containsOcurrenceOf(declarationOfThis)) {
+                if (anotherExpression._containsOccurrenceOf(declarationOfThis)) {
                     return unificationFailure();
                 } else {
                     return successfulUnification([declarationOfThis, anotherExpression]);
@@ -94,7 +94,7 @@ export class Identifier extends Expression {
         return false;
     }
 
-    _containsOcurrenceOf(identifierDeclaration: Identifier): boolean {
+    _containsOccurrenceOf(identifierDeclaration: Identifier): boolean {
         return this.declaration() === identifierDeclaration;
     }
 
