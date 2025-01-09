@@ -1,6 +1,7 @@
 import {CompoundExpression} from "./compoundExpression.ts";
 import {UnificationResult} from "./unificationResult.ts";
 import {Identifier} from "./identifier.ts";
+import {Hole} from "./hole.ts";
 
 export abstract class Expression {
     protected _parent: CompoundExpression | undefined;
@@ -48,10 +49,10 @@ export abstract class Expression {
             .some(freeVariable => freeVariable.equals(aVariable));
     }
 
-    detachFromParent(): void {
+    detachFromParent(): Hole {
         if (this._parent === undefined) throw new Error("Cannot detach root expression");
 
-        this._parent.detachChild(this);
+        return this._parent.detachChild(this);
     }
 
     detachedFrom(oldParent: CompoundExpression) {
@@ -62,5 +63,9 @@ export abstract class Expression {
 
     needsParenthesis() {
         return false;
+    }
+
+    isRootExpression() {
+        return this._parent === undefined;
     }
 }

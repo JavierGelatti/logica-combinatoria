@@ -50,7 +50,9 @@ export abstract class CompoundExpression extends Expression {
     }
 
     detachChild(expressionToDetach: Expression) {
-        this.replaceDirectChild(expressionToDetach, hole());
+        const replacement = hole();
+        this.replaceDirectChild(expressionToDetach, replacement);
+        return replacement;
     }
 
     private replaceDirectChild(childToReplace: Expression, replacement: Expression) {

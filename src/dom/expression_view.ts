@@ -6,6 +6,8 @@ import {Equality} from "../core/equality.ts";
 import {Identifier} from "../core/identifier.ts";
 import {createElement} from "./createElement.ts";
 import {Hole} from "../core/hole.ts";
+import {DropEffect, makeDraggable, makeDropTarget} from "./drag_and_drop.ts";
+import {animateWith} from "./animation.ts";
 
 export abstract class ExpressionView<T extends Expression> {
     private static readonly modelKey = Symbol("model");
@@ -15,7 +17,7 @@ export abstract class ExpressionView<T extends Expression> {
         return element[this.modelKey];
     }
 
-    static forExpression(expression: Expression) {
+    static forExpression(expression: Expression): ExpressionView<Expression> {
         if (expression instanceof Identifier) {
             return new IdentifierView(expression);
         } else if (expression instanceof ForAll) {
@@ -44,6 +46,8 @@ export abstract class ExpressionView<T extends Expression> {
             // @ts-ignore
             this._domElement[ExpressionView.modelKey] = this;
 
+            this._domElement.classList.add("expression");
+
             if (this.expression.needsParenthesis()) {
                 this._domElement.prepend(leftParenthesis());
                 this._domElement.append(rightParenthesis());
@@ -54,6 +58,10 @@ export abstract class ExpressionView<T extends Expression> {
     }
 
     protected abstract _createDomElement(): HTMLElement
+
+    makeDraggable(onDrop: () => void = () => {}, dropEffect: DropEffect = "copy"): void {
+        makeDraggable(this.domElement(), onDrop, dropEffect);
+    }
 }
 
 export class ApplicationView extends ExpressionView<Application> {
@@ -94,15 +102,10 @@ export class ExistsView extends ExpressionView<Exists> {
 
 export class EqualityView extends ExpressionView<Equality> {
     protected _createDomElement(): HTMLElement {
-        const leftElement = ApplicationView.forExpression(this.expression.left).domElement();
-        makeDraggable(leftElement);
-        const rightElement = ApplicationView.forExpression(this.expression.right).domElement();
-        makeDraggable(rightElement);
-
         return createElement("span", {className: "equality" }, [
-            leftElement,
+            ApplicationView.forExpression(this.expression.left).domElement(),
             createElement("span", { className: "operator", textContent: "=" }),
-            rightElement,
+            ApplicationView.forExpression(this.expression.right).domElement(),
         ]);
     }
 }
@@ -122,14 +125,14 @@ export class IdentifierView extends ExpressionView<Identifier> {
 export class HoleView extends ExpressionView<Hole> {
     protected _createDomElement(): HTMLElement {
         const element = createElement("span", { className: "hole" });
-        makeDropTarget(element, droppedExpression => {
+        makeDropTarget(element, droppedElement => {
+            const droppedExpression = ExpressionView.forDomElement(droppedElement)!.expression;
             const droppedExpressionCopy = droppedExpression.copy();
             this.expression.fillWith(droppedExpressionCopy);
-            const newExpressionElement = ExpressionView.forExpression(droppedExpressionCopy).domElement();
-            newExpressionElement.classList.add("just-added");
-            newExpressionElement.addEventListener("animationend", () => {
-                newExpressionElement.classList.remove("just-added");
-            }, { once: true });
+            const newExpressionView = ExpressionView.forExpression(droppedExpressionCopy);
+            newExpressionView.makeDraggable();
+            const newExpressionElement = newExpressionView.domElement();
+            animateWith(newExpressionElement, "just-added");
             element.replaceWith(newExpressionElement);
         });
         return element;
@@ -156,37 +159,3 @@ function rightParenthesis() {
     return createElement("span", {className: "parenthesis", textContent: ")"});
 }
 
-function makeDraggable(element: HTMLElement) {
-    element.id = crypto.randomUUID();
-    element.setAttribute("draggable", "true");
-    element.addEventListener("dragstart", (e) => {
-        if (e.dataTransfer !== null) {
-            e.dataTransfer.setData("text/plain", element.id);
-            e.dataTransfer.dropEffect = "copy";
-        }
-    });
-}
-
-function makeDropTarget(element: HTMLElement, onDrop: (droppedExpression: Expression) => void) {
-    element.addEventListener("dragenter", (e) => {
-        element.classList.add("drop-target");
-        e.preventDefault();
-    });
-    element.addEventListener("dragover", (e) => {
-        e.preventDefault();
-    });
-    element.addEventListener("dragleave", (e) => {
-        element.classList.remove("drop-target");
-        e.preventDefault();
-    });
-    element.addEventListener("drop", (e) => {
-        element.classList.remove("drop-target");
-        const sourceElementId = e.dataTransfer!.getData("text/plain");
-        const sourceElement = document.getElementById(sourceElementId)!;
-        const sourceView = ExpressionView.forDomElement(sourceElement)!;
-
-        onDrop(sourceView.expression);
-
-        e.preventDefault();
-    });
-}
