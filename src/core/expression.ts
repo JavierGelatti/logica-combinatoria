@@ -9,9 +9,9 @@ export type Value = typeof valueType;
 export type Truth = typeof truthType;
 export type ExpressionType = Value | Truth;
 
-export abstract class Expression<T extends ExpressionType = ExpressionType> {
+export abstract class Expression<T extends ExpressionType = any> {
     protected abstract _type: T;
-    protected _parent: CompoundExpression | undefined;
+    protected _parent: CompoundExpression<any> | undefined;
 
     equals(anotherObject: unknown): boolean {
         if (!(anotherObject instanceof this.constructor)) return false;
