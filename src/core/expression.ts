@@ -86,4 +86,8 @@ export abstract class Expression<T extends ExpressionType = any> {
     }
 
     abstract allHolesOfType<T extends ExpressionType>(expressionType: T): Hole<T>[]
+
+    isComplete() {
+        return this.allHolesOfType(valueType).length === 0 && this.allHolesOfType(truthType).length === 0;
+    }
 }

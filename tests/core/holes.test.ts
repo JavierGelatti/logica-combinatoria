@@ -83,4 +83,19 @@ describe("holes", () => {
         expect(expression2.allHolesOfType(truthType).length).toEqual(0);
         expect(expression2.allHolesOfType(valueType).length).toEqual(2);
     });
+
+    test("an expression with holes is not complete", () => {
+        const expression1: Expression = exists(identifier("x"), truthHole());
+        const expression2: Expression = forall(identifier("x"), equality(identifier("x"), hole()));
+
+        expect(expression1.isComplete()).toBe(false);
+        expect(expression2.isComplete()).toBe(false);
+    });
+
+    test("an expression without holes is complete", () => {
+        const expressionWithoutHoles: Expression =
+            exists(identifier("x"), equality(identifier("x"), identifier("x")));
+
+        expect(expressionWithoutHoles.isComplete()).toBe(true);
+    });
 });
