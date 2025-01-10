@@ -1,3 +1,5 @@
+import {isUUID, randomUUID} from "./uuid.ts";
+
 export type DropEffect = typeof DataTransfer.prototype.dropEffect;
 type DragEventType = "drag" | "dragend" | "dragenter" | "dragleave" | "dragover" | "dragstart" | "drop";
 
@@ -7,23 +9,6 @@ export type DraggableConfiguration = {
     onDragEnd?: () => void,
     dropEffect?: DropEffect,
 };
-
-function randomUUID() {
-    if (!crypto.randomUUID) {
-        return `${randomDigits(8)}-${randomDigits(4)}-${randomDigits(4)}-${randomDigits(4)}-${randomDigits(12)}` as const;
-
-        function randomDigits(digits: number) {
-            return Math.random().toString(16).substring(2, digits + 2);
-        }
-    }
-
-    return crypto.randomUUID();
-}
-
-function isUUID(text: string) {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-    return uuidRegex.test(text);
-}
 
 export function makeDraggable(
     element: HTMLElement,
