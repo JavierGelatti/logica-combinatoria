@@ -19,4 +19,10 @@ export class Application extends BinaryExpression<Value, Value> {
     needsParenthesis() {
         return this._parent instanceof Application;
     }
+
+    toString(): string {
+        const representationWithoutParenthesis = `${this.functionBeingApplied.toString()} ${this.argument.toString()}`;
+
+        return this.needsParenthesis() ? `(${representationWithoutParenthesis})` : representationWithoutParenthesis;
+    }
 }

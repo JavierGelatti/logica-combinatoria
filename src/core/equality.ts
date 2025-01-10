@@ -7,4 +7,8 @@ export class Equality extends BinaryExpression<Value, Truth> {
     constructor(left: Expression<Value>, right: Expression<Value>) {
         super(left, right, Equality);
     }
+
+    toString(): string {
+        return `${this.left} = ${this.right}`;
+    }
 }

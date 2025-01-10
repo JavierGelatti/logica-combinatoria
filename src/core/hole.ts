@@ -55,4 +55,8 @@ export class Hole<T extends ExpressionType> extends Expression<T> {
             return [];
         }
     }
+
+    toString(): string {
+        return "_";
+    }
 }

@@ -6,4 +6,8 @@ export class ForAll extends Binder {
     constructor(boundVariable: Identifier, expression: Expression<Truth>) {
         super(boundVariable, expression, ForAll);
     }
+
+    toString(): string {
+        return `(∀${this.boundVariable.toString()}) ${this.body.toString()}`;
+    }
 }

@@ -108,4 +108,12 @@ export class Identifier extends Expression<Value> {
     allHolesOfType<S extends ExpressionType>(_expressionType: S): Hole<S>[] {
         return [];
     }
+
+    toString(): string {
+        if (this.subscript !== undefined) {
+            return `${String(this.name)}_${this.subscript}`;
+        } else {
+            return String(this.name);
+        }
+    }
 }

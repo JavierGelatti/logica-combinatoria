@@ -90,4 +90,6 @@ export abstract class Expression<T extends ExpressionType = any> {
     isComplete() {
         return this.allHolesOfType(valueType).length === 0 && this.allHolesOfType(truthType).length === 0;
     }
+
+    abstract toString(): string;
 }
