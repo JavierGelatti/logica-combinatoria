@@ -29,7 +29,7 @@ show(mockingbird);
 const aForAll = forall(
     identifier("x"),
     forall(identifier("y"),
-        equality(hole(), identifier("x"))
+        equality(identifier("y"), identifier("x"))
     )
 );
 // const argument = application(identifier("y"), identifier("y", 0));

@@ -77,10 +77,18 @@ export abstract class Binder extends CompoundExpression<Truth> {
     }
 
     renameVariableTo(newName: Identifier) {
-        if (this.freeVariablesContain(newName)) throw new Error(`Cannot rename: ${newName} is free in the expression`);
+        if (this.hasLocallyUnbound(newName)) {
+            throw new Error(`Cannot rename: ${newName} is free in the expression`);
+        }
+
         return new this._species(
             newName.copy(),
             this.applyTo(newName)
         );
+    }
+
+    public hasLocallyUnbound(newName: Identifier) {
+        // If this returns true, the variable is either (globally) free, or it's bound outside of this expression.
+        return this.copy().freeVariablesContain(newName);
     }
 }

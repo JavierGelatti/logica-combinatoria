@@ -111,7 +111,7 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
         const subscript = matchResult[2] !== "" ? Number(matchResult[2]) : undefined;
         const newIdentifier = identifier(name, subscript);
 
-        if (this.expression.freeVariablesContain(newIdentifier)) {
+        if (this.expression.hasLocallyUnbound(newIdentifier)) {
             return this.promptVariableRename("No se puede renombrar: el nombre aparece libre en la expresión", newIdentifier.toString());
         }
 
