@@ -8,13 +8,25 @@ export type DraggableConfiguration = {
     dropEffect?: DropEffect,
 };
 
+function randomId() {
+    if (!crypto.randomUUID) {
+        return `${randomDigits(8)}-${randomDigits(4)}-${randomDigits(4)}-${randomDigits(4)}-${randomDigits(12)}` as const;
+
+        function randomDigits(digits: number) {
+            return Math.random().toString(16).substring(2, digits + 2);
+        }
+    }
+
+    return crypto.randomUUID();
+}
+
 export function makeDraggable(
     element: HTMLElement,
     configuration: DraggableConfiguration = {}
 ) {
     const { onDragStart, onDrop, onDragEnd, dropEffect } = Object.assign({ dropEffect: "copy" }, configuration);
 
-    element.id = crypto.randomUUID();
+    element.id = randomId();
     element.setAttribute("draggable", "true");
     element.addEventListener("dragstart", (e) => {
         if (e.dataTransfer === null) return;
