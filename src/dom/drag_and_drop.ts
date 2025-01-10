@@ -76,13 +76,14 @@ export function makeDropTargetExpecting(
     const enabledDropTargetClass = `drop-target-enabled-for-${expectedElementId}`;
     dropTargetElement.classList.add(enabledDropTargetClass);
 
-    addEventListenerToTarget("dragenter", (e) => {
+    addEventListenerToTarget("dragenter", () => {
         dropTargetElement.classList.add("drop-target");
     });
     addEventListenerToTarget("dragover", (e) => {
+        dropTargetElement.classList.add("drop-target");
         e.stopPropagation();
     });
-    addEventListenerToTarget("dragleave", (e) => {
+    addEventListenerToTarget("dragleave", () => {
         dropTargetElement.classList.remove("drop-target");
     });
     addEventListenerToTarget("drop", (e) => {
@@ -93,7 +94,7 @@ export function makeDropTargetExpecting(
         e.stopPropagation();
     });
 
-    expectedDropElement.addEventListener("dragend", (e) => {
+    expectedDropElement.addEventListener("dragend", () => {
         endInteraction();
     }, { signal: abortController.signal });
 

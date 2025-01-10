@@ -146,10 +146,10 @@ export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> 
             const droppedExpressionCopy = droppedExpression.copy();
             this.expression.fillWith(droppedExpressionCopy);
             const newExpressionView = ExpressionView.forExpression(droppedExpressionCopy);
-            newExpressionView.makeDraggable();
             const newExpressionElement = newExpressionView.domElement();
             animateWith(newExpressionElement, "just-added");
             this.domElement().replaceWith(newExpressionElement);
+            return newExpressionView;
         }
     }
 }

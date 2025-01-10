@@ -58,7 +58,7 @@
     &.just-added {
         animation: shake .3s;
 
-        --text-shadow: rgba(126, 126, 126, 0.2);
+        --text-shadow: rgba(255, 255, 0, 0.2);
     }
 }
 
@@ -75,16 +75,18 @@
     background: rgba(0, 0, 0, .2);
     min-width: .7em;
     height: 1em;
-    transition: transform .2s, opacity .2s;
+    transition: transform .2s, opacity .2s, background-color .2s;
     transform: scale(.8);
     opacity: .5;
 
     &[class*="drop-target-enabled-for"] {
+        background: rgba(34, 139, 34, .05);
         transform: scale(1);
         opacity: 1;
     }
 
     &.drop-target {
+        background: rgba(34, 139, 34, .2);
         transform: scale(1.2);
         opacity: .8;
     }
@@ -165,12 +167,46 @@
             padding-left: .3em;
             padding-right: .3em;
         }
+
+        &[class*="drop-target-enabled-for"] {
+            background: rgba(255, 0, 0, .05);
+            transition: background-color .2s;
+        }
+
+        &.drop-target {
+            background: rgba(255, 0, 0, 0.2);
+        }
     }
 
     .canvas {
+        margin: .5em 0;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
+
+        .new-expression-drop-target {
+            align-self: stretch;
+            text-align: center;
+            flex-grow: 1;
+
+            &[class*="drop-target-enabled-for"] {
+                background: rgba(34, 139, 34, .05);
+                transition: background-color .2s;
+
+                &::after {
+                    content: '➕ Nueva expresión';
+                    text-align: center;
+                    font-family: sans-serif;
+                    font-size: .5em;
+                    padding-top: 1em;
+                    opacity: .5;
+                }
+            }
+
+            &.drop-target {
+                background: rgba(34, 139, 34, .2);
+            }
+        }
     }
 }

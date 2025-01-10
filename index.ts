@@ -1,8 +1,9 @@
 import {application, equality, exists, forall, hole, identifier, truthHole} from "./src/core/expression_constructors";
 import {ExpressionView, HoleView} from "./src/dom/expression_view";
-import {Expression, valueType} from "./src/core/expression";
+import {Expression} from "./src/core/expression";
 import {createElement} from "./src/dom/createElement";
-import {makeDropTarget, makeDropTargetExpecting} from "./src/dom/drag_and_drop";
+import {makeDropTargetExpecting} from "./src/dom/drag_and_drop";
+import {animateWith} from "./src/dom/animation";
 
 const mockingbird = forall(
     identifier("x"),
@@ -46,6 +47,7 @@ class ExpressionEditor {
     private readonly _domElement: HTMLElement;
     private _editorPallete!: HTMLElement;
     private _editorCanvas!: HTMLElement;
+    private _newExpressionDropTarget!: HTMLElement;
     private _editorCanvasExpressions: ExpressionView[] = [];
 
     constructor() {
@@ -57,39 +59,12 @@ class ExpressionEditor {
     }
 
     private _createDomElement(): HTMLElement {
-        const editor = createElement("div", { className: "expression-editor" }, [
-            this._editorPallete = createElement("div", { className: "pallete" }),
-            this._editorCanvas = createElement("div", { className: "canvas" })
+        return createElement("div", {className: "expression-editor"}, [
+            this._editorPallete = createElement("div", {className: "pallete"}),
+            this._editorCanvas = createElement("div", {className: "canvas"}, [
+                this._newExpressionDropTarget = createElement("div", {className: "new-expression-drop-target"})
+            ])
         ]);
-
-        makeDropTarget(this._editorCanvas, droppedElement => {
-            const droppedExpression = ExpressionView.forDomElement(droppedElement)!.expression;
-            if (!droppedExpression.isRootExpression()) return;
-
-            const droppedExpressionCopy = droppedExpression.copy();
-
-            const expressionView = ExpressionView.forExpression(droppedExpressionCopy);
-            expressionView.makeDraggable({
-                dropEffect: "move",
-                onDragStart: () => this.onEditorExpressionPickUp(expressionView)
-            });
-            this._editorCanvas.append(expressionView.domElement());
-            this._editorCanvasExpressions.push(expressionView);
-        });
-
-        makeDropTarget(this._editorPallete, droppedElement => {
-            const droppedExpressionView = ExpressionView.forDomElement(droppedElement)!;
-            const droppedExpression = droppedExpressionView.expression;
-
-            if (!droppedExpression.isRootExpression()) {
-                const newHole = droppedExpression.detachFromParent();
-                droppedExpressionView.domElement().replaceWith(
-                    ExpressionView.forExpression(newHole).domElement()
-                )
-            }
-        });
-
-        return editor;
     }
 
     addToPallete(expression: Expression) {
@@ -102,6 +77,43 @@ class ExpressionEditor {
     }
 
     private onPalleteExpressionPickUp(pickedUpExpressionView: ExpressionView) {
+        if (pickedUpExpressionView.expression.isRootExpression()) {
+            makeDropTargetExpecting(this._newExpressionDropTarget, pickedUpExpressionView.domElement(), () => {
+                const droppedExpressionCopy = pickedUpExpressionView.expression.copy();
+
+                const expressionView = ExpressionView.forExpression(droppedExpressionCopy);
+                this._makeDraggable(expressionView);
+                this._editorCanvas.insertBefore(expressionView.domElement(), this._newExpressionDropTarget);
+                animateWith(expressionView.domElement(), "just-added");
+                this._editorCanvasExpressions.push(expressionView);
+            });
+        }
+
+        this.onEditorExpressionPickUp(pickedUpExpressionView);
+    }
+
+    private _makeDraggable(expressionView: ExpressionView<Expression>) {
+        expressionView.makeDraggable({
+            dropEffect: "move",
+            onDragStart: () => this.onExistingExpressionPickUp(expressionView),
+        });
+    }
+
+    private onExistingExpressionPickUp(pickedUpExpressionView: ExpressionView<Expression<any>>) {
+        makeDropTargetExpecting(this._editorPallete, pickedUpExpressionView.domElement(), () => {
+            const droppedExpression = pickedUpExpressionView.expression;
+
+            if (!droppedExpression.isRootExpression()) {
+                const newHole = droppedExpression.detachFromParent();
+                pickedUpExpressionView.domElement().replaceWith(
+                    ExpressionView.forExpression(newHole).domElement()
+                )
+            } else if (this._editorCanvasExpressions.includes(pickedUpExpressionView)) {
+                this._editorCanvasExpressions.splice(this._editorCanvasExpressions.indexOf(pickedUpExpressionView), 1);
+                pickedUpExpressionView.domElement().remove();
+            }
+        });
+
         this.onEditorExpressionPickUp(pickedUpExpressionView);
     }
 
@@ -117,7 +129,8 @@ class ExpressionEditor {
                     holeView.domElement(),
                     pickedUpExpressionView.domElement(),
                     () => {
-                        holeView.fillWith(pickedUpExpressionView);
+                        const newExpressionView = holeView.fillWith(pickedUpExpressionView)!;
+                        this._makeDraggable(newExpressionView);
                     },
                 );
             });
