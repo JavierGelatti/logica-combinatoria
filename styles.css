@@ -154,14 +154,25 @@
     margin: 1em auto 0;
 
     .pallete {
-        border-right: 1px solid gray;
-        padding-right: .5em;
-        margin: .5em;
+        padding: 0 .5em;
+        margin: .5em .5em .5em 0;
         max-width: 80px;
         gap: 1px 20px;
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
+        position: relative;
+
+        &::before {
+            background: gray;
+            content: ' ';
+            width: 1px;
+            position: absolute;
+            right: -.5em;
+            transform: translateX(50%);
+            top: 0;
+            bottom: 0;
+        }
 
         & > .identifier {
             padding-left: .3em;
@@ -179,7 +190,8 @@
     }
 
     .canvas {
-        margin: .5em 0;
+        padding: .5em 0;
+        margin: .5em 0 .5em .5em;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
