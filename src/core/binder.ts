@@ -75,4 +75,12 @@ export abstract class Binder extends CompoundExpression<Truth> {
             this._body = replacement as Expression<Truth>;
         }
     }
+
+    renameVariableTo(newName: Identifier) {
+        if (this.freeVariablesContain(newName)) throw new Error(`Cannot rename: ${newName} is free in the expression`);
+        return new this._species(
+            newName.copy(),
+            this.applyTo(newName)
+        );
+    }
 }
