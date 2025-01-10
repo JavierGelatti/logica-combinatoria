@@ -17,12 +17,12 @@ export function makeDraggable(
     element.id = crypto.randomUUID();
     element.setAttribute("draggable", "true");
     element.addEventListener("dragstart", (e) => {
-        if (e.dataTransfer !== null) {
-            e.dataTransfer.setData("text/plain", element.id);
-            e.dataTransfer.dropEffect = dropEffect;
-            onDragStart?.();
-            e.stopPropagation();
-        }
+        if (e.dataTransfer === null) return;
+
+        e.dataTransfer.setData(element.id, "");
+        e.dataTransfer.dropEffect = dropEffect;
+        onDragStart?.();
+        e.stopPropagation();
     });
     element.addEventListener("dragend", (e) => {
         if (e.dataTransfer && e.dataTransfer.dropEffect !== "none") {
@@ -71,7 +71,7 @@ export function makeDropTargetExpecting(
         dropTargetElement.addEventListener(
             type,
             function(event) {
-                const sourceElementId = event.dataTransfer?.getData("text/plain");
+                const sourceElementId = event.dataTransfer?.types[0];
                 if (sourceElementId === expectedElementId) {
                     listener.bind(this)(event);
                     event.preventDefault();
