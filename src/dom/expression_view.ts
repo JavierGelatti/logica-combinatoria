@@ -8,6 +8,8 @@ import {createElement} from "./createElement.ts";
 import {Hole} from "../core/hole.ts";
 import {DraggableConfiguration, makeDraggable} from "./drag_and_drop.ts";
 import {animateWith} from "./animation.ts";
+import {Binder} from "../core/binder.ts";
+import {identifier} from "../core/expression_constructors.ts";
 
 export abstract class ExpressionView<T extends Expression = Expression> {
     private static readonly modelKey = Symbol("model");
@@ -89,28 +91,64 @@ export class ApplicationView extends ExpressionView<Application> {
     }
 }
 
-export class ForAllView extends ExpressionView<ForAll> {
+abstract class BinderView<T extends Binder> extends ExpressionView<T> {
+    protected abstract _binderSymbol: string;
+
+    promptVariableRename(
+        promptText: string = "Nuevo nombre",
+        promptInitialValue: string = this.expression.boundVariable.toString()
+    ): void {
+        const newName = prompt(promptText, promptInitialValue)?.trim();
+        if (newName === undefined) return;
+
+        const nameRegex = /^([^\s\d]\S*?)_?(\d*)$/;
+        const matchResult = newName.match(nameRegex);
+        if (matchResult === null) {
+            return this.promptVariableRename("Nombre inválido", newName);
+        }
+
+        const name = matchResult[1];
+        const subscript = matchResult[2] !== "" ? Number(matchResult[2]) : undefined;
+        const newIdentifier = identifier(name, subscript);
+
+        if (this.expression.freeVariablesContain(newIdentifier)) {
+            return this.promptVariableRename("No se puede renombrar: el nombre aparece libre en la expresión", newIdentifier.toString());
+        }
+
+        const newExpression = this.expression.renameVariableTo(newIdentifier);
+        if (!this.expression.isRootExpression()) {
+            this.expression.detachFromParent().fillWith(newExpression);
+        }
+        const newExpressionView = ExpressionView.forExpression(newExpression);
+        this.domElement().replaceWith(newExpressionView.domElement());
+    }
+
+    protected _binderElement(name: string) {
+        return createElement("span", { className: "binder", textContent: name });
+    }
+
     protected _createDomElement(): HTMLElement {
-        return createElement("span", {className: "forall" }, [
-            ...parenthesized(
-                binder("∀"),
-                ApplicationView.forExpression(this.expression.boundVariable).domElement()
-            ),
+        return createElement("span", {className: "exists" }, [
+            createElement(
+                "span",
+                {className: "full-binder", ondblclick: () => this.promptVariableRename()},
+                [
+                    ...parenthesized(
+                        this._binderElement(this._binderSymbol),
+                        ApplicationView.forExpression(this.expression.boundVariable).domElement()
+                    ),
+                ]),
             ApplicationView.forExpression(this.expression.body).domElement(),
         ]);
     }
 }
 
-export class ExistsView extends ExpressionView<Exists> {
-    protected _createDomElement(): HTMLElement {
-        return createElement("span", {className: "exists" }, [
-            ...parenthesized(
-                binder("∃"),
-                ApplicationView.forExpression(this.expression.boundVariable).domElement()
-            ),
-            ApplicationView.forExpression(this.expression.body).domElement(),
-        ]);
-    }
+export class ForAllView extends BinderView<ForAll> {
+    protected _binderSymbol = "∀";
+}
+
+export class ExistsView extends BinderView<Exists> {
+    protected _binderSymbol = "∃";
 }
 
 export class EqualityView extends ExpressionView<Equality> {
@@ -152,10 +190,6 @@ export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> 
             return newExpressionView;
         }
     }
-}
-
-function binder(name: string) {
-    return createElement("span", { className: "binder", textContent: name });
 }
 
 function parenthesized(...elements: Element[]) {

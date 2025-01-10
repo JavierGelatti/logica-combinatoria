@@ -25,7 +25,7 @@
     font-style: normal;
 }
 
-.expression {
+.expression, .full-binder {
     font-family: 'KaTeX_Size1', serif;
     font-size: 20px;
     display: flex;
@@ -36,8 +36,7 @@
     padding: 0 1px 0;
     border-radius: 4px;
     user-select: none;
-    /*cursor: pointer;*/
-    /*margin: 1px;*/
+    margin: 1px;
     /*border: 1px solid rgba(255, 0, 0, .5);*/
 
     --separation-margin: 3px;
@@ -122,6 +121,17 @@
 
 .binder {
     color: darkgoldenrod;
+}
+
+.full-binder {
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(34, 139, 34, .1);
+    }
+    &:active {
+        background: rgba(34, 139, 34, .2);
+    }
 }
 
 .identifier {
