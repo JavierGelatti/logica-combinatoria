@@ -20,7 +20,7 @@ export function makeDraggable(
 
     const abortController = new AbortController();
 
-    element.id = element.id ?? randomUUID();
+    if (element.id === "") element.id = randomUUID();
     element.setAttribute("draggable", "true");
     addEventListenerToElement("dragstart", (e) => {
         // See comment [657fabfb-7fbe-46ab-805e-cc1a74517ff4]
