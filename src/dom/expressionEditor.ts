@@ -10,6 +10,7 @@ export class ExpressionEditor {
     private _editorPallete!: HTMLElement;
     private _editorCanvas!: HTMLElement;
     private _newExpressionDropTargetElement!: HTMLElement;
+    private _deleteExpressionDropTargetElement!: HTMLElement;
     private _editorCanvasExpressions: ExpressionView[] = [];
     private _currentInteraction: UserInteraction | undefined = undefined;
 
@@ -23,7 +24,9 @@ export class ExpressionEditor {
 
     private _createDomElement(): HTMLElement {
         return createElement("div", {className: "expression-editor"}, [
-            this._editorPallete = createElement("div", {className: "pallete"}),
+            this._editorPallete = createElement("div", {className: "pallete"}, [
+                this._deleteExpressionDropTargetElement = createElement("div", {className: "delete-expression-drop-target"})
+            ]),
             this._editorCanvas = createElement("div", {className: "canvas"}, [
                 this._newExpressionDropTargetElement = createElement("div", {className: "new-expression-drop-target"}),
             ]),
@@ -103,7 +106,7 @@ export class ExpressionEditor {
 
     private _deleteExpressionDropTarget() {
         return new DropTarget(
-            this._editorPallete,
+            this._deleteExpressionDropTargetElement,
             (droppedExpressionView) => {
                 if (droppedExpressionView.isForRootExpression()) {
                     this.removeFromCanvas(droppedExpressionView);

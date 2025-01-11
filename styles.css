@@ -203,12 +203,24 @@
             padding-right: .3em;
         }
 
-        &[class*="drop-target-enabled-for"] {
-            background: rgba(255, 0, 0, .05);
-            transition: background-color .2s;
+        .delete-expression-drop-target {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: red;
+            display: none;
+            z-index: 1;
 
-            &.drop-target, &:hover {
-                background: rgba(255, 0, 0, 0.2);
+            &[class*="drop-target-enabled-for"] {
+                display: block;
+                background: rgba(255, 0, 0, .05);
+                transition: background-color .2s;
+
+                &.drop-target, &:hover {
+                    background: rgba(255, 0, 0, 0.2);
+                }
             }
         }
     }
