@@ -2,9 +2,11 @@ import {ExpressionEditor} from "../expressionEditor.ts";
 import {ExpressionView} from "../expression_view.ts";
 import {makeDraggable, makeDropTargetExpecting} from "../essentials/drag_and_drop.ts";
 import {UserInteraction} from "./userInteraction.ts";
+import {addCancelableListener} from "../essentials/addCancelableListener.ts";
 
 export class GrabInteraction extends UserInteraction {
     private _unmakeDraggable: (() => void) | undefined;
+    private _unmakeClickable: (() => void) | undefined;
     private _dropTargetDeactivators: (() => void)[] | undefined;
 
     constructor(
@@ -16,11 +18,13 @@ export class GrabInteraction extends UserInteraction {
     }
 
     register() {
-        this._unmakeDraggable = makeDraggable(this.expressionView.domElement(), {
+        const domElement = this.expressionView.domElement();
+        this._unmakeDraggable = makeDraggable(domElement, {
             onDragStart: () => this.start(),
             onDrop: () => this.finish(),
             onDragCancel: () => this.cancel(),
         });
+        this._unmakeClickable = addCancelableListener(domElement, "click", () => this.start());
     }
 
     protected _start(): void {
@@ -29,7 +33,22 @@ export class GrabInteraction extends UserInteraction {
 
     private _activateDropTargets() {
         this._dropTargetDeactivators = this.currentDropTargets(this.expressionView)
-            .map(dropTarget => dropTarget.activateOn(this.expressionView));
+            .map(dropTarget => {
+                const dropDeactivator = dropTarget.activateOn(this.expressionView);
+                const clickDeactivator = addCancelableListener(
+                    dropTarget.element,
+                    "click",
+                    () => {
+                        dropTarget.onDrop(this.expressionView);
+                        this.finish();
+                    }
+                )
+
+                return () => {
+                    dropDeactivator();
+                    clickDeactivator();
+                };
+            });
     }
 
     protected _cancel() {
@@ -47,13 +66,14 @@ export class GrabInteraction extends UserInteraction {
 
     unregister(): void {
         this._unmakeDraggable?.();
+        this._unmakeClickable?.();
     }
 }
 
 export class DropTarget {
     constructor(
-        private element: HTMLElement,
-        private onDrop: (droppedExpressionView: ExpressionView) => void,
+        public readonly element: HTMLElement,
+        public readonly onDrop: (droppedExpressionView: ExpressionView) => void,
     ) {
     }
 

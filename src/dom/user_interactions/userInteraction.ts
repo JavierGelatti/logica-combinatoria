@@ -8,8 +8,9 @@ export abstract class UserInteraction {
     abstract register(): void;
 
     start(): void {
-        this._start();
+        // The order is important: the editor will cancel the current interaction (if any) before starting this one.
         this.editor.startedInteraction(this);
+        this._start();
     }
 
     protected abstract _start(): void;
