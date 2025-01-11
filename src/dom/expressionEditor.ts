@@ -4,6 +4,7 @@ import {Expression, ExpressionType} from "../core/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
+import {removeElementFrom} from "./essentials/removeElementFrom.ts";
 
 export class ExpressionEditor {
     private readonly _domElement: HTMLElement;
@@ -120,7 +121,7 @@ export class ExpressionEditor {
     private removeFromCanvas(expressionView: ExpressionView) {
         if (!this._editorCanvasExpressions.includes(expressionView)) return;
 
-        this._editorCanvasExpressions.splice(this._editorCanvasExpressions.indexOf(expressionView), 1);
+        removeElementFrom(expressionView, this._editorCanvasExpressions);
         expressionView.domElement().remove();
     }
 
