@@ -2,7 +2,7 @@ import {ExpressionEditor} from "../expressionEditor.ts";
 import {ExpressionView} from "../expression_view.ts";
 import {makeDraggable, makeDropTargetExpecting} from "../essentials/drag_and_drop.ts";
 import {UserInteraction} from "./userInteraction.ts";
-import {addCancelableListener} from "../essentials/addCancelableListener.ts";
+import { onClick } from "../essentials/onClick.ts";
 
 export class GrabInteraction extends UserInteraction {
     private _grabDeactivators: (() => void)[] | undefined;
@@ -24,10 +24,9 @@ export class GrabInteraction extends UserInteraction {
                 onDrop: () => this.finish(),
                 onDragCancel: () => this.cancel(),
             }),
-            addCancelableListener(domElement, "click", event => {
+            onClick(domElement, () => {
                 this.expressionView.domElement().classList.add("grabbed");
                 this.start();
-                event.stopPropagation();
             })
         ];
     }
@@ -40,22 +39,16 @@ export class GrabInteraction extends UserInteraction {
         this._dropTargetDeactivators = this.currentDropTargets(this.expressionView)
             .flatMap(dropTarget => {
                 const dropDeactivator = dropTarget.activateOn(this.expressionView);
-                const clickInsideDeactivator = addCancelableListener(
+                const clickInsideDeactivator = onClick(
                     dropTarget.element,
-                    "click",
-                    event => {
+                    () => {
                         dropTarget.onDrop(this.expressionView);
                         this.finish();
-                        event.stopPropagation();
                     }
                 );
-                const clickOutsideDeactivator = addCancelableListener(
+                const clickOutsideDeactivator = onClick(
                     document.body,
-                    "click",
-                    event => {
-                        this.cancel();
-                        event.stopPropagation();
-                    }
+                    () => this.cancel()
                 );
 
                 return [dropDeactivator, clickInsideDeactivator, clickOutsideDeactivator];
