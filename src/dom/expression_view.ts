@@ -4,13 +4,11 @@ import {ForAll} from "../core/forAll.ts";
 import {Exists} from "../core/exists.ts";
 import {Equality} from "../core/equality.ts";
 import {Identifier} from "../core/identifier.ts";
-import {createElement} from "./createElement.ts";
+import {createElement} from "./essentials/createElement.ts";
 import {Hole} from "../core/hole.ts";
-import {animateWith} from "./animation.ts";
+import {animateWith} from "./essentials/animation.ts";
 import {Binder} from "../core/binder.ts";
 import {identifier} from "../core/expression_constructors.ts";
-import {DropTarget} from "./dropTarget.ts";
-import {makeDraggable} from "./drag_and_drop.ts";
 
 export abstract class ExpressionView<T extends Expression = Expression> {
     private static readonly modelKey = Symbol("model");
@@ -74,15 +72,6 @@ export abstract class ExpressionView<T extends Expression = Expression> {
     }
 
     protected abstract _createDomElement(): HTMLElement
-
-    makeDraggable(currentDropTargets: (grabbedExpressionView: ExpressionView) => DropTarget[]) {
-        makeDraggable(this.domElement(), {
-            onDragStart: () => {
-                currentDropTargets(this).forEach(dropTarget => dropTarget.activateOn(this))
-            }
-        });
-    }
-
     expressionType() {
         return this.expression.type();
     }

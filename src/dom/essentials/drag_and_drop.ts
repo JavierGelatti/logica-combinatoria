@@ -2,25 +2,27 @@ import {isUUID, randomUUID} from "./uuid.ts";
 
 export type DropEffect = typeof DataTransfer.prototype.dropEffect;
 type DragEventType = "drag" | "dragend" | "dragenter" | "dragleave" | "dragover" | "dragstart" | "drop";
+type DragEventWithDataTransfer = DragEvent & { readonly dataTransfer: DataTransfer };
 
 export type DraggableConfiguration = {
     onDragStart?: () => void,
     onDrop?: () => void,
-    onDragEnd?: () => void,
+    onDragCancel?: () => void,
     dropEffect?: DropEffect,
 };
 
 export function makeDraggable(
     element: HTMLElement,
-    configuration: DraggableConfiguration = {}
-) {
-    const { onDragStart, onDrop, onDragEnd, dropEffect } = Object.assign({ dropEffect: "copy" }, configuration);
+    configuration: DraggableConfiguration
+): () => void {
+    const { onDragStart, onDrop, onDragCancel, dropEffect } =
+        Object.assign({ dropEffect: "copy" }, configuration);
 
-    element.id = randomUUID();
+    const abortController = new AbortController();
+
+    element.id = element.id ?? randomUUID();
     element.setAttribute("draggable", "true");
-    element.addEventListener("dragstart", (e) => {
-        if (e.dataTransfer === null) return;
-
+    addEventListenerToElement("dragstart", (e) => {
         // See comment [657fabfb-7fbe-46ab-805e-cc1a74517ff4]
         e.dataTransfer.setData(element.id, "");
         e.dataTransfer.setData("text/plain", element.id);
@@ -29,22 +31,52 @@ export function makeDraggable(
         onDragStart?.();
         e.stopPropagation();
     });
-    element.addEventListener("dragend", (e) => {
+    addEventListenerToElement("dragend", (e) => {
         if (e.dataTransfer && e.dataTransfer.dropEffect !== "none") {
             onDrop?.();
+        } else {
+            onDragCancel?.();
         }
 
-        onDragEnd?.();
         e.stopPropagation();
     });
+
+    return endInteraction;
+
+    function addEventListenerToElement(
+        type: DragEventType,
+        listener: (this: HTMLElement, ev: DragEventWithDataTransfer) => any
+    ): void {
+        element.addEventListener(
+            type,
+            function(event) {
+                if (!hasDataTransfer(event)) return;
+
+                listener.bind(this)(event);
+            },
+            { signal: abortController.signal }
+        );
+    }
+
+    function endInteraction() {
+        element.removeAttribute("draggable");
+        abortController.abort();
+    }
 }
+
+export type DropTargetConfiguration = {
+    onDrop: () => void,
+    dropEffect?: DropEffect,
+};
 
 export function makeDropTargetExpecting(
     dropTargetElement: HTMLElement,
     expectedDropElement: HTMLElement,
-    onDrop: () => void,
-    dropEffect: DropEffect = "copy",
-) {
+    configuration: DropTargetConfiguration
+): () => void {
+    const { onDrop, dropEffect } =
+        Object.assign({ dropEffect: "copy" }, configuration);
+
     const abortController = new AbortController();
     const expectedElementId = expectedDropElement.id;
 
@@ -53,11 +85,11 @@ export function makeDropTargetExpecting(
 
     addEventListenerToTarget("dragenter", e => {
         dropTargetElement.classList.add("drop-target");
-        if (e.dataTransfer) e.dataTransfer.dropEffect = dropEffect;
+        e.dataTransfer.dropEffect = dropEffect;
     });
     addEventListenerToTarget("dragover", e => {
         dropTargetElement.classList.add("drop-target");
-        if (e.dataTransfer) e.dataTransfer.dropEffect = dropEffect;
+        e.dataTransfer.dropEffect = dropEffect;
         e.stopPropagation();
     });
     addEventListenerToTarget("dragleave", () => {
@@ -71,15 +103,16 @@ export function makeDropTargetExpecting(
         e.stopPropagation();
     });
 
-    expectedDropElement.addEventListener("dragend", () => {
-        endInteraction();
-    }, { signal: abortController.signal });
+    return endInteraction;
 
-    function addEventListenerToTarget(type: DragEventType, listener: (this: HTMLElement, ev: DragEvent) => any): void {
+    function addEventListenerToTarget(
+        type: DragEventType,
+        listener: (this: HTMLElement, ev: DragEventWithDataTransfer) => any
+    ): void {
         dropTargetElement.addEventListener(
             type,
             function(event) {
-                if (event.dataTransfer === null) return;
+                if (!hasDataTransfer(event)) return;
 
                 if (isForExpectedTarget(event.dataTransfer)) {
                     listener.bind(this)(event);
@@ -113,4 +146,8 @@ export function makeDropTargetExpecting(
         dropTargetElement.classList.remove(enabledDropTargetClass);
         abortController.abort();
     }
+}
+
+function hasDataTransfer(event: DragEvent): event is DragEventWithDataTransfer {
+    return event.dataTransfer !== null;
 }

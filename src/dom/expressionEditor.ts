@@ -1,8 +1,9 @@
 import {ExpressionView, HoleView} from "./expression_view.ts";
-import {createElement} from "./createElement.ts";
+import {createElement} from "./essentials/createElement.ts";
 import {Expression, ExpressionType} from "../core/expression.ts";
-import {DropTarget} from "./dropTarget.ts";
-import {animateWith} from "./animation.ts";
+import {animateWith} from "./essentials/animation.ts";
+import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
+import {UserInteraction} from "./user_interactions/userInteraction.ts";
 
 export class ExpressionEditor {
     private readonly _domElement: HTMLElement;
@@ -10,6 +11,7 @@ export class ExpressionEditor {
     private _editorCanvas!: HTMLElement;
     private _newExpressionDropTargetElement!: HTMLElement;
     private _editorCanvasExpressions: ExpressionView[] = [];
+    private _currentInteraction: UserInteraction | undefined = undefined;
 
     constructor() {
         this._domElement = this._createDomElement();
@@ -32,16 +34,20 @@ export class ExpressionEditor {
         if (!expression.isRootExpression()) throw new Error("Non-root expression added to the pallete");
 
         const expressionView = ExpressionView.forExpression(expression);
-        expressionView.makeDraggable(
-            grabbedExpressionView => this._palleteExpressionDropTargetsFor(grabbedExpressionView),
-        );
+        new GrabInteraction(
+            this,
+            expressionView,
+            grabbedExpressionView => this._palleteExpressionDropTargetsFor(grabbedExpressionView)
+        ).register();
         this._editorPallete.append(expressionView.domElement());
     }
 
-    private _makeDraggable(expressionView: ExpressionView<Expression>) {
-        expressionView.makeDraggable(
-            grabbedExpressionView => this._canvasExpressionDropTargetsFor(grabbedExpressionView),
-        );
+    private _makeDraggable(expressionView: ExpressionView) {
+        new GrabInteraction(
+            this,
+            expressionView,
+            grabbedExpressionView => this._canvasExpressionDropTargetsFor(grabbedExpressionView)
+        ).register();
     }
 
     private _palleteExpressionDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
@@ -51,7 +57,7 @@ export class ExpressionEditor {
         ];
     }
 
-    private _holesInCanvasDropTargetsFor(grabbedExpressionView: ExpressionView<Expression<any>>) {
+    private _holesInCanvasDropTargetsFor(grabbedExpressionView: ExpressionView) {
         const pickedUpExpressionType = grabbedExpressionView.expressionType();
         return this._canvasHolesOfType(pickedUpExpressionType).map(holeView => new DropTarget(
             holeView.domElement(),
@@ -113,5 +119,29 @@ export class ExpressionEditor {
 
         this._editorCanvasExpressions.splice(this._editorCanvasExpressions.indexOf(expressionView), 1);
         expressionView.domElement().remove();
+    }
+
+    startedInteraction(newInteraction: UserInteraction) {
+        if (this._currentInteraction !== undefined) {
+            this._currentInteraction.cancel();
+        }
+
+        this._currentInteraction = newInteraction;
+    }
+
+    completedInteraction(interaction: UserInteraction) {
+        if (this._currentInteraction !== interaction) {
+            throw new Error("Completed an interaction that was not current");
+        }
+
+        this._currentInteraction = undefined;
+    }
+
+    cancelledInteraction(interaction: UserInteraction) {
+        if (this._currentInteraction !== interaction) {
+            throw new Error("Cancelled an interaction that was not current");
+        }
+
+        this._currentInteraction = undefined;
     }
 }
