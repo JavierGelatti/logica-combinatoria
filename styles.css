@@ -34,6 +34,7 @@
     line-height: 1em;
     height: calc(1em + 10px);
     padding: 0 1px 0;
+    border-bottom: 1px solid transparent;
     border-radius: 4px;
     user-select: none;
     margin: 1px;
@@ -42,16 +43,24 @@
     --separation-margin: 3px;
 
     &[draggable], &[draggable] * {
-        cursor: grab;
         touch-action: none;
+
+        &:not(.grabbed) {
+            cursor: grab;
+        }
     }
 
     &[draggable]:hover {
-        &:not(:has(&)) {
+        &:not(:has(&)):not(:has([class*="drop-target-enabled-for"]:hover)) {
             background: rgba(255, 0, 0, .1);
-            margin-bottom: -1px;
             border-bottom: 1px solid red;
         }
+    }
+
+    &.grabbed {
+        background: rgba(255, 0, 0, .1);
+        border-bottom: 1px solid red;
+        box-shadow: 0 0 5px red;
     }
 
     &.just-added {
@@ -69,6 +78,10 @@
     100% { transform: rotate(1deg); }
 }
 
+[class*="drop-target-enabled-for"] {
+    cursor: pointer !important;
+}
+
 .hole {
     border: 1px dashed dimgray;
     background: rgba(0, 0, 0, .2);
@@ -82,13 +95,14 @@
         background: rgba(34, 139, 34, .05);
         transform: scale(1);
         opacity: 1;
+
+        &.drop-target, &:hover {
+            background: rgba(34, 139, 34, .2);
+            transform: scale(1.2);
+            opacity: .8;
+        }
     }
 
-    &.drop-target {
-        background: rgba(34, 139, 34, .2);
-        transform: scale(1.2);
-        opacity: .8;
-    }
 }
 
 .parenthesis {
@@ -192,10 +206,10 @@
         &[class*="drop-target-enabled-for"] {
             background: rgba(255, 0, 0, .05);
             transition: background-color .2s;
-        }
 
-        &.drop-target {
-            background: rgba(255, 0, 0, 0.2);
+            &.drop-target, &:hover {
+                background: rgba(255, 0, 0, 0.2);
+            }
         }
     }
 
@@ -224,10 +238,10 @@
                     padding-top: 1em;
                     opacity: .5;
                 }
-            }
 
-            &.drop-target {
-                background: rgba(34, 139, 34, .2);
+                &.drop-target, &:hover {
+                    background: rgba(34, 139, 34, .2);
+                }
             }
         }
     }

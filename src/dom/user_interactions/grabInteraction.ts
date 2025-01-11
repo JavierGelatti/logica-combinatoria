@@ -25,6 +25,7 @@ export class GrabInteraction extends UserInteraction {
                 onDragCancel: () => this.cancel(),
             }),
             addCancelableListener(domElement, "click", event => {
+                this.expressionView.domElement().classList.add("grabbed");
                 this.start();
                 event.stopPropagation();
             })
@@ -62,10 +63,12 @@ export class GrabInteraction extends UserInteraction {
     }
 
     protected _cancel() {
+        this.expressionView.domElement().classList.remove("grabbed");
         this._deactivateDropTargets();
     }
 
     protected _finish() {
+        this.expressionView.domElement().classList.remove("grabbed");
         this._deactivateDropTargets();
     }
 
