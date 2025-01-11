@@ -6,10 +6,11 @@ import {Equality} from "../core/equality.ts";
 import {Identifier} from "../core/identifier.ts";
 import {createElement} from "./createElement.ts";
 import {Hole} from "../core/hole.ts";
-import {DraggableConfiguration, makeDraggable} from "./drag_and_drop.ts";
 import {animateWith} from "./animation.ts";
 import {Binder} from "../core/binder.ts";
 import {identifier} from "../core/expression_constructors.ts";
+import {DropTarget} from "./dropTarget.ts";
+import {makeDraggable} from "./drag_and_drop.ts";
 
 export abstract class ExpressionView<T extends Expression = Expression> {
     private static readonly modelKey = Symbol("model");
@@ -74,8 +75,27 @@ export abstract class ExpressionView<T extends Expression = Expression> {
 
     protected abstract _createDomElement(): HTMLElement
 
-    makeDraggable(configuration?: DraggableConfiguration): void {
-        makeDraggable(this.domElement(), configuration);
+    makeDraggable(currentDropTargets: (grabbedExpressionView: ExpressionView) => DropTarget[]) {
+        makeDraggable(this.domElement(), {
+            onDragStart: () => {
+                currentDropTargets(this).forEach(dropTarget => dropTarget.activateOn(this))
+            }
+        });
+    }
+
+    expressionType() {
+        return this.expression.type();
+    }
+
+    detachFromParent() {
+        const newHole = this.expression.detachFromParent();
+        this.domElement().replaceWith(
+            ExpressionView.forExpression(newHole).domElement(),
+        );
+    }
+
+    isForRootExpression() {
+        return this.expression.isRootExpression();
     }
 }
 
@@ -180,7 +200,7 @@ export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> 
 
     fillWith(droppedExpressionView: ExpressionView) {
         const droppedExpression = droppedExpressionView.expression;
-        if (droppedExpression.hasType(this.expression.type())) {
+        if (droppedExpression.hasType(this.expressionType())) {
             const droppedExpressionCopy = droppedExpression.copy();
             this.expression.fillWith(droppedExpressionCopy);
             const newExpressionView = ExpressionView.forExpression(droppedExpressionCopy);

@@ -1,9 +1,9 @@
 import {application, equality, exists, forall, hole, identifier, truthHole} from "./src/core/expression_constructors";
 import {ExpressionView, HoleView} from "./src/dom/expression_view";
-import {Expression} from "./src/core/expression";
+import {Expression, ExpressionType} from "./src/core/expression";
 import {createElement} from "./src/dom/createElement";
-import {makeDropTargetExpecting} from "./src/dom/drag_and_drop";
 import {animateWith} from "./src/dom/animation";
+import {DropTarget} from "./src/dom/dropTarget";
 
 const mockingbird = forall(
     identifier("x"),
@@ -47,7 +47,7 @@ class ExpressionEditor {
     private readonly _domElement: HTMLElement;
     private _editorPallete!: HTMLElement;
     private _editorCanvas!: HTMLElement;
-    private _newExpressionDropTarget!: HTMLElement;
+    private _newExpressionDropTargetElement!: HTMLElement;
     private _editorCanvasExpressions: ExpressionView[] = [];
 
     constructor() {
@@ -62,79 +62,96 @@ class ExpressionEditor {
         return createElement("div", {className: "expression-editor"}, [
             this._editorPallete = createElement("div", {className: "pallete"}),
             this._editorCanvas = createElement("div", {className: "canvas"}, [
-                this._newExpressionDropTarget = createElement("div", {className: "new-expression-drop-target"})
+                this._newExpressionDropTargetElement = createElement("div", {className: "new-expression-drop-target"})
             ])
         ]);
     }
 
     addToPallete(expression: Expression) {
+        if (!expression.isRootExpression()) throw new Error("Non-root expression added to the pallete");
+
         const expressionView = ExpressionView.forExpression(expression);
-        expressionView.makeDraggable({
-            onDragStart: () => this.onPalleteExpressionPickUp(expressionView),
-            onDragEnd: () => {}
-        });
+        expressionView.makeDraggable(
+            grabbedExpressionView => this._palleteExpressionDropTargetsFor(grabbedExpressionView)
+        );
         this._editorPallete.append(expressionView.domElement());
     }
 
-    private onPalleteExpressionPickUp(pickedUpExpressionView: ExpressionView) {
-        if (pickedUpExpressionView.expression.isRootExpression()) {
-            makeDropTargetExpecting(this._newExpressionDropTarget, pickedUpExpressionView.domElement(), () => {
-                const droppedExpressionCopy = pickedUpExpressionView.expression.copy();
-
-                const expressionView = ExpressionView.forExpression(droppedExpressionCopy);
-                this._makeDraggable(expressionView);
-                this._editorCanvas.insertBefore(expressionView.domElement(), this._newExpressionDropTarget);
-                animateWith(expressionView.domElement(), "just-added");
-                this._editorCanvasExpressions.push(expressionView);
-            });
-        }
-
-        this.onEditorExpressionPickUp(pickedUpExpressionView);
-    }
-
     private _makeDraggable(expressionView: ExpressionView<Expression>) {
-        expressionView.makeDraggable({
-            dropEffect: "move",
-            onDragStart: () => this.onExistingExpressionPickUp(expressionView),
-        });
+        expressionView.makeDraggable(
+            grabbedExpressionView => this._canvasExpressionDropTargetsFor(grabbedExpressionView)
+        );
     }
 
-    private onExistingExpressionPickUp(pickedUpExpressionView: ExpressionView<Expression<any>>) {
-        makeDropTargetExpecting(this._editorPallete, pickedUpExpressionView.domElement(), () => {
-            const droppedExpression = pickedUpExpressionView.expression;
-
-            if (!droppedExpression.isRootExpression()) {
-                const newHole = droppedExpression.detachFromParent();
-                pickedUpExpressionView.domElement().replaceWith(
-                    ExpressionView.forExpression(newHole).domElement()
-                )
-            } else if (this._editorCanvasExpressions.includes(pickedUpExpressionView)) {
-                this._editorCanvasExpressions.splice(this._editorCanvasExpressions.indexOf(pickedUpExpressionView), 1);
-                pickedUpExpressionView.domElement().remove();
-            }
-        });
-
-        this.onEditorExpressionPickUp(pickedUpExpressionView);
+    private _palleteExpressionDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
+        return [
+            this._newExpressionDropTarget(),
+            ...this._holesInCanvasDropTargetsFor(grabbedExpressionView)
+        ];
     }
 
-    private onEditorExpressionPickUp(pickedUpExpressionView: ExpressionView<Expression<any>>) {
-        const pickedUpExpressionType = pickedUpExpressionView.expression.type();
-        this._editorCanvasExpressions.forEach(expressionView => {
-            const holes = expressionView.expression.allHolesOfType(pickedUpExpressionType);
+    private _holesInCanvasDropTargetsFor(grabbedExpressionView: ExpressionView<Expression<any>>) {
+        const pickedUpExpressionType = grabbedExpressionView.expressionType();
+        return this._canvasHolesOfType(pickedUpExpressionType).map(holeView => new DropTarget(
+            holeView.domElement(),
+            (droppedExpressionView) => this._fillHoleInCanvas(holeView, droppedExpressionView),
+        ));
+    }
 
-            const holeViews: HoleView<any>[] = holes.map(hole => ExpressionView.forExpression(hole));
+    private _newExpressionDropTarget() {
+        return new DropTarget(
+            this._newExpressionDropTargetElement,
+            (droppedExpressionView) => this.addNewExpressionToCanvas(droppedExpressionView.expression),
+        );
+    }
 
-            holeViews.forEach(holeView => {
-                makeDropTargetExpecting(
-                    holeView.domElement(),
-                    pickedUpExpressionView.domElement(),
-                    () => {
-                        const newExpressionView = holeView.fillWith(pickedUpExpressionView)!;
-                        this._makeDraggable(newExpressionView);
-                    },
-                );
-            });
-        });
+    private _fillHoleInCanvas(holeView: HoleView<any>, droppedExpressionView: ExpressionView) {
+        const newExpressionView = holeView.fillWith(droppedExpressionView)!;
+        this._makeDraggable(newExpressionView);
+    }
+
+    private addNewExpressionToCanvas(requestedExpressionToAdd: Expression) {
+        const newExpression = requestedExpressionToAdd.copy();
+        const newExpressionView = ExpressionView.forExpression(newExpression);
+
+        this._makeDraggable(newExpressionView);
+        this._editorCanvas.insertBefore(newExpressionView.domElement(), this._newExpressionDropTargetElement);
+        animateWith(newExpressionView.domElement(), "just-added");
+        this._editorCanvasExpressions.push(newExpressionView);
+    }
+
+    private _canvasHolesOfType(expressionType: ExpressionType): HoleView<any>[] {
+        return this._editorCanvasExpressions
+            .map(expressionView => expressionView.expression)
+            .flatMap(expression => expression.allHolesOfType(expressionType))
+            .map(hole => ExpressionView.forExpression(hole));
+    }
+
+    private _canvasExpressionDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
+        return [
+            this._deleteExpressionDropTarget(),
+            ...this._holesInCanvasDropTargetsFor(grabbedExpressionView)
+        ];
+    }
+
+    private _deleteExpressionDropTarget() {
+        return new DropTarget(
+            this._editorPallete,
+            (droppedExpressionView) => {
+                if (droppedExpressionView.isForRootExpression()) {
+                    this.removeFromCanvas(droppedExpressionView);
+                } else {
+                    droppedExpressionView.detachFromParent();
+                }
+            },
+        );
+    }
+
+    private removeFromCanvas(expressionView: ExpressionView) {
+        if (!this._editorCanvasExpressions.includes(expressionView)) return;
+
+        this._editorCanvasExpressions.splice(this._editorCanvasExpressions.indexOf(expressionView), 1);
+        expressionView.domElement().remove();
     }
 }
 
