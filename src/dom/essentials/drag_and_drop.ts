@@ -1,5 +1,3 @@
-import {isUUID, randomUUID} from "./uuid.ts";
-
 export type DropEffect = typeof DataTransfer.prototype.dropEffect;
 type DragEventType = "drag" | "dragend" | "dragenter" | "dragleave" | "dragover" | "dragstart" | "drop";
 type DragEventWithDataTransfer = DragEvent & { readonly dataTransfer: DataTransfer };
@@ -9,36 +7,30 @@ export type DraggableConfiguration = {
     onDrop?: () => void,
     onDragCancel?: () => void,
     dropEffect?: DropEffect,
+    textOnDrop?: () => string
 };
 
 export function makeDraggable(
     element: HTMLElement,
     configuration: DraggableConfiguration
 ): () => void {
-    const { onDragStart, onDrop, onDragCancel, dropEffect } =
-        Object.assign({ dropEffect: "copy" }, configuration);
+    const { onDragStart, onDrop, onDragCancel, dropEffect, textOnDrop } =
+        Object.assign({ dropEffect: "copy", textOnDrop: () => "" }, configuration);
 
     const abortController = new AbortController();
 
-    if (element.id === "") element.id = randomUUID();
     element.setAttribute("draggable", "true");
     addEventListenerToElement("dragstart", (e) => {
-        // See comment [657fabfb-7fbe-46ab-805e-cc1a74517ff4]
-        e.dataTransfer.setData(element.id, "");
-        e.dataTransfer.setData("text/plain", element.id);
-
+        e.dataTransfer.setData("text/plain", textOnDrop());
         e.dataTransfer.dropEffect = dropEffect;
         onDragStart?.();
-        e.stopPropagation();
     });
     addEventListenerToElement("dragend", (e) => {
-        if (e.dataTransfer && e.dataTransfer.dropEffect !== "none") {
+        if (e.dataTransfer.dropEffect !== "none") {
             onDrop?.();
         } else {
             onDragCancel?.();
         }
-
-        e.stopPropagation();
     });
 
     return endInteraction;
@@ -51,8 +43,8 @@ export function makeDraggable(
             type,
             function(event) {
                 if (!hasDataTransfer(event)) return;
-
                 listener.bind(this)(event);
+                event.stopPropagation();
             },
             { signal: abortController.signal }
         );
@@ -113,33 +105,11 @@ export function makeDropTargetExpecting(
             type,
             function(event) {
                 if (!hasDataTransfer(event)) return;
-
-                if (isForExpectedTarget(event.dataTransfer)) {
-                    listener.bind(this)(event);
-                    event.preventDefault();
-                }
+                listener.bind(this)(event);
+                event.preventDefault();
             },
             { signal: abortController.signal }
         );
-    }
-
-    function isForExpectedTarget(dataTransfer: DataTransfer) {
-        if (dataTransfer.types[0] === expectedElementId) return true;
-
-        // [657fabfb-7fbe-46ab-805e-cc1a74517ff4]
-        // The verification is weird because some browsers (e.g. Chrome) only allow to access the data of the
-        // dataTransfer object on _drop_. For those cases, we store the data as the _type_, so we can access it
-        // before the drop. Other browsers (e.g. Chrome for Android) do not like a custom type: they only support, for
-        // instance, text/plain.
-        // As we want the drag & drop feature to work on the worst case, we skip the check and allow the event if we
-        // can't get any information about its source.
-        const sourceElementIdFromType = dataTransfer.types.find(type => isUUID(type));
-        const sourceElementIdFromData = dataTransfer.getData("text/plain");
-
-        const didNotGetAnyInfo = sourceElementIdFromType === undefined && sourceElementIdFromData === "";
-        if (didNotGetAnyInfo) return true;
-
-        return sourceElementIdFromType === expectedElementId || sourceElementIdFromData === expectedElementId;
     }
 
     function endInteraction() {

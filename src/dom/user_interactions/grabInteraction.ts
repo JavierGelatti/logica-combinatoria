@@ -23,6 +23,7 @@ export class GrabInteraction extends UserInteraction {
                 onDragStart: () => this.start(),
                 onDrop: () => this.finish(),
                 onDragCancel: () => this.cancel(),
+                textOnDrop: () => this.expressionView.expression.toString(),
             }),
             onClick(domElement, () => {
                 this.expressionView.domElement().classList.add("grabbed");
