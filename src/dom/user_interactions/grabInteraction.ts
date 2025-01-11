@@ -5,8 +5,7 @@ import {UserInteraction} from "./userInteraction.ts";
 import {addCancelableListener} from "../essentials/addCancelableListener.ts";
 
 export class GrabInteraction extends UserInteraction {
-    private _unmakeDraggable: (() => void) | undefined;
-    private _unmakeClickable: (() => void) | undefined;
+    private _grabDeactivators: (() => void)[] | undefined;
     private _dropTargetDeactivators: (() => void)[] | undefined;
 
     constructor(
@@ -19,12 +18,17 @@ export class GrabInteraction extends UserInteraction {
 
     register() {
         const domElement = this.expressionView.domElement();
-        this._unmakeDraggable = makeDraggable(domElement, {
-            onDragStart: () => this.start(),
-            onDrop: () => this.finish(),
-            onDragCancel: () => this.cancel(),
-        });
-        this._unmakeClickable = addCancelableListener(domElement, "click", () => this.start());
+        this._grabDeactivators = [
+            makeDraggable(domElement, {
+                onDragStart: () => this.start(),
+                onDrop: () => this.finish(),
+                onDragCancel: () => this.cancel(),
+            }),
+            addCancelableListener(domElement, "click", event => {
+                this.start();
+                event.stopPropagation();
+            })
+        ];
     }
 
     protected _start(): void {
@@ -33,21 +37,27 @@ export class GrabInteraction extends UserInteraction {
 
     private _activateDropTargets() {
         this._dropTargetDeactivators = this.currentDropTargets(this.expressionView)
-            .map(dropTarget => {
+            .flatMap(dropTarget => {
                 const dropDeactivator = dropTarget.activateOn(this.expressionView);
-                const clickDeactivator = addCancelableListener(
+                const clickInsideDeactivator = addCancelableListener(
                     dropTarget.element,
                     "click",
-                    () => {
+                    event => {
                         dropTarget.onDrop(this.expressionView);
                         this.finish();
+                        event.stopPropagation();
                     }
-                )
+                );
+                const clickOutsideDeactivator = addCancelableListener(
+                    document.body,
+                    "click",
+                    event => {
+                        this.cancel();
+                        event.stopPropagation();
+                    }
+                );
 
-                return () => {
-                    dropDeactivator();
-                    clickDeactivator();
-                };
+                return [dropDeactivator, clickInsideDeactivator, clickOutsideDeactivator];
             });
     }
 
@@ -62,11 +72,13 @@ export class GrabInteraction extends UserInteraction {
     private _deactivateDropTargets() {
         this._dropTargetDeactivators
             ?.forEach(deactivateDropTarget => deactivateDropTarget());
+        this._dropTargetDeactivators = undefined;
     }
 
     unregister(): void {
-        this._unmakeDraggable?.();
-        this._unmakeClickable?.();
+        this._grabDeactivators
+            ?.forEach(deactivateGrab => deactivateGrab());
+        this._grabDeactivators = undefined;
     }
 }
 
