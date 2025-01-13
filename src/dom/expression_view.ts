@@ -143,6 +143,7 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
                 "span",
                 {
                     className: "full-binder",
+                    onclick: e => e.stopPropagation(),
                     ondblclick: () => this.promptVariableRename()
                 },
                 [
