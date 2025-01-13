@@ -11,7 +11,7 @@ export class GrabInteraction extends UserInteraction {
     constructor(
         editor: ExpressionEditor,
         private readonly expressionView: ExpressionView,
-        private readonly currentDropTargets: { (grabbedExpressionView: ExpressionView): DropTarget[] },
+        private readonly currentDropTargets: (grabbedExpressionView: ExpressionView) => DropTarget[],
     ) {
         super(editor);
     }
@@ -26,8 +26,9 @@ export class GrabInteraction extends UserInteraction {
                 textOnDrop: () => this.expressionView.expression.toString(),
             }),
             onClick(domElement, () => {
-                this.expressionView.domElement().classList.add("grabbed");
+                // The order is important, see UserInteraction.start
                 this.start();
+                this.expressionView.domElement().classList.add("grabbed");
             })
         ];
     }
