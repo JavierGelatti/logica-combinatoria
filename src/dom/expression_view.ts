@@ -102,6 +102,7 @@ export class ApplicationView extends ExpressionView<Application> {
 
 abstract class BinderView<T extends Binder> extends ExpressionView<T> {
     protected abstract _binderSymbol: string;
+    protected abstract _binderCssClass: string;
 
     promptVariableRename(
         promptText: string = "Nuevo nombre",
@@ -137,10 +138,13 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
     }
 
     protected _createDomElement(): HTMLElement {
-        return createElement("span", {className: "exists" }, [
+        return createElement("span", {className: this._binderCssClass }, [
             createElement(
                 "span",
-                {className: "full-binder", ondblclick: () => this.promptVariableRename()},
+                {
+                    className: "full-binder",
+                    ondblclick: () => this.promptVariableRename()
+                },
                 [
                     ...parenthesized(
                         this._binderElement(this._binderSymbol),
@@ -154,10 +158,12 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
 
 export class ForAllView extends BinderView<ForAll> {
     protected _binderSymbol = "∀";
+    protected _binderCssClass = "forall";
 }
 
 export class ExistsView extends BinderView<Exists> {
     protected _binderSymbol = "∃";
+    protected _binderCssClass = "exists";
 }
 
 export class EqualityView extends ExpressionView<Equality> {
