@@ -3,7 +3,19 @@ export function addCancelableListener<K extends keyof HTMLElementEventMap>(
     type: K,
     listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions
-) {
+): () => void;
+export function addCancelableListener(
+    domElement: HTMLElement,
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+): () => void;
+export function addCancelableListener(
+    domElement: HTMLElement,
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+): () => void {
     domElement.addEventListener(type, listener, options);
 
     return () => {
