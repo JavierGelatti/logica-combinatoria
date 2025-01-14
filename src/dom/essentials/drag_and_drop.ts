@@ -79,30 +79,42 @@ export function makeDropTargetExpecting(
         Object.assign({ dropEffect: "copy" }, configuration);
 
     const abortController = new AbortController();
-    const expectedElementId = expectedDropElement.id;
 
-    const enabledDropTargetClass = `drop-target-enabled-for-${expectedElementId}`;
-    dropTargetElement.classList.add(enabledDropTargetClass);
+    dropTargetElement.classList.add("enabled-drop-target");
 
     addEventListenerToTarget("dragenter", e => {
-        dropTargetElement.classList.add("drop-target");
+        dropTargetElement.classList.add("active-drop-target");
         e.dataTransfer.dropEffect = dropEffect;
     });
     addEventListenerToTarget("dragover", e => {
-        dropTargetElement.classList.add("drop-target");
+        dropTargetElement.classList.add("active-drop-target");
         e.dataTransfer.dropEffect = dropEffect;
         e.stopPropagation();
     });
     addEventListenerToTarget("dragleave", () => {
-        dropTargetElement.classList.remove("drop-target");
+        dropTargetElement.classList.remove("active-drop-target");
     });
     addEventListenerToTarget("drop", (e) => {
-        dropTargetElement.classList.remove("drop-target");
+        dropTargetElement.classList.remove("active-drop-target");
 
         onDrop();
 
         e.stopPropagation();
     });
+
+    dropTargetElement.addEventListener("pointerenter", () => {
+        dropTargetElement.classList.add("active-drop-target");
+    }, { signal: abortController.signal });
+    dropTargetElement.addEventListener("pointerleave", () => {
+        dropTargetElement.classList.remove("active-drop-target");
+    }, { signal: abortController.signal });
+    dropTargetElement.addEventListener("click", event => {
+        expectedDropElement.dispatchEvent(new CustomEvent("dropclick", {bubbles: true}));
+
+        onDrop();
+
+        event.stopPropagation();
+    }, { signal: abortController.signal, once: true });
 
     return endInteraction;
 
@@ -122,7 +134,7 @@ export function makeDropTargetExpecting(
     }
 
     function endInteraction() {
-        dropTargetElement.classList.remove(enabledDropTargetClass);
+        dropTargetElement.classList.remove("enabled-drop-target");
         abortController.abort();
     }
 }

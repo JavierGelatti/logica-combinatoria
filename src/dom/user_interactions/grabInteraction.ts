@@ -24,29 +24,16 @@ export class GrabInteraction extends UserInteraction {
 
     private _activateDropTargets() {
         this._dropTargetDeactivators = this.currentDropTargets(this.expressionView)
-            .flatMap(dropTarget => {
-                const dropDeactivator = makeDropTargetExpecting(
-                    dropTarget.element,
-                    this.expressionView.domElement(),
-                    {
-                        onDrop: () => {
-                            dropTarget.onDrop(this.expressionView);
-                            this.finish();
-                        },
-                    },
-                );
-                const clickInsideDeactivator = onClick(
-                    dropTarget.element,
-                    () => {
-                        this.expressionView.domElement().dispatchEvent(
-                            new CustomEvent("dropclick", {bubbles: true})
-                        );
+            .map(dropTarget => makeDropTargetExpecting(
+                dropTarget.element,
+                this.expressionView.domElement(),
+                {
+                    onDrop: () => {
                         dropTarget.onDrop(this.expressionView);
                         this.finish();
-                    }
-                );
-                return [dropDeactivator, clickInsideDeactivator];
-            });
+                    },
+                },
+            ));
     }
 
     protected _cancel() {

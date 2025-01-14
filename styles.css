@@ -51,7 +51,7 @@
     }
 
     &[draggable]:hover {
-        &:not(:has(&)):not(:has([class*="drop-target-enabled-for"]:hover)) {
+        &:not(:has(&)):not(:has(.active-drop-target)) {
             background: rgba(255, 0, 0, .1);
             border-bottom: 1px solid red;
         }
@@ -78,7 +78,7 @@
     100% { transform: rotate(1deg); }
 }
 
-[class*="drop-target-enabled-for"] {
+.enabled-drop-target {
     cursor: pointer !important;
 }
 
@@ -91,12 +91,12 @@
     transform: scale(.8);
     opacity: .5;
 
-    &[class*="drop-target-enabled-for"] {
+    &.enabled-drop-target {
         background: rgba(34, 139, 34, .05);
         transform: scale(1);
         opacity: 1;
 
-        &.drop-target, &:hover {
+        &.active-drop-target {
             background: rgba(34, 139, 34, .2);
             transform: scale(1.2);
             opacity: .8;
@@ -213,12 +213,12 @@
             display: none;
             z-index: 1;
 
-            &[class*="drop-target-enabled-for"] {
+            &.enabled-drop-target {
                 display: block;
                 background: rgba(255, 0, 0, .05);
                 transition: background-color .2s;
 
-                &.drop-target, &:hover {
+                &.active-drop-target {
                     background: rgba(255, 0, 0, 0.2);
                 }
             }
@@ -238,7 +238,7 @@
             text-align: center;
             flex-grow: 1;
 
-            &[class*="drop-target-enabled-for"] {
+            &.enabled-drop-target {
                 background: rgba(34, 139, 34, .05);
                 transition: background-color .2s;
 
@@ -251,7 +251,7 @@
                     opacity: .5;
                 }
 
-                &.drop-target, &:hover {
+                &.active-drop-target {
                     background: rgba(34, 139, 34, .2);
                 }
             }
