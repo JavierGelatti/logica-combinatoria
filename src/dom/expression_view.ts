@@ -49,7 +49,10 @@ export abstract class ExpressionView<T extends Expression = Expression> {
 
     private _domElement?: HTMLElement;
 
-    constructor(public readonly expression: T) {}
+    constructor(
+        public readonly expression: T,
+        protected readonly isDraggable: boolean = true
+    ) {}
 
     domElement(): HTMLElement {
         if (this._domElement === undefined) {
@@ -87,8 +90,8 @@ export abstract class ExpressionView<T extends Expression = Expression> {
 
 export class ApplicationView extends ExpressionView<Application> {
     protected _createDomElement(): HTMLElement {
-        const elementForFunction = ApplicationView.forExpression(this.expression.functionBeingApplied).domElement();
-        const elementForArgument = ApplicationView.forExpression(this.expression.argument).domElement();
+        const elementForFunction = ExpressionView.forExpression(this.expression.functionBeingApplied).domElement();
+        const elementForArgument = ExpressionView.forExpression(this.expression.argument).domElement();
 
         return createElement("span", {className: "application" }, [
             elementForFunction,
@@ -126,6 +129,7 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
         if (!this.expression.isRootExpression()) {
             this.expression.detachFromParent().fillWith(newExpression);
         }
+        // FIXME: Actualmente no estamos registrando ninguno de estos cambios en el editor.
         const newExpressionView = ExpressionView.forExpression(newExpression);
         this.domElement().replaceWith(newExpressionView.domElement());
     }
@@ -146,10 +150,10 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
                 [
                     ...parenthesized(
                         this._binderElement(this._binderSymbol),
-                        ApplicationView.forExpression(this.expression.boundVariable).domElement()
+                        new IdentifierView(this.expression.boundVariable, false).domElement()
                     ),
                 ]),
-            ApplicationView.forExpression(this.expression.body).domElement(),
+            ExpressionView.forExpression(this.expression.body).domElement(),
         ]);
     }
 }
@@ -167,9 +171,9 @@ export class ExistsView extends BinderView<Exists> {
 export class EqualityView extends ExpressionView<Equality> {
     protected _createDomElement(): HTMLElement {
         return createElement("span", {className: "equality" }, [
-            ApplicationView.forExpression(this.expression.left).domElement(),
+            ExpressionView.forExpression(this.expression.left).domElement(),
             createElement("span", { className: "operator", textContent: "=" }),
-            ApplicationView.forExpression(this.expression.right).domElement(),
+            ExpressionView.forExpression(this.expression.right).domElement(),
         ]);
     }
 }
@@ -187,6 +191,10 @@ export class IdentifierView extends ExpressionView<Identifier> {
 }
 
 export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> {
+    constructor(expression: Hole<T>) {
+        super(expression, false);
+    }
+
     protected _createDomElement(): HTMLElement {
         return createElement("span", {className: "hole"});
     }
