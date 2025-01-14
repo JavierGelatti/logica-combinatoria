@@ -2,7 +2,6 @@ import {ExpressionEditor} from "../expressionEditor.ts";
 import {ExpressionView} from "../expression_view.ts";
 import {makeDropTargetExpecting} from "../essentials/drag_and_drop.ts";
 import {UserInteraction} from "./userInteraction.ts";
-import {onClick} from "../essentials/onClick.ts";
 
 export class GrabInteraction extends UserInteraction {
     private _grabDeactivators: (() => void)[] | undefined;
