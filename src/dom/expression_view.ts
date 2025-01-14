@@ -16,12 +16,7 @@ export abstract class ExpressionView<T extends Expression = Expression> {
     private static readonly views: WeakMap<Expression, WeakRef<ExpressionView>> = new WeakMap();
 
     static forDomElement(element: HTMLElement): ExpressionView | undefined {
-        const expressionView = Reflect.get(element, this.modelKey) as ExpressionView | undefined;
-        if (expressionView !== undefined) return expressionView;
-
-        if (element.parentElement === null) return undefined;
-
-        return this.forDomElement(element.parentElement);
+        return Reflect.get(element, this.modelKey);
     }
 
     static forExpression<E extends Expression, V extends ExpressionView<E>>(expression: E): V {
@@ -159,7 +154,6 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
         if (!this.expression.isRootExpression()) {
             this.expression.detachFromParent().fillWith(newExpression);
         }
-        // FIXME: Actualmente no estamos registrando ninguno de estos cambios en el editor.
         const newExpressionView = ExpressionView.forExpression(newExpression);
         this.domElement().replaceWith(newExpressionView.domElement());
     }

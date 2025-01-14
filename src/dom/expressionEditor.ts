@@ -4,7 +4,6 @@ import {Expression, ExpressionType} from "../core/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
-import {removeElementFrom} from "./essentials/removeElementFrom.ts";
 import {makeDraggableDelegator} from "./essentials/drag_and_drop.ts";
 
 export class ExpressionEditor {
@@ -13,7 +12,6 @@ export class ExpressionEditor {
     private _editorCanvas!: HTMLElement;
     private _newExpressionDropTargetElement!: HTMLElement;
     private _deleteExpressionDropTargetElement!: HTMLElement;
-    private _editorCanvasExpressions: ExpressionView[] = [];
     private _currentInteraction: UserInteraction | undefined = undefined;
 
     constructor() {
@@ -49,9 +47,8 @@ export class ExpressionEditor {
 
     private draggableExpressionViewFrom(target: HTMLElement): ExpressionView | undefined {
         const expressionView = ExpressionView.forDomElement(target);
-        if (expressionView === undefined) return undefined;
-        if (expressionView.isDraggable) return expressionView;
-        const parentElement = expressionView.domElement().parentElement;
+        if (expressionView?.isDraggable) return expressionView;
+        const parentElement = (expressionView?.domElement() ?? target).parentElement;
         if (parentElement === null) return undefined;
         return this.draggableExpressionViewFrom(parentElement);
     }
@@ -104,17 +101,23 @@ export class ExpressionEditor {
         holeView.fillWith(droppedExpressionView);
     }
 
+    private _editorCanvasExpressions(): ExpressionView[] {
+        return [...this._editorCanvas.children]
+            .filter(element => element instanceof HTMLElement)
+            .map(element => ExpressionView.forDomElement(element))
+            .filter(expressionView => expressionView !== undefined);
+    }
+
     private addNewExpressionToCanvas(requestedExpressionToAdd: Expression) {
         const newExpression = requestedExpressionToAdd.copy();
         const newExpressionView = ExpressionView.forExpression(newExpression);
 
         this._editorCanvas.insertBefore(newExpressionView.domElement(), this._newExpressionDropTargetElement);
         animateWith(newExpressionView.domElement(), "just-added");
-        this._editorCanvasExpressions.push(newExpressionView);
     }
 
     private _canvasHolesOfType(expressionType: ExpressionType): HoleView<any>[] {
-        return this._editorCanvasExpressions
+        return this._editorCanvasExpressions()
             .map(expressionView => expressionView.expression)
             .flatMap(expression => expression.allHolesOfType(expressionType))
             .map(hole => ExpressionView.forExpression(hole));
@@ -132,19 +135,12 @@ export class ExpressionEditor {
             this._deleteExpressionDropTargetElement,
             (droppedExpressionView) => {
                 if (droppedExpressionView.isForRootExpression()) {
-                    this.removeFromCanvas(droppedExpressionView);
+                    droppedExpressionView.domElement().remove();
                 } else {
                     droppedExpressionView.detachFromParent();
                 }
             },
         );
-    }
-
-    private removeFromCanvas(expressionView: ExpressionView) {
-        if (!this._editorCanvasExpressions.includes(expressionView)) return;
-
-        removeElementFrom(expressionView, this._editorCanvasExpressions);
-        expressionView.domElement().remove();
     }
 
     startedInteraction(newInteraction: UserInteraction) {
