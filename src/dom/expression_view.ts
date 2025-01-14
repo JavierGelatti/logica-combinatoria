@@ -15,10 +15,7 @@ export abstract class ExpressionView<T extends Expression = Expression> {
     private static readonly views: WeakMap<Expression, WeakRef<ExpressionView>> = new WeakMap();
 
     static forDomElement(element: HTMLElement): ExpressionView | undefined {
-        const expressionView: ExpressionView | undefined = Reflect.get(element, this.modelKey);
-        if (expressionView === undefined) throw new Error("The dom element was not an expression view");
-
-        return expressionView;
+        return Reflect.get(element, this.modelKey);
     }
 
     static forExpression<E extends Expression, V extends ExpressionView<E>>(expression: E): V {
