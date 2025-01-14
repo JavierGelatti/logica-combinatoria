@@ -1,4 +1,4 @@
-import {Expression, ExpressionType} from "../core/expression.ts";
+import {Expression, ExpressionType, valueType} from "../core/expression.ts";
 import {Application} from "../core/application.ts";
 import {ForAll} from "../core/forAll.ts";
 import {Exists} from "../core/exists.ts";
@@ -220,7 +220,7 @@ export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> 
     }
 
     protected _createDomElement(): HTMLElement {
-        return createElement("span", {className: "hole"});
+        return createElement("span", {className: "hole", classNames: [this.expression.type() === valueType ? "value" : "truth"]});
     }
 
     fillWith(droppedExpressionView: ExpressionView) {

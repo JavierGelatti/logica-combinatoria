@@ -34,6 +34,7 @@
     line-height: 1em;
     height: calc(1em + 10px);
     padding: 0 1px 0;
+    border-top: 1px solid transparent;
     border-bottom: 1px solid transparent;
     border-radius: 4px;
     user-select: none;
@@ -102,7 +103,6 @@
             opacity: .8;
         }
     }
-
 }
 
 .parenthesis {
@@ -205,6 +205,10 @@
             padding-right: .3em;
         }
 
+        * {
+            transition: filter .2s;
+        }
+
         .delete-expression-drop-target {
             position: absolute;
             top: 0;
@@ -213,12 +217,29 @@
             bottom: 0;
             background: red;
             display: none;
+            text-align: center;
             z-index: 1;
 
             &.enabled-drop-target {
                 display: block;
                 background: rgba(255, 0, 0, .05);
+                border: 1px dashed dimgray;
                 transition: background-color .2s;
+                align-content: center;
+
+                &::after {
+                    content: '♻️';
+                    font-family: sans-serif;
+                    font-size: 2em;
+                    opacity: .5;
+                    transition: transform .1s;
+                    display: block;
+                }
+
+                & ~ * {
+                    filter: blur(5px);
+                    transition: filter 0s;
+                }
 
                 &.active-drop-target {
                     background: rgba(255, 0, 0, 0.2);
@@ -233,7 +254,7 @@
         flex-grow: 1;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
 
         .new-expression-drop-target {
             align-self: stretch;
@@ -242,6 +263,7 @@
 
             &.enabled-drop-target {
                 background: rgba(34, 139, 34, .05);
+                border: 1px dashed dimgray;
                 transition: background-color .2s;
 
                 &::after {

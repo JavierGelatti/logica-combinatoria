@@ -46,8 +46,7 @@ const editor = new ExpressionEditor();
 [
     identifier("x"),
     identifier("y"),
-    identifier("y", 0),
-    identifier("y", 1),
+    identifier("z"),
     identifier("M"),
     application(hole(), hole()),
     equality(hole(), hole()),
