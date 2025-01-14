@@ -4,7 +4,6 @@ import {makeDropTargetExpecting} from "../essentials/drag_and_drop.ts";
 import {UserInteraction} from "./userInteraction.ts";
 
 export class GrabInteraction extends UserInteraction {
-    private _grabDeactivators: (() => void)[] | undefined;
     private _dropTargetDeactivators: (() => void)[] | undefined;
 
     constructor(
@@ -37,12 +36,14 @@ export class GrabInteraction extends UserInteraction {
 
     protected _cancel() {
         this.abortGrab();
-        this.expressionView.domElement().classList.remove("grabbed");
-        this.expressionView.stopGrabInteraction(this);
-        this._deactivateDropTargets();
+        this._releaseGrabbedExpression();
     }
 
     protected _finish() {
+        this._releaseGrabbedExpression();
+    }
+
+    private _releaseGrabbedExpression() {
         this.expressionView.domElement().classList.remove("grabbed");
         this.expressionView.stopGrabInteraction(this);
         this._deactivateDropTargets();
@@ -53,18 +54,11 @@ export class GrabInteraction extends UserInteraction {
             ?.forEach(deactivateDropTarget => deactivateDropTarget());
         this._dropTargetDeactivators = undefined;
     }
-
-    unregister(): void {
-        this._grabDeactivators
-            ?.forEach(deactivateGrab => deactivateGrab());
-        this._grabDeactivators = undefined;
-    }
 }
 
 export class DropTarget {
     constructor(
         public readonly element: HTMLElement,
         public readonly onDrop: (droppedExpressionView: ExpressionView) => void,
-    ) {
-    }
+    ) {}
 }

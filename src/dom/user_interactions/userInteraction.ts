@@ -26,6 +26,4 @@ export abstract class UserInteraction {
     }
 
     protected abstract _finish(): void;
-
-    abstract unregister(): void;
 }
