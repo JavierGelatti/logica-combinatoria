@@ -5,6 +5,7 @@ import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
 import {removeElementFrom} from "./essentials/removeElementFrom.ts";
+import {makeDraggableDelegator} from "./essentials/drag_and_drop.ts";
 
 export class ExpressionEditor {
     private readonly _domElement: HTMLElement;
@@ -17,6 +18,42 @@ export class ExpressionEditor {
 
     constructor() {
         this._domElement = this._createDomElement();
+
+        this._setupDraggableExpressionsOn(this._editorPallete, (grabbedExpressionView: ExpressionView) => {
+            return this._palleteExpressionDropTargetsFor(grabbedExpressionView);
+        });
+
+        this._setupDraggableExpressionsOn(this._editorCanvas, (grabbedExpressionView: ExpressionView) => {
+            return this._canvasExpressionDropTargetsFor(grabbedExpressionView);
+        });
+    }
+
+    private _setupDraggableExpressionsOn(parentElement: HTMLElement, currentDropTargets: (grabbedExpressionView: ExpressionView) => DropTarget[]) {
+        makeDraggableDelegator<ExpressionView>(
+            parentElement,
+            potentialTarget => this.draggableExpressionViewFrom(potentialTarget),
+            {
+                onDragStart: (target, cancelGrab) => {
+                    new GrabInteraction(
+                        this,
+                        target,
+                        cancelGrab,
+                        currentDropTargets,
+                    ).start();
+                },
+                onDragCancel: target => target.currentGrabInteraction()!.cancel(),
+                textOnDrop: target => target.expression.toString(),
+            },
+        );
+    }
+
+    private draggableExpressionViewFrom(target: HTMLElement): ExpressionView | undefined {
+        const expressionView = ExpressionView.forDomElement(target);
+        if (expressionView === undefined) return undefined;
+        if (expressionView.isDraggable) return expressionView;
+        const parentElement = expressionView.domElement().parentElement;
+        if (parentElement === null) return undefined;
+        return this.draggableExpressionViewFrom(parentElement);
     }
 
     domElement(): HTMLElement {
@@ -38,20 +75,7 @@ export class ExpressionEditor {
         if (!expression.isRootExpression()) throw new Error("Non-root expression added to the pallete");
 
         const expressionView = ExpressionView.forExpression(expression);
-        new GrabInteraction(
-            this,
-            expressionView,
-            grabbedExpressionView => this._palleteExpressionDropTargetsFor(grabbedExpressionView)
-        ).register();
         this._editorPallete.append(expressionView.domElement());
-    }
-
-    private _makeDraggable(expressionView: ExpressionView) {
-        new GrabInteraction(
-            this,
-            expressionView,
-            grabbedExpressionView => this._canvasExpressionDropTargetsFor(grabbedExpressionView)
-        ).register();
     }
 
     private _palleteExpressionDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
@@ -77,15 +101,13 @@ export class ExpressionEditor {
     }
 
     private _fillHoleInCanvas(holeView: HoleView<any>, droppedExpressionView: ExpressionView) {
-        const newExpressionView = holeView.fillWith(droppedExpressionView)!;
-        this._makeDraggable(newExpressionView);
+        holeView.fillWith(droppedExpressionView);
     }
 
     private addNewExpressionToCanvas(requestedExpressionToAdd: Expression) {
         const newExpression = requestedExpressionToAdd.copy();
         const newExpressionView = ExpressionView.forExpression(newExpression);
 
-        this._makeDraggable(newExpressionView);
         this._editorCanvas.insertBefore(newExpressionView.domElement(), this._newExpressionDropTargetElement);
         animateWith(newExpressionView.domElement(), "just-added");
         this._editorCanvasExpressions.push(newExpressionView);

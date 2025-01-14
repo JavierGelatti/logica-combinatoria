@@ -9,6 +9,7 @@ import {Hole} from "../core/hole.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {Binder} from "../core/binder.ts";
 import {identifier} from "../core/expression_constructors.ts";
+import {GrabInteraction} from "./user_interactions/grabInteraction.ts";
 
 export abstract class ExpressionView<T extends Expression = Expression> {
     private static readonly modelKey = Symbol("model");
@@ -52,12 +53,20 @@ export abstract class ExpressionView<T extends Expression = Expression> {
         }
     }
 
+    private readonly _isDraggable: boolean;
     private _domElement?: HTMLElement;
+    declare private _currentGrabInteraction: GrabInteraction | undefined;
 
     constructor(
         public readonly expression: T,
-        protected readonly isDraggable: boolean = true
-    ) {}
+        isDraggable: boolean = true
+    ) {
+        this._isDraggable = isDraggable;
+    }
+
+    get isDraggable() {
+        return this._isDraggable;
+    }
 
     domElement(): HTMLElement {
         if (this._domElement === undefined) {
@@ -66,6 +75,9 @@ export abstract class ExpressionView<T extends Expression = Expression> {
             Reflect.set(this._domElement, ExpressionView.modelKey, this);
 
             this._domElement.classList.add("expression");
+            if (this.isDraggable) {
+                this._domElement.setAttribute("draggable", "true");
+            }
 
             if (this.expression.needsParenthesis()) {
                 this._domElement.prepend(leftParenthesis());
@@ -90,6 +102,19 @@ export abstract class ExpressionView<T extends Expression = Expression> {
 
     isForRootExpression() {
         return this.expression.isRootExpression();
+    }
+
+    startGrabInteraction(grabInteraction: GrabInteraction) {
+        this._currentGrabInteraction = grabInteraction;
+    }
+
+    currentGrabInteraction() {
+        return this._currentGrabInteraction;
+    }
+
+    stopGrabInteraction(grabInteraction: GrabInteraction) {
+        if (this._currentGrabInteraction !== grabInteraction) throw new Error("Stopped a non-current grab interaction");
+        delete this._currentGrabInteraction;
     }
 }
 

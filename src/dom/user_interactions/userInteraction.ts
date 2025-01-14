@@ -5,8 +5,6 @@ export abstract class UserInteraction {
         protected readonly editor: ExpressionEditor,
     ) {}
 
-    abstract register(): void;
-
     start(): void {
         // The order is important: the editor will cancel the current interaction (if any) before starting this one.
         this.editor.startedInteraction(this);

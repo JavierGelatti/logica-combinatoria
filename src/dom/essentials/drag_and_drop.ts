@@ -2,57 +2,66 @@ export type DropEffect = typeof DataTransfer.prototype.dropEffect;
 type DragEventType = "drag" | "dragend" | "dragenter" | "dragleave" | "dragover" | "dragstart" | "drop";
 type DragEventWithDataTransfer = DragEvent & { readonly dataTransfer: DataTransfer };
 
-export type DraggableConfiguration = {
-    onDragStart?: () => void,
-    onDrop?: () => void,
-    onDragCancel?: () => void,
+export type DraggableDelegatorConfiguration<E> = {
+    onDragStart?: (target: E, dragWasCancelled: () => void) => void,
+    onDragCancel?: (target: E) => void,
     dropEffect?: DropEffect,
-    textOnDrop?: () => string
+    textOnDrop?: (target: E) => string
 };
 
-export function makeDraggable(
-    element: HTMLElement,
-    configuration: DraggableConfiguration
-): () => void {
-    const { onDragStart, onDrop, onDragCancel, dropEffect, textOnDrop } =
-        Object.assign({ dropEffect: "copy", textOnDrop: () => "" }, configuration);
+export function makeDraggableDelegator<E extends { domElement(): HTMLElement }>(
+    parentElement: HTMLElement,
+    targetSelector: (potentialTarget: HTMLElement) => E | undefined,
+    configuration: DraggableDelegatorConfiguration<E>
+) {
+    const { onDragStart, onDragCancel, dropEffect, textOnDrop } =
+        Object.assign({ dropEffect: "copy", textOnDrop: (_target: E, _dragWasCancelled: () => void) => "" }, configuration);
 
-    const abortController = new AbortController();
+    parentElement.addEventListener("dragstart", whenOnTarget((event, target, targetElement) => {
+        if (!hasDataTransfer(event)) return;
 
-    element.setAttribute("draggable", "true");
-    addEventListenerToElement("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", textOnDrop());
-        e.dataTransfer.dropEffect = dropEffect;
-        onDragStart?.();
-    });
-    addEventListenerToElement("dragend", (e) => {
-        if (e.dataTransfer.dropEffect !== "none") {
-            onDrop?.();
-        } else {
-            onDragCancel?.();
+        const grabbingAbortController = new AbortController();
+        onDragStart?.(target, () => grabbingAbortController.abort());
+
+        event.dataTransfer.setData("text/plain", textOnDrop(target));
+        event.dataTransfer.dropEffect = dropEffect;
+
+        targetElement.addEventListener("dragend", (event) => {
+            if (event.dataTransfer?.dropEffect === "none") {
+                onDragCancel?.(target);
+            }
+        }, {once: true, signal: grabbingAbortController.signal});
+    }));
+
+    parentElement.addEventListener("click", whenOnTarget((event, target, targetElement) => {
+        const grabbingAbortController = new AbortController();
+        onDragStart?.(target, () => grabbingAbortController.abort());
+
+        targetElement.classList.add("grabbed");
+        event.stopPropagation();
+
+        document.body.addEventListener("click", () => {
+            onDragCancel?.(target)
+            grabbingAbortController.abort();
+        }, {once: true, signal: grabbingAbortController.signal });
+
+        targetElement.addEventListener("dropclick", () => {
+            grabbingAbortController.abort();
+        }, {once: true, signal: grabbingAbortController.signal });
+    }));
+
+    function whenOnTarget<Ev extends Event>(handler: (event: Ev, target: E, targetElement: HTMLElement) => void) {
+        return (event: Ev) => {
+            const target = targetOf(event);
+            if (target === undefined) return;
+            handler(event, target, target.domElement());
         }
-    });
-
-    return endInteraction;
-
-    function addEventListenerToElement(
-        type: DragEventType,
-        listener: (this: HTMLElement, ev: DragEventWithDataTransfer) => any
-    ): void {
-        element.addEventListener(
-            type,
-            function(event) {
-                if (!hasDataTransfer(event)) return;
-                listener.bind(this)(event);
-                event.stopPropagation();
-            },
-            { signal: abortController.signal }
-        );
     }
 
-    function endInteraction() {
-        element.removeAttribute("draggable");
-        abortController.abort();
+    function targetOf(event: Event): E | undefined {
+        if (!(event.target instanceof HTMLElement)) return;
+
+        return targetSelector(event.target);
     }
 }
 

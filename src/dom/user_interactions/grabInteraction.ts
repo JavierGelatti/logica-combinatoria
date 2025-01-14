@@ -1,8 +1,8 @@
 import {ExpressionEditor} from "../expressionEditor.ts";
 import {ExpressionView} from "../expression_view.ts";
-import {makeDraggable, makeDropTargetExpecting} from "../essentials/drag_and_drop.ts";
+import {makeDropTargetExpecting} from "../essentials/drag_and_drop.ts";
 import {UserInteraction} from "./userInteraction.ts";
-import { onClick } from "../essentials/onClick.ts";
+import {onClick} from "../essentials/onClick.ts";
 
 export class GrabInteraction extends UserInteraction {
     private _grabDeactivators: (() => void)[] | undefined;
@@ -11,59 +11,54 @@ export class GrabInteraction extends UserInteraction {
     constructor(
         editor: ExpressionEditor,
         private readonly expressionView: ExpressionView,
+        private readonly abortGrab: () => void,
         private readonly currentDropTargets: (grabbedExpressionView: ExpressionView) => DropTarget[],
     ) {
         super(editor);
     }
 
-    register() {
-        const domElement = this.expressionView.domElement();
-        this._grabDeactivators = [
-            makeDraggable(domElement, {
-                onDragStart: () => this.start(),
-                onDrop: () => this.finish(),
-                onDragCancel: () => this.cancel(),
-                textOnDrop: () => this.expressionView.expression.toString(),
-            }),
-            onClick(domElement, () => {
-                // The order is important, see UserInteraction.start
-                this.start();
-                this.expressionView.domElement().classList.add("grabbed");
-            })
-        ];
-    }
-
     protected _start(): void {
+        this.expressionView.startGrabInteraction(this);
         this._activateDropTargets();
     }
 
     private _activateDropTargets() {
         this._dropTargetDeactivators = this.currentDropTargets(this.expressionView)
             .flatMap(dropTarget => {
-                const dropDeactivator = dropTarget.activateOn(this.expressionView);
+                const dropDeactivator = makeDropTargetExpecting(
+                    dropTarget.element,
+                    this.expressionView.domElement(),
+                    {
+                        onDrop: () => {
+                            dropTarget.onDrop(this.expressionView);
+                            this.finish();
+                        },
+                    },
+                );
                 const clickInsideDeactivator = onClick(
                     dropTarget.element,
                     () => {
+                        this.expressionView.domElement().dispatchEvent(
+                            new CustomEvent("dropclick", {bubbles: true})
+                        );
                         dropTarget.onDrop(this.expressionView);
                         this.finish();
                     }
                 );
-                const clickOutsideDeactivator = onClick(
-                    document.body,
-                    () => this.cancel()
-                );
-
-                return [dropDeactivator, clickInsideDeactivator, clickOutsideDeactivator];
+                return [dropDeactivator, clickInsideDeactivator];
             });
     }
 
     protected _cancel() {
+        this.abortGrab();
         this.expressionView.domElement().classList.remove("grabbed");
+        this.expressionView.stopGrabInteraction(this);
         this._deactivateDropTargets();
     }
 
     protected _finish() {
         this.expressionView.domElement().classList.remove("grabbed");
+        this.expressionView.stopGrabInteraction(this);
         this._deactivateDropTargets();
     }
 
@@ -85,15 +80,5 @@ export class DropTarget {
         public readonly element: HTMLElement,
         public readonly onDrop: (droppedExpressionView: ExpressionView) => void,
     ) {
-    }
-
-    activateOn(grabbedExpressionView: ExpressionView): () => void {
-        return makeDropTargetExpecting(
-            this.element,
-            grabbedExpressionView.domElement(),
-            {
-                onDrop: () => this.onDrop(grabbedExpressionView),
-            },
-        );
     }
 }
