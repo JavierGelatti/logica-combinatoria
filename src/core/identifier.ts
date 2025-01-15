@@ -3,6 +3,7 @@ import {successfulUnification, unificationFailure, UnificationResult} from "./un
 import {Exists} from "./exists.ts";
 import { Hole } from "./hole.ts";
 import {AtomicExpression} from "./atomicExpression.ts";
+import { Binder } from "./binder.ts";
 
 export class Identifier extends AtomicExpression<Value> {
     protected _type: Value = valueType;
@@ -79,11 +80,15 @@ export class Identifier extends AtomicExpression<Value> {
     }
 
     private isExistentiallyBound() {
-        return this.declaration()?._parent instanceof Exists;
+        return this.binder() instanceof Exists;
     }
 
-    declaration() {
-        return this._parent?.declarationOf(this) ?? undefined;
+    binder(): Binder | undefined {
+        return this._parent?.declarationOf(this);
+    }
+
+    declaration(): Identifier | undefined {
+        return this._parent?.declarationOf(this)?.boundVariable;
     }
 
     _containsOccurrenceOf(identifierDeclaration: Identifier): boolean {
@@ -103,6 +108,22 @@ export class Identifier extends AtomicExpression<Value> {
             return `${String(this.name)}_${this.subscript}`;
         } else {
             return String(this.name);
+        }
+    }
+
+    allOccurrences(): Set<Identifier> {
+        const binder = this.binder();
+        if (binder === undefined) throw new Error("The variable is free");
+
+        return new Set([binder.boundVariable])
+            .union(binder.body.allOccurrencesOf(binder.boundVariable));
+    }
+
+    allOccurrencesOf(lookedUpIdentifier: Identifier): Set<Identifier> {
+        if (this.equals(lookedUpIdentifier)) {
+            return new Set([this]);
+        } else {
+            return new Set();
         }
     }
 }

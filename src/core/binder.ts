@@ -56,14 +56,14 @@ export abstract class Binder extends CompoundExpression<Truth> {
         );
     }
 
-    declarationOf(variable: Identifier): Identifier | undefined {
-        if (this._boundVariable.equals(variable)) return this._boundVariable;
+    declarationOf(variable: Identifier): Binder | undefined {
+        if (this._boundVariable.equals(variable)) return this;
 
         return super.declarationOf(variable);
     }
 
     protected _unifyWith(anotherExpression: this): UnificationResult {
-        return this._equals(anotherExpression) ? successfulUnification() : unificationFailure();
+        return this.equals(anotherExpression) ? successfulUnification() : unificationFailure();
     }
 
     copy() {
@@ -97,5 +97,12 @@ export abstract class Binder extends CompoundExpression<Truth> {
             this.boundVariable.copy(),
             this.body.replace(subExpressionToReplace, newExpression)
         );
+    }
+
+    allOccurrencesOf(lookedUpIdentifier: Identifier): Set<Identifier> {
+        if (lookedUpIdentifier.equals(this._boundVariable)) {
+            return new Set();
+        }
+        return super.allOccurrencesOf(lookedUpIdentifier);
     }
 }

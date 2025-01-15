@@ -112,4 +112,6 @@ export abstract class Expression<T extends ExpressionType = any> {
     }
 
     abstract toString(): string;
+
+    abstract allOccurrencesOf(lookedUpIdentifier: Identifier): Set<Identifier>
 }

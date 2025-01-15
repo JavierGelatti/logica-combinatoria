@@ -48,4 +48,8 @@ export class Hole<T extends ExpressionType> extends AtomicExpression<T> {
     toString(): string {
         return "_";
     }
+
+    allOccurrencesOf(_lookedUpIdentifier: Identifier): Set<Identifier> {
+        return new Set();
+    }
 }

@@ -2,6 +2,7 @@ import {Expression, ExpressionType} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
 import {unificationFailure, UnificationResult} from "./unificationResult.ts";
 import {Hole} from "./hole.ts";
+import {Binder} from "./binder.ts";
 
 export abstract class CompoundExpression<T extends ExpressionType = ExpressionType> extends Expression<T> {
     protected readonly _subexpressions: Expression[];
@@ -18,7 +19,7 @@ export abstract class CompoundExpression<T extends ExpressionType = ExpressionTy
         return this.declarationOf(variable) === undefined;
     }
 
-    declarationOf(variable: Identifier): Identifier | undefined {
+    declarationOf(variable: Identifier): Binder | undefined {
         return this._parent?.declarationOf(variable);
     }
 
@@ -77,5 +78,11 @@ export abstract class CompoundExpression<T extends ExpressionType = ExpressionTy
 
     allSubExpressions(): Expression[] {
         return [this, ...this._subexpressions.flatMap(s => s.allSubExpressions())];
+    }
+
+    allOccurrencesOf(lookedUpIdentifier: Identifier): Set<Identifier> {
+        return this._subexpressions
+            .map(subexpression => subexpression.allOccurrencesOf(lookedUpIdentifier))
+            .reduce((previous, current) => previous.union(current));
     }
 }

@@ -139,4 +139,25 @@ describe("variable binding", () => {
 
         expect(anExpression.freeVariables()).toEqual(new Set([z1, z2]));
     });
+
+    test("can find all occurrences of an identifier", () => {
+        let binder0!: Identifier, binder1: Identifier;
+        let ocurrence1!: Identifier, ocurrence2!: Identifier, ocurrence3!:Identifier;
+        forall(
+            binder0 = identifier("x"),
+            forall(binder1 = identifier("x"),
+                equality(
+                    application(
+                        ocurrence1 = identifier("x"),
+                        application(identifier("y"), ocurrence2 = identifier("x"))
+                    ),
+                    ocurrence3 = identifier("x")
+                )
+            )
+        );
+
+        expect(binder0.allOccurrences()).toEqual(new Set([binder0]));
+        expect(binder1.allOccurrences()).toEqual(new Set([binder1, ocurrence1, ocurrence2, ocurrence3]));
+        expect(ocurrence3.allOccurrences()).toEqual(new Set([binder1, ocurrence1, ocurrence2, ocurrence3]));
+    });
 });
