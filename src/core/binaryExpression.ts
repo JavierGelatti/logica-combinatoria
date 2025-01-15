@@ -1,4 +1,4 @@
-import {Expression, ExpressionType, Value} from "./expression.ts";
+import {Expression, ExpressionType, Truth, Value} from "./expression.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
 import {UnificationResult} from "./unificationResult.ts";
 
@@ -32,7 +32,14 @@ export abstract class BinaryExpression<I extends ExpressionType, O extends Expre
             anotherObject._right.equals(this._right);
     }
 
-    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<O> {
+    public substitute(subExpressionToSubstitute: Expression<Value>, newExpression: Expression<Value>): Expression<O> {
+        return new this._species(
+            this._left.substitute(subExpressionToSubstitute, newExpression),
+            this._right.substitute(subExpressionToSubstitute, newExpression),
+        );
+    }
+
+    protected _replaceChild<S extends ExpressionType>(subExpressionToReplace: Expression<S>, newExpression: Expression<S>): Expression<O> {
         return new this._species(
             this._left.replace(subExpressionToReplace, newExpression),
             this._right.replace(subExpressionToReplace, newExpression),

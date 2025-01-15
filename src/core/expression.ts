@@ -21,7 +21,17 @@ export abstract class Expression<T extends ExpressionType = any> {
 
     protected abstract _equals(anotherObject: this): boolean;
 
-    public abstract replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<T>;
+    abstract substitute(subExpressionToSubstitute: Expression<Value>, newExpression: Expression<Value>): Expression<T>;
+
+    replace<S extends ExpressionType>(subExpressionToReplace: Expression<S>, newExpression: Expression<S>): Expression<T> {
+        if (subExpressionToReplace as Expression === this) {
+            return newExpression as Expression as Expression<T>;
+        }
+
+        return this._replaceChild(subExpressionToReplace, newExpression);
+    }
+
+    protected abstract _replaceChild<S extends ExpressionType>(subExpressionToReplace: Expression<S>, newExpression: Expression<S>): Expression<T>;
 
     insertedInto(newParent: CompoundExpression) {
         if (this._parent !== undefined) throw new Error("The expression already had a parent");
@@ -29,7 +39,7 @@ export abstract class Expression<T extends ExpressionType = any> {
         this._parent = newParent;
     }
 
-    public abstract unifyWith(anotherExpression: Expression): UnificationResult;
+    abstract unifyWith(anotherExpression: Expression): UnificationResult;
 
     contains(anExpression: Expression): boolean {
         return this === anExpression || this._contains(anExpression);

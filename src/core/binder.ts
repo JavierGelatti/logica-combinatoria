@@ -36,23 +36,23 @@ export abstract class Binder extends CompoundExpression<Truth> {
     }
 
     applyTo(boundVariableValue: Expression<Value>) {
-        return this._body.replace(this._boundVariable, boundVariableValue);
+        return this._body.substitute(this._boundVariable, boundVariableValue);
     }
 
-    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<Truth> {
-        if (subExpressionToReplace.equals(this._boundVariable)) return this.copy();
+    public substitute(subExpressionToSubstitute: Expression<Value>, newExpression: Expression<Value>): Expression<Truth> {
+        if (subExpressionToSubstitute.equals(this._boundVariable)) return this.copy();
 
         if (newExpression.freeVariablesContain(this._boundVariable)) {
             const newBoundVariable = this._boundVariable.withIncrementedSubscript()
             return new this._species(
                 newBoundVariable,
-                this._body.replace(this._boundVariable, newBoundVariable),
-            ).replace(subExpressionToReplace, newExpression);
+                this._body.substitute(this._boundVariable, newBoundVariable),
+            ).substitute(subExpressionToSubstitute, newExpression);
         }
 
         return new this._species(
             this._boundVariable.copy(),
-            this._body.replace(subExpressionToReplace, newExpression),
+            this._body.substitute(subExpressionToSubstitute, newExpression),
         );
     }
 
@@ -90,5 +90,12 @@ export abstract class Binder extends CompoundExpression<Truth> {
     public hasLocallyUnbound(newName: Identifier) {
         // If this returns true, the variable is either (globally) free, or it's bound outside of this expression.
         return this.copy().freeVariablesContain(newName);
+    }
+
+    protected _replaceChild<S extends ExpressionType>(subExpressionToReplace: Expression<S>, newExpression: Expression<S>): Expression<Truth> {
+        return new this._species(
+            this.boundVariable.copy(),
+            this.body.replace(subExpressionToReplace, newExpression)
+        );
     }
 }

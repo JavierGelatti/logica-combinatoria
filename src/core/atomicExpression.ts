@@ -1,8 +1,8 @@
 import {Expression, ExpressionType, Value} from "./expression.ts";
 
 export abstract class AtomicExpression<T extends ExpressionType> extends Expression<T> {
-    replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<T> {
-        if (subExpressionToReplace.equals(this)) {
+    substitute(subExpressionToSubstitute: Expression<Value>, newExpression: Expression<Value>): Expression<T> {
+        if (subExpressionToSubstitute.equals(this)) {
             return newExpression.copy() as Expression<T>;
         } else {
             return this.copy();
@@ -15,5 +15,9 @@ export abstract class AtomicExpression<T extends ExpressionType> extends Express
 
     allSubExpressions(): Expression[] {
         return [this];
+    }
+
+    protected _replaceChild<S extends ExpressionType>(_subExpressionToReplace: Expression<S>, _newExpression: Expression<S>): Expression<T> {
+        return this.copy();
     }
 }
