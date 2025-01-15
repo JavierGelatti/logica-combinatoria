@@ -76,6 +76,14 @@ export abstract class Expression<T extends ExpressionType = any> {
         return this._parent === undefined;
     }
 
+    rootExpression(): Expression {
+        if (this._parent === undefined) {
+            return this;
+        }
+
+        return this._parent.rootExpression();
+    }
+
     type(): T {
         return this._type;
     }
