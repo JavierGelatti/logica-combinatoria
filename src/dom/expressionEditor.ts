@@ -10,6 +10,7 @@ import {Identifier} from "../core/identifier.ts";
 
 export class ExpressionEditor {
     private readonly _domElement: HTMLElement;
+    private _systemElement!: HTMLElement;
     private _axiomsList!: HTMLOListElement;
     private _theoremsList!: HTMLOListElement;
     private _editorPallete!: HTMLElement;
@@ -25,9 +26,11 @@ export class ExpressionEditor {
         this._setupDraggableExpressionsOn(this._editorPallete, (grabbedExpressionView: ExpressionView) => {
             return this._palleteExpressionDropTargetsFor(grabbedExpressionView);
         });
-
         this._setupDraggableExpressionsOn(this._editorCanvas, (grabbedExpressionView: ExpressionView) => {
             return this._canvasExpressionDropTargetsFor(grabbedExpressionView);
+        });
+        this._setupDraggableExpressionsOn(this._systemElement, (grabbedExpressionView: ExpressionView) => {
+            return this._palleteExpressionDropTargetsFor(grabbedExpressionView);
         });
     }
 
@@ -64,7 +67,7 @@ export class ExpressionEditor {
 
     private _createDomElement(): HTMLElement {
         return createElement("div", {}, [
-            createElement("div", {className: "logic-system"}, [
+            this._systemElement = createElement("div", {className: "logic-system"}, [
                 this._axiomsList = createElement("ol", {className: "axioms"}),
                 this._theoremsList = createElement("ol", {className: "theorems"}),
             ]),
@@ -206,6 +209,7 @@ export class ExpressionEditor {
     private _canvasExpressionDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
         return [
             this._deleteExpressionDropTarget(),
+            this._newExpressionDropTarget(),
             ...this._holesInCanvasDropTargetsFor(grabbedExpressionView),
             ...this._forallBindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView)
         ];
