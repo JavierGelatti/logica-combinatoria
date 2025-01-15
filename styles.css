@@ -48,7 +48,7 @@ body {
 
     --separation-margin: 3px;
 
-    &[draggable], &[draggable] * {
+    &[draggable="true"], &[draggable="true"] * {
         touch-action: none;
 
         &:not(.grabbed) {
@@ -56,7 +56,7 @@ body {
         }
     }
 
-    &[draggable]:hover {
+    &[draggable="true"]:hover {
         &:not(:has(&)):not(:has(.active-drop-target)):not(:has(.full-binder:hover)) {
             background: rgba(255, 0, 0, .1);
             border-bottom: 1px solid red;

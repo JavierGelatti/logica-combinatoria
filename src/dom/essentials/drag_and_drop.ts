@@ -34,20 +34,31 @@ export function makeDraggableDelegator<E extends { domElement(): HTMLElement }>(
     }));
 
     parentElement.addEventListener("click", whenOnTarget((event, target, targetElement) => {
+        if (!targetElement.draggable) return;
+
         const grabbingAbortController = new AbortController();
-        onDragStart?.(target, () => grabbingAbortController.abort());
+
+        onDragStart?.(target, () => endGrab());
 
         targetElement.classList.add("grabbed");
         event.stopPropagation();
 
         document.body.addEventListener("click", () => {
             onDragCancel?.(target)
-            grabbingAbortController.abort();
+            endGrab();
         }, {once: true, signal: grabbingAbortController.signal });
 
         targetElement.addEventListener("dropclick", () => {
-            grabbingAbortController.abort();
+            endGrab();
         }, {once: true, signal: grabbingAbortController.signal });
+
+        const draggableElements = [...document.body.querySelectorAll<HTMLElement>('[draggable="true"]')];
+        draggableElements.forEach(draggableElement => draggableElement.draggable = false);
+
+        function endGrab() {
+            grabbingAbortController.abort();
+            draggableElements.forEach(draggableElement => draggableElement.draggable = true);
+        }
     }));
 
     function whenOnTarget<Ev extends Event>(handler: (event: Ev, target: E, targetElement: HTMLElement) => void) {
