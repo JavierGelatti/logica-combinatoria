@@ -30,6 +30,8 @@ export class GrabInteraction extends UserInteraction {
                         dropTarget.onDrop(this.expressionView);
                         this.finish();
                     },
+                    onActivate: () => dropTarget.onActivate(),
+                    onDeactivate: () => dropTarget.onDeactivate()
                 },
             ));
     }
@@ -60,5 +62,7 @@ export class DropTarget {
     constructor(
         public readonly element: HTMLElement,
         public readonly onDrop: (droppedExpressionView: ExpressionView) => void,
+        public readonly onActivate: () => void = () => {},
+        public readonly onDeactivate: () => void = () => {},
     ) {}
 }

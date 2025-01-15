@@ -153,6 +153,9 @@ body {
     &:active {
         background: rgba(34, 139, 34, .2);
     }
+    &.active-drop-target {
+        background: yellow;
+    }
 }
 
 .identifier {
@@ -168,6 +171,10 @@ body {
         font-style: normal;
         font-weight: bold;
         color: darkslateblue;
+    }
+
+    &.highlighted {
+        background-color: yellow;
     }
 
     sub {

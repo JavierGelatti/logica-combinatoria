@@ -1,6 +1,6 @@
 import {ExpressionView, HoleView} from "./expression_view.ts";
 import {createElement} from "./essentials/createElement.ts";
-import {Expression, ExpressionType, truthType} from "../core/expression.ts";
+import {Expression, ExpressionType} from "../core/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
@@ -118,10 +118,22 @@ export class ExpressionEditor {
             .flatMap(expressionView => expressionView.expression.allSubExpressions())
             .filter(expression => expression instanceof ForAll)
             .map(expression => ExpressionView.forExpression(expression))
-            .map(forallView => new DropTarget(
-                forallView.domElement(),
-                (droppedExpressionView) => this._applyForallTo(forallView, droppedExpressionView),
-            ));
+            .map(forallView => {
+                const binderElement: HTMLElement = forallView.domElement().querySelector(".full-binder")!;
+                const variableViews = [...forallView.expression.boundVariable.allOccurrences()]
+                    .map(identifier => ExpressionView.forExpression(identifier));
+
+                return new DropTarget(
+                    binderElement,
+                    (droppedExpressionView) => this._applyForallTo(forallView, droppedExpressionView),
+                    () => {
+                        variableViews.forEach(view => view.domElement().classList.add("highlighted"))
+                    },
+                    () => {
+                        variableViews.forEach(view => view.domElement().classList.remove("highlighted"))
+                    }
+                );
+            });
     }
 
     private _newExpressionDropTarget() {

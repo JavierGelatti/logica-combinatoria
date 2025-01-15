@@ -67,6 +67,8 @@ export function makeDraggableDelegator<E extends { domElement(): HTMLElement }>(
 
 export type DropTargetConfiguration = {
     onDrop: () => void,
+    onActivate?: () => void,
+    onDeactivate?: () => void,
     dropEffect?: DropEffect,
 };
 
@@ -75,27 +77,27 @@ export function makeDropTargetExpecting(
     expectedDropElement: HTMLElement,
     configuration: DropTargetConfiguration
 ): () => void {
-    const { onDrop, dropEffect } =
-        Object.assign({ dropEffect: "copy" }, configuration);
+    const { onDrop, dropEffect, onActivate, onDeactivate } =
+        Object.assign({ dropEffect: "copy", onActivate: () => {}, onDeactivate: () => {} }, configuration);
 
     const abortController = new AbortController();
 
     dropTargetElement.classList.add("enabled-drop-target");
 
     addEventListenerToTarget("dragenter", e => {
-        dropTargetElement.classList.add("active-drop-target");
+        activateDropTarget();
         e.dataTransfer.dropEffect = dropEffect;
     });
     addEventListenerToTarget("dragover", e => {
-        dropTargetElement.classList.add("active-drop-target");
+        activateDropTarget();
         e.dataTransfer.dropEffect = dropEffect;
         e.stopPropagation();
     });
     addEventListenerToTarget("dragleave", () => {
-        dropTargetElement.classList.remove("active-drop-target");
+        deactivateDropTarget();
     });
     addEventListenerToTarget("drop", (e) => {
-        dropTargetElement.classList.remove("active-drop-target");
+        deactivateDropTarget();
 
         onDrop();
 
@@ -103,12 +105,13 @@ export function makeDropTargetExpecting(
     });
 
     dropTargetElement.addEventListener("pointerenter", () => {
-        dropTargetElement.classList.add("active-drop-target");
+        activateDropTarget();
     }, { signal: abortController.signal });
     dropTargetElement.addEventListener("pointerleave", () => {
-        dropTargetElement.classList.remove("active-drop-target");
+        deactivateDropTarget();
     }, { signal: abortController.signal });
     dropTargetElement.addEventListener("click", event => {
+        deactivateDropTarget();
         expectedDropElement.dispatchEvent(new CustomEvent("dropclick", {bubbles: true}));
 
         onDrop();
@@ -136,6 +139,16 @@ export function makeDropTargetExpecting(
     function endInteraction() {
         dropTargetElement.classList.remove("enabled-drop-target");
         abortController.abort();
+    }
+
+    function activateDropTarget() {
+        dropTargetElement.classList.add("active-drop-target");
+        onActivate();
+    }
+
+    function deactivateDropTarget() {
+        dropTargetElement.classList.remove("active-drop-target");
+        onDeactivate();
     }
 }
 
