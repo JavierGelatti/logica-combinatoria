@@ -33,6 +33,9 @@ export class UnificationSuccess extends UnificationResult {
     ) {
         super();
 
+        if (!rootExpression.isRootExpression()) {
+            throw new Error("The root expression is a subexpression");
+        }
         if (this._variables().some(identifier => identifier.rootExpression() !== rootExpression)) {
             throw new Error("Wrong unification: all of the variables should belong to the same root expression");
         }
@@ -64,7 +67,7 @@ export class UnificationSuccess extends UnificationResult {
 
     rewrite() {
         if (this.bindings.size === 0) {
-            return this.rootExpression;
+            return this.rootExpression.copy();
         }
     }
 }

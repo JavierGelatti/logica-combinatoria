@@ -187,6 +187,19 @@ describe("unification", () => {
                 .toThrowError("Wrong unification: all of the variables should belong to the same root expression");
         });
 
+        test("cannot create an unification with a non-root expression", () => {
+            let subexpression!: Identifier;
+            forall(identifier("x"),
+                equality(
+                    subexpression = identifier("x"),
+                    identifier("w")
+                )
+            );
+
+            expect(() => successfulUnification(subexpression))
+                .toThrowError("The root expression is a subexpression");
+        });
+
         test("an unification example", () => {
             let mockingbirdRHS!: Expression;
             let x!: Identifier, a!: Identifier;
@@ -205,13 +218,16 @@ describe("unification", () => {
     });
 
     describe("rewriting", () => {
-        test("a free variable unification can be applied", () => {
+        test("an unification with no bindings rewrites by returning a copy of the same expression", () => {
             const freeVariable = identifier("x");
             const theSameFreeVariable = identifier("x");
-
             const sucessfulUnification = freeVariable.unifyWith(theSameFreeVariable) as UnificationSuccess;
 
-            expect(sucessfulUnification.rewrite()).toEqual(identifier("x"));
+            const rewriteResult = sucessfulUnification.rewrite();
+
+            expect(rewriteResult).toEqual(identifier("x"));
+            expect(rewriteResult).not.toBe(freeVariable);
+            expect(rewriteResult).not.toBe(theSameFreeVariable);
         });
     });
 });
