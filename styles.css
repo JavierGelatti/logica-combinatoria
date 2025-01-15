@@ -25,6 +25,11 @@
     font-style: normal;
 }
 
+body {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
 .expression, .full-binder {
     font-family: 'KaTeX_Size1', serif;
     font-size: 20px;
@@ -173,10 +178,26 @@
     }
 }
 
+.logic-system {
+    margin: 1em;
+
+    .axioms, .theorems {
+        .expression {
+            justify-content: left;
+            width: fit-content;
+        }
+    }
+
+    .axioms {
+        border-bottom: 1px solid gray;
+        margin-bottom: 1em;
+
+    }
+}
+
 .expression-editor {
     display: flex;
     border-top: 1px solid gray;
-    max-width: 700px;
     margin: 1em auto 0;
 
     .pallete {

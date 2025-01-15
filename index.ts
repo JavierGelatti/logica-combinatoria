@@ -1,46 +1,5 @@
 import {application, equality, exists, forall, hole, identifier, truthHole} from "./src/core/expression_constructors";
-import {ExpressionView} from "./src/dom/expression_view";
-import {Expression} from "./src/core/expression";
 import {ExpressionEditor} from "./src/dom/expressionEditor";
-
-const mockingbird = forall(
-    identifier("x"),
-    equality(
-        application(identifier("M"), identifier("x")),
-        application(identifier("x"), identifier("x")),
-    )
-);
-
-show(mockingbird);
-
-// show(exists(
-//     identifier("x"),
-//     equality(
-//         application(identifier("x"), identifier("x")),
-//         application(
-//             application(identifier("x"), identifier("x")),
-//             identifier("x")
-//         ),
-//     )
-// ));
-//
-const aForAll = forall(
-    identifier("x"),
-    forall(identifier("y"),
-        equality(identifier("y"), identifier("x"))
-    )
-);
-// const argument = application(identifier("y"), identifier("y", 0));
-// const result = aForAll.applyTo(argument);
-//
-show(aForAll);
-show(aForAll.applyTo(application(identifier("y"), identifier("y", 0))));
-// show(result);
-
-function show(expression: Expression) {
-    document.body.append(ExpressionView.forExpression(expression).domElement());
-}
-
 
 const editor = new ExpressionEditor();
 [
@@ -53,5 +12,29 @@ const editor = new ExpressionEditor();
     forall(identifier("x"), truthHole()),
     exists(identifier("x"), truthHole())
 ].forEach(e => editor.addToPallete(e));
+
+const mockingbird = forall(
+    identifier("x"),
+    equality(
+        application(identifier("M"), identifier("x")),
+        application(identifier("x"), identifier("x")),
+    )
+);
+editor.addAxiom(mockingbird);
+
+const composition = forall(identifier("A"),
+    forall(identifier("B"),
+        exists(identifier("C"),
+            forall(identifier("x"),
+                equality(
+                    application(identifier("C"), identifier("x")),
+                    application(identifier("A"), application(identifier("B"), identifier("x"))),
+                )
+            )
+        )
+    )
+);
+editor.addAxiom(composition);
+
 
 document.body.append(editor.domElement());

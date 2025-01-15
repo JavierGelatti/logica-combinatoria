@@ -98,6 +98,10 @@ export abstract class Expression<T extends ExpressionType = any> {
         return this._type;
     }
 
+    isValue(): this is Expression<Value> {
+        return this._type === valueType;
+    }
+
     hasType<S extends ExpressionType>(type: S): this is Expression<S> {
         // @ts-expect-error
         return this._type === type;

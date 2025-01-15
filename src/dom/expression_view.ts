@@ -1,4 +1,4 @@
-import {Expression, ExpressionType, valueType} from "../core/expression.ts";
+import {Expression, ExpressionType, Value, valueType} from "../core/expression.ts";
 import {Application} from "../core/application.ts";
 import {ForAll} from "../core/forAll.ts";
 import {Exists} from "../core/exists.ts";
@@ -84,8 +84,13 @@ export abstract class ExpressionView<T extends Expression = Expression> {
     }
 
     protected abstract _createDomElement(): HTMLElement
+
     expressionType() {
         return this.expression.type();
+    }
+
+    isValue(): this is ExpressionView<Expression<Value>> {
+        return this.expression.isValue();
     }
 
     detachFromParent() {
