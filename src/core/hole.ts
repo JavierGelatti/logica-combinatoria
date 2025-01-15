@@ -1,8 +1,9 @@
-import {Expression, ExpressionType, Value} from "./expression";
+import {Expression, ExpressionType} from "./expression";
 import { Identifier } from "./identifier";
 import {unificationFailure, UnificationResult} from "./unificationResult";
+import {AtomicExpression} from "./atomicExpression.ts";
 
-export class Hole<T extends ExpressionType> extends Expression<T> {
+export class Hole<T extends ExpressionType> extends AtomicExpression<T> {
     protected _type: T;
 
     constructor(type: T) {
@@ -14,20 +15,8 @@ export class Hole<T extends ExpressionType> extends Expression<T> {
         return this === anotherObject;
     }
 
-    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression {
-        if (subExpressionToReplace === this) {
-            return newExpression.copy();
-        }
-
-        return this.copy();
-    }
-
     public unifyWith(_anotherExpression: Expression): UnificationResult {
         return unificationFailure();
-    }
-
-    protected _contains(_anExpression: Expression): boolean {
-        return false;
     }
 
     _containsOccurrenceOf(_identifierDeclaration: Identifier): boolean {

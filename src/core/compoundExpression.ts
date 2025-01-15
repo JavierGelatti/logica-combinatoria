@@ -74,4 +74,8 @@ export abstract class CompoundExpression<T extends ExpressionType = ExpressionTy
     allHolesOfType<S extends ExpressionType>(expressionType: S): Hole<S>[] {
         return this._subexpressions.flatMap(subexpression => subexpression.allHolesOfType(expressionType));
     }
+
+    allSubExpressions(): Expression[] {
+        return [this, ...this._subexpressions.flatMap(s => s.allSubExpressions())];
+    }
 }

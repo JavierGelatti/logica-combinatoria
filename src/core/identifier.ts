@@ -2,8 +2,9 @@ import {Expression, ExpressionType, Value, valueType} from "./expression.ts";
 import {successfulUnification, unificationFailure, UnificationResult} from "./unificationResult.ts";
 import {Exists} from "./exists.ts";
 import { Hole } from "./hole.ts";
+import {AtomicExpression} from "./atomicExpression.ts";
 
-export class Identifier extends Expression<Value> {
+export class Identifier extends AtomicExpression<Value> {
     protected _type: Value = valueType;
 
     constructor(
@@ -15,14 +16,6 @@ export class Identifier extends Expression<Value> {
 
     protected _equals(anotherObject: this): boolean {
         return anotherObject.name === this.name && anotherObject.subscript === this.subscript;
-    }
-
-    public replace(subExpressionToReplace: Expression<Value>, newExpression: Expression<Value>): Expression<Value> {
-        if (subExpressionToReplace.equals(this)) {
-            return newExpression.copy();
-        } else {
-            return this.copy();
-        }
     }
 
     copy() {
@@ -91,10 +84,6 @@ export class Identifier extends Expression<Value> {
 
     declaration() {
         return this._parent?.declarationOf(this) ?? undefined;
-    }
-
-    protected _contains(_anExpression: Expression): boolean {
-        return false;
     }
 
     _containsOccurrenceOf(identifierDeclaration: Identifier): boolean {
