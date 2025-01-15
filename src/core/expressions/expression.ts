@@ -1,5 +1,5 @@
 import {CompoundExpression} from "./compoundExpression.ts";
-import {UnificationResult} from "../unificationResult.ts";
+import {successfulUnification, UnificationResult} from "../unificationResult.ts";
 import {Identifier} from "./identifier.ts";
 import {Hole} from "./hole.ts";
 
@@ -122,4 +122,8 @@ export abstract class Expression<T extends ExpressionType = any> {
     abstract toString(): string;
 
     abstract allOccurrencesOf(lookedUpIdentifier: Identifier): Set<Identifier>
+
+    protected successfulUnification(...bindings: [Identifier, Expression][]) {
+        return successfulUnification(this.rootExpression(), ...bindings);
+    }
 }

@@ -63,7 +63,7 @@ export abstract class Binder extends CompoundExpression<Truth> {
     }
 
     protected _unifyWith(anotherExpression: this): UnificationResult {
-        return this.equals(anotherExpression) ? successfulUnification() : unificationFailure();
+        return this.equals(anotherExpression) ? this.successfulUnification() : unificationFailure();
     }
 
     copy() {

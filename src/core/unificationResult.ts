@@ -9,7 +9,7 @@ export abstract class UnificationResult {
     abstract isSuccessful(): this is UnificationSuccess;
 }
 
-class UnificationFailure extends UnificationResult {
+export class UnificationFailure extends UnificationResult {
     // noinspection JSUnusedGlobalSymbols
     declare private __unification_failure_brand__: any;
 
@@ -26,11 +26,20 @@ class UnificationFailure extends UnificationResult {
     }
 }
 
-class UnificationSuccess extends UnificationResult {
+export class UnificationSuccess extends UnificationResult {
     constructor(
+        public readonly rootExpression: Expression,
         public readonly bindings: Map<Identifier, Expression> = new Map(),
     ) {
         super();
+
+        if (this._variables().some(identifier => identifier.rootExpression() !== rootExpression)) {
+            throw new Error("Wrong unification: all of the variables should belong to the same root expression");
+        }
+    }
+
+    private _variables() {
+        return [...this.bindings.keys()];
     }
 
     combinedWith(anotherUnification: UnificationResult): UnificationResult {
@@ -46,16 +55,22 @@ class UnificationSuccess extends UnificationResult {
             }
         }
 
-        return new UnificationSuccess(new Map([...this.bindings.entries(), ...bindings.entries()]));
+        return new UnificationSuccess(this.rootExpression, new Map([...this.bindings.entries(), ...bindings.entries()]));
     }
 
     isSuccessful(): this is UnificationSuccess {
         return true;
     }
+
+    apply() {
+        if (this.bindings.size === 0) {
+            return this.rootExpression;
+        }
+    }
 }
 
-export function successfulUnification(...bindings: [Identifier, Expression][]) {
-    return new UnificationSuccess(new Map(bindings));
+export function successfulUnification(rootExpression: Expression, ...bindings: [Identifier, Expression][]) {
+    return new UnificationSuccess(rootExpression, new Map(bindings));
 }
 
 export function unificationFailure() {

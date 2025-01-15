@@ -43,7 +43,7 @@ export class Identifier extends AtomicExpression<Value> {
         if (!(anotherExpression instanceof Identifier)) return unificationFailure();
 
         if (anotherExpression.isFree()) {
-            return this.equals(anotherExpression) ? successfulUnification() : unificationFailure();
+            return this.equals(anotherExpression) ? this.successfulUnification() : unificationFailure();
         }
 
         return unificationFailure();
@@ -57,25 +57,25 @@ export class Identifier extends AtomicExpression<Value> {
 
             if (declarationOfThis !== anotherExpression.declaration()) return unificationFailure();
 
-            return successfulUnification();
+            return this.successfulUnification();
         } else {
             if (!(anotherExpression instanceof Identifier)) {
                 if (anotherExpression._containsOccurrenceOf(declarationOfThis)) {
                     return unificationFailure();
                 } else {
-                    return successfulUnification([declarationOfThis, anotherExpression]);
+                    return this.successfulUnification([declarationOfThis, anotherExpression]);
                 }
             }
 
             if (declarationOfThis === anotherExpression.declaration()) {
-                return successfulUnification();
+                return this.successfulUnification();
             }
 
             if (anotherExpression.isFree()) {
-                return successfulUnification([declarationOfThis, anotherExpression]);
+                return this.successfulUnification([declarationOfThis, anotherExpression]);
             }
 
-            return successfulUnification([declarationOfThis, anotherExpression]);
+            return this.successfulUnification([declarationOfThis, anotherExpression]);
         }
     }
 
