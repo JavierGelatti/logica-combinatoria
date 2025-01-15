@@ -195,6 +195,23 @@ body {
 .logic-system {
     margin: 1em;
 
+    ol {
+        counter-reset: section;
+        list-style-type: none;
+        padding: 0;
+
+        li {
+            display: flex;
+            align-items: center;
+            margin-left: .5em;
+        }
+
+        li::before {
+            counter-increment: section;
+            padding-right: .5em;
+        }
+    }
+
     .axioms, .theorems {
         .expression {
             justify-content: left;
@@ -206,6 +223,19 @@ body {
         border-bottom: 1px solid gray;
         margin-bottom: 1em;
 
+        li::before {
+            content: 'A' counter(section) ". ";
+        }
+    }
+
+    .theorems {
+        li::before {
+            content: counters(section, ".") ". ";
+        }
+
+        & > li::before {
+            content: 'T' counters(section, ".") ". ";
+        }
     }
 }
 
