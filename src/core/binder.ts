@@ -105,4 +105,8 @@ export abstract class Binder extends CompoundExpression<Truth> {
         }
         return super.allOccurrencesOf(lookedUpIdentifier);
     }
+
+    allOccurrencesOfBoundVariable(): Set<Identifier> {
+        return this.boundVariable.allOccurrences();
+    }
 }

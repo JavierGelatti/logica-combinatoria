@@ -66,6 +66,10 @@ export abstract class Expression<T extends ExpressionType = any> {
             .some(freeVariable => freeVariable.equals(aVariable));
     }
 
+    isFreeVariableInParent(identifier: Identifier) {
+        return this._parent?.isFreeVariable(identifier) ?? true;
+    }
+
     detachFromParent(): Hole<T> {
         if (this._parent === undefined) throw new Error("Cannot detach root expression");
 

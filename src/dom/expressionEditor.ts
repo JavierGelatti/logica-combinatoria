@@ -6,6 +6,7 @@ import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.t
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
 import {makeDraggableDelegator} from "./essentials/drag_and_drop.ts";
 import {ForAll} from "../core/forAll.ts";
+import {Identifier} from "../core/identifier.ts";
 
 export class ExpressionEditor {
     private readonly _domElement: HTMLElement;
@@ -16,6 +17,7 @@ export class ExpressionEditor {
     private _newExpressionDropTargetElement!: HTMLElement;
     private _deleteExpressionDropTargetElement!: HTMLElement;
     private _currentInteraction: UserInteraction | undefined = undefined;
+    private _wellKnownObjects: Identifier[] = [];
 
     constructor() {
         this._domElement = this._createDomElement();
@@ -80,6 +82,12 @@ export class ExpressionEditor {
     addAxiom(expression: Expression) {
         if (!expression.isRootExpression()) throw new Error("Non-root expression added as axiom");
 
+        [...expression.freeVariables()].forEach(freeVariable => {
+            if (this._wellKnownObjects.some(o => o.equals(freeVariable))) return;
+
+            this._wellKnownObjects.push(freeVariable);
+        });
+
         const expressionView = ExpressionView.forExpression(expression);
         this._axiomsList.append(
             createElement("li", {}, [
@@ -112,15 +120,23 @@ export class ExpressionEditor {
     }
 
     private _forallBindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
-        if (!grabbedExpressionView.isValue()) return [];
+        const grabbedExpression = grabbedExpressionView.expression.copy();
+        if (!grabbedExpression.isValue()) return [];
+        if (!grabbedExpression.isComplete()) return [];
 
         return [...this._axiomExpressions(), ...this._theoremExpressions()]
             .flatMap(expressionView => expressionView.expression.allSubExpressions())
             .filter(expression => expression instanceof ForAll)
+            .filter(forall => {
+                return [...grabbedExpression.freeVariables()]
+                    .every(freeVariable => {
+                        return !forall.isFreeVariableInParent(freeVariable) || this._isWellKnownFreeVariable(freeVariable);
+                    });
+            })
             .map(expression => ExpressionView.forExpression(expression))
             .map(forallView => {
-                const binderElement: HTMLElement = forallView.domElement().querySelector(".full-binder")!;
-                const variableViews = [...forallView.expression.boundVariable.allOccurrences()]
+                const binderElement: HTMLElement = forallView.domElement().querySelector("& > .full-binder")!;
+                const variableViews = [...forallView.expression.allOccurrencesOfBoundVariable()]
                     .map(identifier => ExpressionView.forExpression(identifier));
 
                 return new DropTarget(
@@ -134,6 +150,10 @@ export class ExpressionEditor {
                     }
                 );
             });
+    }
+
+    private _isWellKnownFreeVariable(freeVariable: Identifier) {
+        return this._wellKnownObjects.some(o => o.equals(freeVariable));
     }
 
     private _newExpressionDropTarget() {

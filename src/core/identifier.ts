@@ -28,7 +28,7 @@ export class Identifier extends AtomicExpression<Value> {
     }
 
     isFree() {
-        return this._parent?.isFreeVariable(this) ?? true;
+        return this.isFreeVariableInParent(this);
     }
 
     unifyWith(anotherExpression: Expression) {
