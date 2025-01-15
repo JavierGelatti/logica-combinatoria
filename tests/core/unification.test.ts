@@ -204,14 +204,14 @@ describe("unification", () => {
         });
     });
 
-    describe("application", () => {
+    describe("rewriting", () => {
         test("a free variable unification can be applied", () => {
             const freeVariable = identifier("x");
             const theSameFreeVariable = identifier("x");
 
             const sucessfulUnification = freeVariable.unifyWith(theSameFreeVariable) as UnificationSuccess;
 
-            expect(sucessfulUnification.apply()).toEqual(identifier("x"));
+            expect(sucessfulUnification.rewrite()).toEqual(identifier("x"));
         });
     });
 });

@@ -62,7 +62,7 @@ export class UnificationSuccess extends UnificationResult {
         return true;
     }
 
-    apply() {
+    rewrite() {
         if (this.bindings.size === 0) {
             return this.rootExpression;
         }
