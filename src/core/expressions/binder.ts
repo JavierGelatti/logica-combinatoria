@@ -1,7 +1,7 @@
 import {Expression, ExpressionType, Truth, truthType, Value} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
-import {successfulUnification, unificationFailure, UnificationResult} from "../unificationResult.ts";
+import {unificationFailure, UnificationResult} from "../unificationResult.ts";
 
 export abstract class Binder extends CompoundExpression<Truth> {
     protected _type: Truth = truthType;

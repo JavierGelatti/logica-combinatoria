@@ -1,5 +1,5 @@
 import {Expression, ExpressionType, Value, valueType} from "./expression.ts";
-import {successfulUnification, unificationFailure, UnificationResult} from "../unificationResult.ts";
+import {unificationFailure, UnificationResult} from "../unificationResult.ts";
 import {Exists} from "./exists.ts";
 import { Hole } from "./hole.ts";
 import {AtomicExpression} from "./atomicExpression.ts";
