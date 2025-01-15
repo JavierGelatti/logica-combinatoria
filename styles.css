@@ -143,6 +143,9 @@ body {
 }
 
 .full-binder {
+    margin: 0;
+    border: 1px solid transparent;
+
     &, & * {
         cursor: pointer !important;
     }
@@ -152,6 +155,10 @@ body {
     }
     &:active {
         background: rgba(34, 139, 34, .2);
+    }
+    &.enabled-drop-target {
+        background: rgba(255, 255, 0, .1);
+        border: 1px dashed dimgray;
     }
     &.active-drop-target {
         background: yellow;

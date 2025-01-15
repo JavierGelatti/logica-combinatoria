@@ -85,15 +85,25 @@ export function makeDropTargetExpecting(
     dropTargetElement.classList.add("enabled-drop-target");
 
     addEventListenerToTarget("dragenter", e => {
-        activateDropTarget();
+        const exitedElement = e.relatedTarget as Node;
+        if (dropTargetElement.contains(exitedElement)) {
+            // We were already dragging within dropTargetElement
+            return;
+        }
         e.dataTransfer.dropEffect = dropEffect;
+        activateDropTarget();
     });
     addEventListenerToTarget("dragover", e => {
-        activateDropTarget();
         e.dataTransfer.dropEffect = dropEffect;
         e.stopPropagation();
     });
-    addEventListenerToTarget("dragleave", () => {
+    addEventListenerToTarget("dragleave", e => {
+        const enteredElement = e.relatedTarget as Node;
+        if (dropTargetElement.contains(enteredElement)) {
+            // We are still dragging within dropTargetElement
+            return;
+        }
+
         deactivateDropTarget();
     });
     addEventListenerToTarget("drop", (e) => {
