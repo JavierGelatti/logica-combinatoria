@@ -1,9 +1,40 @@
 import {ExpressionEditor} from "../expressionEditor.ts";
 import {ExpressionView} from "../expression_view.ts";
-import {makeDropTargetExpecting} from "../essentials/drag_and_drop.ts";
+import {makeDraggableDelegator, makeDropTargetExpecting} from "../essentials/drag_and_drop.ts";
 import {UserInteraction} from "./userInteraction.ts";
 
 export class GrabInteraction extends UserInteraction {
+    static setupOn(
+        editor: ExpressionEditor,
+        parentElement: HTMLElement,
+        currentDropTargets: (grabbedExpressionView: ExpressionView) => DropTarget[]
+    ) {
+        makeDraggableDelegator<ExpressionView>(
+            parentElement,
+            potentialTarget => this.draggableExpressionViewFrom(potentialTarget),
+            {
+                onDragStart: (target, cancelGrab) => {
+                    new GrabInteraction(
+                        editor,
+                        target,
+                        cancelGrab,
+                        currentDropTargets,
+                    ).start();
+                },
+                onDragCancel: target => target.currentGrabInteraction()!.cancel(),
+                textOnDrop: target => target.expression.toString(),
+            },
+        );
+    }
+
+    private static draggableExpressionViewFrom(target: HTMLElement): ExpressionView | undefined {
+        const expressionView = ExpressionView.forDomElement(target);
+        if (expressionView?.isDraggable) return expressionView;
+        const parentElement = (expressionView?.domElement() ?? target).parentElement;
+        if (parentElement === null) return undefined;
+        return this.draggableExpressionViewFrom(parentElement);
+    }
+
     private _dropTargetDeactivators: (() => void)[] | undefined;
 
     constructor(

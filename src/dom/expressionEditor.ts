@@ -4,7 +4,6 @@ import {Expression, ExpressionType} from "../core/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
-import {makeDraggableDelegator} from "./essentials/drag_and_drop.ts";
 import {ForAll} from "../core/forAll.ts";
 import {Identifier} from "../core/identifier.ts";
 
@@ -23,46 +22,15 @@ export class ExpressionEditor {
     constructor() {
         this._domElement = this._createDomElement();
 
-        this._setupDraggableExpressionsOn(this._editorPallete, (grabbedExpressionView: ExpressionView) => {
+        GrabInteraction.setupOn(this, this._editorPallete, (grabbedExpressionView: ExpressionView) => {
             return this._palleteExpressionDropTargetsFor(grabbedExpressionView);
         });
-        this._setupDraggableExpressionsOn(this._editorCanvas, (grabbedExpressionView: ExpressionView) => {
+        GrabInteraction.setupOn(this, this._editorCanvas, (grabbedExpressionView: ExpressionView) => {
             return this._canvasExpressionDropTargetsFor(grabbedExpressionView);
         });
-        this._setupDraggableExpressionsOn(this._systemElement, (grabbedExpressionView: ExpressionView) => {
+        GrabInteraction.setupOn(this, this._systemElement, (grabbedExpressionView: ExpressionView) => {
             return this._palleteExpressionDropTargetsFor(grabbedExpressionView);
         });
-    }
-
-    private _setupDraggableExpressionsOn(parentElement: HTMLElement, currentDropTargets: (grabbedExpressionView: ExpressionView) => DropTarget[]) {
-        makeDraggableDelegator<ExpressionView>(
-            parentElement,
-            potentialTarget => this.draggableExpressionViewFrom(potentialTarget),
-            {
-                onDragStart: (target, cancelGrab) => {
-                    new GrabInteraction(
-                        this,
-                        target,
-                        cancelGrab,
-                        currentDropTargets,
-                    ).start();
-                },
-                onDragCancel: target => target.currentGrabInteraction()!.cancel(),
-                textOnDrop: target => target.expression.toString(),
-            },
-        );
-    }
-
-    private draggableExpressionViewFrom(target: HTMLElement): ExpressionView | undefined {
-        const expressionView = ExpressionView.forDomElement(target);
-        if (expressionView?.isDraggable) return expressionView;
-        const parentElement = (expressionView?.domElement() ?? target).parentElement;
-        if (parentElement === null) return undefined;
-        return this.draggableExpressionViewFrom(parentElement);
-    }
-
-    domElement(): HTMLElement {
-        return this._domElement;
     }
 
     private _createDomElement(): HTMLElement {
@@ -80,6 +48,10 @@ export class ExpressionEditor {
                 ]),
             ])
         ]);
+    }
+
+    domElement(): HTMLElement {
+        return this._domElement;
     }
 
     addAxiom(expression: Expression) {
@@ -100,9 +72,7 @@ export class ExpressionEditor {
     }
 
     addToPallete(expression: Expression) {
-        if (!expression.isRootExpression()) throw new Error("Non-root expression added to the pallete");
-
-        const expressionView = ExpressionView.forExpression(expression);
+        const expressionView = ExpressionView.forExpression(expression.copy());
         this._editorPallete.append(expressionView.domElement());
     }
 
