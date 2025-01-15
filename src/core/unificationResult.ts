@@ -5,6 +5,8 @@ export abstract class UnificationResult {
     abstract combinedWith(anotherUnification: UnificationResult): UnificationResult
 
     abstract combinedWithBindings(bindings: Map<Identifier, Expression>): UnificationResult;
+
+    abstract isSuccessful(): this is UnificationSuccess;
 }
 
 class UnificationFailure extends UnificationResult {
@@ -17,6 +19,10 @@ class UnificationFailure extends UnificationResult {
 
     combinedWithBindings(_bindings: Map<Identifier, Expression>) {
         return this;
+    }
+
+    isSuccessful(): this is UnificationSuccess {
+        return false;
     }
 }
 
@@ -41,6 +47,10 @@ class UnificationSuccess extends UnificationResult {
         }
 
         return new UnificationSuccess(new Map([...this.bindings.entries(), ...bindings.entries()]));
+    }
+
+    isSuccessful(): this is UnificationSuccess {
+        return true;
     }
 }
 

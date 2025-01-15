@@ -1,11 +1,12 @@
 import {ExpressionView, HoleView} from "./expression_view.ts";
 import {createElement} from "./essentials/createElement.ts";
-import {Expression, ExpressionType} from "../core/expressions/expression.ts";
+import {Expression, ExpressionType, Value} from "../core/expressions/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
 import {ForAll} from "../core/expressions/forAll.ts";
 import {Identifier} from "../core/expressions/identifier.ts";
+import {Equality} from "../core/expressions/equality.ts";
 
 export class ExpressionEditor {
     private readonly _domElement: HTMLElement;
@@ -29,7 +30,7 @@ export class ExpressionEditor {
             return this._canvasExpressionDropTargetsFor(grabbedExpressionView);
         });
         GrabInteraction.setupOn(this, this._systemElement, (grabbedExpressionView: ExpressionView) => {
-            return this._palleteExpressionDropTargetsFor(grabbedExpressionView);
+            return this._systemExpressionDropTargetsFor(grabbedExpressionView);
         });
     }
 
@@ -69,6 +70,13 @@ export class ExpressionEditor {
                 expressionView.domElement()
             ])
         );
+    }
+
+    private _systemExpressionDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
+        return [
+            ...this._palleteExpressionDropTargetsFor(grabbedExpressionView),
+            ...this._rewriteExpressionDropTargetsFor(grabbedExpressionView),
+        ];
     }
 
     addToPallete(expression: Expression) {
@@ -233,5 +241,40 @@ export class ExpressionEditor {
                 ExpressionView.forExpression(newTheorem).domElement()
             ])
         );
+    }
+
+    private _rewriteExpressionDropTargetsFor(grabbedExpressionView: ExpressionView) {
+        const grabbedExpression = grabbedExpressionView.expression;
+        // FIXME: Acceso directo al parent
+        const grabbedExpressionParent = grabbedExpression._parent;
+        if (!(grabbedExpressionParent instanceof Equality)) return [];
+
+        return [...this._axiomExpressions(), ...this._theoremExpressions()]
+            .flatMap(expressionView => expressionView.expression.allSubExpressions())
+            .filter(expression => expression.isValue())
+            .filter(expression => {
+                if (expression === grabbedExpression) return false;
+
+                const unification = grabbedExpression.unifyWith(expression);
+                return unification.isSuccessful() && unification.bindings.size === 0;
+            })
+            .map(expression => ExpressionView.forExpression(expression))
+            .map(expressionView => {
+                return new DropTarget(
+                    expressionView.domElement(),
+                    (_droppedExpressionView) => {
+                        this._rewriteTo(expressionView, grabbedExpressionParent.left === grabbedExpression ? grabbedExpressionParent.right : grabbedExpressionParent.left);
+                    }
+                );
+            });
+    }
+
+    private _rewriteTo(expressionView: ExpressionView<Expression<Value>>, newValue: Expression<Value>) {
+        const currentExpression = expressionView.expression;
+        debugger;
+        const newExpression = currentExpression.rootExpression().replace(currentExpression, newValue.copy());
+
+        ExpressionView.forExpression(currentExpression.rootExpression())
+            .domElement().replaceWith(ExpressionView.forExpression(newExpression).domElement());
     }
 }

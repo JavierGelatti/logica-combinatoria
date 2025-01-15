@@ -39,11 +39,11 @@ body {
     line-height: 1em;
     height: calc(1em + 10px);
     padding: 0 1px 0;
-    border-top: 1px solid transparent;
-    border-bottom: 1px solid transparent;
     border-radius: 4px;
     user-select: none;
-    margin: 1px;
+    margin: 0;
+    border: 1px solid transparent;
+
     /*border: 1px solid rgba(255, 0, 0, .5);*/
 
     --separation-margin: 3px;
@@ -73,6 +73,14 @@ body {
         animation: shake .3s;
 
         --text-shadow: rgba(255, 255, 0, 0.2);
+    }
+
+    &.enabled-drop-target {
+        background: rgba(255, 255, 0, .1);
+        border: 1px dashed dimgray;
+    }
+    &.active-drop-target {
+        background: yellow;
     }
 }
 
@@ -143,9 +151,6 @@ body {
 }
 
 .full-binder {
-    margin: 0;
-    border: 1px solid transparent;
-
     &, & * {
         cursor: pointer !important;
     }
@@ -155,13 +160,6 @@ body {
     }
     &:active {
         background: rgba(34, 139, 34, .2);
-    }
-    &.enabled-drop-target {
-        background: rgba(255, 255, 0, .1);
-        border: 1px dashed dimgray;
-    }
-    &.active-drop-target {
-        background: yellow;
     }
 }
 
