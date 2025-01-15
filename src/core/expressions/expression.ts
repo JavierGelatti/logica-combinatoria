@@ -1,5 +1,5 @@
 import {CompoundExpression} from "./compoundExpression.ts";
-import {UnificationResult} from "./unificationResult.ts";
+import {UnificationResult} from "../unificationResult.ts";
 import {Identifier} from "./identifier.ts";
 import {Hole} from "./hole.ts";
 

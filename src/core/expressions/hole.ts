@@ -1,6 +1,6 @@
-import {Expression, ExpressionType} from "./expression";
-import { Identifier } from "./identifier";
-import {unificationFailure, UnificationResult} from "./unificationResult";
+import {Expression, ExpressionType} from "./expression.ts";
+import { Identifier } from "./identifier.ts";
+import {unificationFailure, UnificationResult} from "../unificationResult.ts";
 import {AtomicExpression} from "./atomicExpression.ts";
 
 export class Hole<T extends ExpressionType> extends AtomicExpression<T> {

@@ -1,6 +1,6 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, forall, identifier} from "../../src/core/expression_constructors.ts";
-import {Expression} from "../../src/core/expression.ts";
+import {application, equality, forall, identifier} from "../../src/core/expressions/expression_constructors.ts";
+import {Expression} from "../../src/core/expressions/expression.ts";
 
 describe("subexpression replacement", () => {
     test("an expression is replaced by another if it is the expression to replace", () => {

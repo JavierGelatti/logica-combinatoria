@@ -1,5 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, forall, identifier} from "../../src/core/expression_constructors.ts";
+import {application, equality, forall, identifier} from "../../src/core/expressions/expression_constructors.ts";
 
 describe("forall application", () => {
     test("when a forall is applied, it returns the body with all occurrences of the bound variable replaced by its argument", () => {

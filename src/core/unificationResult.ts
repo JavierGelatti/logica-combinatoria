@@ -1,5 +1,5 @@
-import {Identifier} from "./identifier.ts";
-import {Expression} from "./expression.ts";
+import {Identifier} from "./expressions/identifier.ts";
+import {Expression} from "./expressions/expression.ts";
 
 export abstract class UnificationResult {
     abstract combinedWith(anotherUnification: UnificationResult): UnificationResult

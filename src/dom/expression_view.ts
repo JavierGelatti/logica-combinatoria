@@ -1,14 +1,14 @@
-import {Expression, ExpressionType, Value, valueType} from "../core/expression.ts";
-import {Application} from "../core/application.ts";
-import {ForAll} from "../core/forAll.ts";
-import {Exists} from "../core/exists.ts";
-import {Equality} from "../core/equality.ts";
-import {Identifier} from "../core/identifier.ts";
+import {Expression, ExpressionType, Value, valueType} from "../core/expressions/expression.ts";
+import {Application} from "../core/expressions/application.ts";
+import {ForAll} from "../core/expressions/forAll.ts";
+import {Exists} from "../core/expressions/exists.ts";
+import {Equality} from "../core/expressions/equality.ts";
+import {Identifier} from "../core/expressions/identifier.ts";
 import {createElement} from "./essentials/createElement.ts";
-import {Hole} from "../core/hole.ts";
+import {Hole} from "../core/expressions/hole.ts";
 import {animateWith} from "./essentials/animation.ts";
-import {Binder} from "../core/binder.ts";
-import {identifier} from "../core/expression_constructors.ts";
+import {Binder} from "../core/expressions/binder.ts";
+import {identifier} from "../core/expressions/expression_constructors.ts";
 import {GrabInteraction} from "./user_interactions/grabInteraction.ts";
 
 export abstract class ExpressionView<T extends Expression = Expression> {

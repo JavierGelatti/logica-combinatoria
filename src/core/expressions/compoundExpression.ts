@@ -1,6 +1,6 @@
 import {Expression, ExpressionType} from "./expression.ts";
 import {Identifier} from "./identifier.ts";
-import {unificationFailure, UnificationResult} from "./unificationResult.ts";
+import {unificationFailure, UnificationResult} from "../unificationResult.ts";
 import {Hole} from "./hole.ts";
 import {Binder} from "./binder.ts";
 

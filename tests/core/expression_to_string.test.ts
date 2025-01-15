@@ -1,6 +1,6 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, exists, forall, hole, identifier} from "../../src/core/expression_constructors.ts";
-import {Expression} from "../../src/core/expression.ts";
+import {application, equality, exists, forall, hole, identifier} from "../../src/core/expressions/expression_constructors.ts";
+import {Expression} from "../../src/core/expressions/expression.ts";
 
 describe("string representation of expressions", () => {
     test("a complex example", () => {

@@ -1,9 +1,9 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, exists, forall, identifier} from "../../src/core/expression_constructors.ts";
-import {Identifier} from "../../src/core/identifier.ts";
+import {application, equality, exists, forall, identifier} from "../../src/core/expressions/expression_constructors.ts";
+import {Identifier} from "../../src/core/expressions/identifier.ts";
 import {successfulUnification, unificationFailure} from "../../src/core/unificationResult.ts";
-import {Application} from "../../src/core/application.ts";
-import {Expression} from "../../src/core/expression.ts";
+import {Application} from "../../src/core/expressions/application.ts";
+import {Expression} from "../../src/core/expressions/expression.ts";
 
 describe("unification", () => {
     test("a free variable only unifies with the same free variable", () => {

@@ -1,11 +1,11 @@
 import {ExpressionView, HoleView} from "./expression_view.ts";
 import {createElement} from "./essentials/createElement.ts";
-import {Expression, ExpressionType} from "../core/expression.ts";
+import {Expression, ExpressionType} from "../core/expressions/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
-import {ForAll} from "../core/forAll.ts";
-import {Identifier} from "../core/identifier.ts";
+import {ForAll} from "../core/expressions/forAll.ts";
+import {Identifier} from "../core/expressions/identifier.ts";
 
 export class ExpressionEditor {
     private readonly _domElement: HTMLElement;

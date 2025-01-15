@@ -1,4 +1,4 @@
-import {application, equality, exists, forall, hole, identifier, truthHole} from "./src/core/expression_constructors";
+import {application, equality, exists, forall, hole, identifier, truthHole} from "./src/core/expressions/expression_constructors";
 import {ExpressionEditor} from "./src/dom/expressionEditor";
 
 const editor = new ExpressionEditor();

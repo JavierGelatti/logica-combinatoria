@@ -1,6 +1,6 @@
-import {Expression, ExpressionType, Truth, Value} from "./expression.ts";
+import {Expression, ExpressionType, Value} from "./expression.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
-import {UnificationResult} from "./unificationResult.ts";
+import {UnificationResult} from "../unificationResult.ts";
 
 export abstract class BinaryExpression<I extends ExpressionType, O extends ExpressionType> extends CompoundExpression<O> {
     private _left: Expression<I>;
