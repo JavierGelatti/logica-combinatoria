@@ -274,6 +274,7 @@ export class ExpressionEditor {
         debugger;
         const newExpression = currentExpression.rootExpression().replace(currentExpression, newValue.copy());
 
+        // TODO: Agregar esto como nuevo teorema, en lugar de modificar en el lugar
         ExpressionView.forExpression(currentExpression.rootExpression())
             .domElement().replaceWith(ExpressionView.forExpression(newExpression).domElement());
     }
