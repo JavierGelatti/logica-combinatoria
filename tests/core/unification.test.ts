@@ -221,9 +221,9 @@ describe("unification", () => {
         test("an unification with no bindings rewrites by returning a copy of the same expression", () => {
             const freeVariable = identifier("x");
             const theSameFreeVariable = identifier("x");
-            const sucessfulUnification = freeVariable.unifyWith(theSameFreeVariable) as UnificationSuccess;
+            const successfulUnification = freeVariable.unifyWith(theSameFreeVariable) as UnificationSuccess;
 
-            const rewriteResult = sucessfulUnification.rewrite();
+            const rewriteResult = successfulUnification.rewrite();
 
             expect(rewriteResult).toEqual(identifier("x"));
             expect(rewriteResult).not.toBe(freeVariable);
