@@ -8,10 +8,11 @@ type StandAloneExpression<T extends ExpressionType = any> = Expression<T> & Stan
 
 export class FormalSystem {
     private readonly _axioms: StandAloneExpression<Truth>[] = [];
+    private readonly _theorems: StandAloneExpression<Truth>[] = [];
     private readonly _wellKnownObjects: Identifier[] = [];
 
     axioms() {
-        return this._axioms;
+        return [...this._axioms];
     }
 
     addAxiom(expression: Expression<Truth>): void {
@@ -30,7 +31,7 @@ export class FormalSystem {
     }
 
     wellKnownObjects(): Identifier[] {
-        return this._wellKnownObjects;
+        return [...this._wellKnownObjects];
     }
 
     isWellKnownFreeVariable(identifier: Identifier) {
@@ -40,13 +41,17 @@ export class FormalSystem {
     universalQuantifiersThatCanBeAppliedTo(argument: Expression): ForAll[] {
         if (!this._isStandAloneValue(argument)) return [];
 
-        return this._axioms
-            .flatMap(expression => expression.allSubExpressions())
+        return this._subexpressionOfProvenExpressions()
             .filter(expression => expression instanceof ForAll)
-            .filter(forall => this._canApplyTo(argument, forall));
+            .filter(forall => this._canApplyTo(forall, argument));
     }
 
-    private _canApplyTo(argument: StandAloneExpression<Value>, forall: ForAll) {
+    private _subexpressionOfProvenExpressions() {
+        return this._provenExpressions()
+            .flatMap(expression => expression.allSubExpressions());
+    }
+
+    private _canApplyTo(forall: ForAll, argument: StandAloneExpression<Value>) {
         return [...argument.freeVariables()]
             .every(freeVariable => {
                 return this.isWellKnownFreeVariable(freeVariable) || !forall.isFreeVariableInParent(freeVariable);
@@ -63,5 +68,33 @@ export class FormalSystem {
 
     private _isStandAloneExpression<T extends ExpressionType>(anExpression: Expression<T>): anExpression is StandAloneExpression<T> {
         return anExpression.isRootExpression() && anExpression.isComplete();
+    }
+
+    eliminateForAll(quantifierToEliminate: ForAll, argument: Expression) {
+        if (!this._isStandAloneValue(argument)) throw new Error("Cannot apply a forall to a non-stand-alone value");
+        if (!this._canApplyTo(quantifierToEliminate, argument)) throw new Error("Cannot apply a forall if it'd leave new unknown free variables");
+
+        const provenRootExpression = this._provenExpressionContaining(quantifierToEliminate);
+        if (provenRootExpression === undefined) throw new Error("Cannot eliminate a non-proved universal quantifier");
+
+        const newTheorem = provenRootExpression.replace(
+            quantifierToEliminate,
+            quantifierToEliminate.applyTo(argument)
+        );
+
+        this._theorems.push(newTheorem as StandAloneExpression<Truth>);
+        return newTheorem;
+    }
+
+    private _provenExpressionContaining(expression: Expression) {
+        return this._provenExpressions().find(axiom => axiom.contains(expression));
+    }
+
+    private _provenExpressions() {
+        return [...this._axioms, ...this._theorems];
+    }
+
+    theorems() {
+        return [...this._theorems];
     }
 }

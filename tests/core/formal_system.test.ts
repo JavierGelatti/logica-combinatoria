@@ -13,10 +13,11 @@ import {ForAll} from "../../src/core/expressions/forAll.ts";
 
 describe("a formal system", () => {
     describe("axioms and well-known objects", () => {
-        test("starts with no axioms and no well-known objects", () => {
+        test("starts with no axioms, no well-known objects, and no theorems", () => {
             const system = new FormalSystem();
 
             expect(system.axioms()).toEqual([]);
+            expect(system.theorems()).toEqual([]);
             expect(system.wellKnownObjects()).toEqual([]);
         });
 
@@ -188,6 +189,113 @@ describe("a formal system", () => {
 
             expect(system.universalQuantifiersThatCanBeAppliedTo(truthExpression))
                 .toEqual([]);
+        });
+
+        test("finds universal quantifiers in theorems", () => {
+            const system = new FormalSystem();
+            const axiom1 = forall(identifier("w"),
+                forall(identifier("x"),
+                    equality(identifier("A"), identifier("w"))
+                )
+            );
+            system.addAxiom(axiom1);
+            const newTheorem = system.eliminateForAll(axiom1, identifier("A"));
+
+            expect(system.universalQuantifiersThatCanBeAppliedTo(identifier("A")))
+                .toContain(newTheorem);
+        });
+    });
+
+    describe("elimination of universal quantifiers", () => {
+        test("cannot apply an universal quantifier to a non-stand-alone value", () => {
+            const system = new FormalSystem();
+            const axiom1 = forall(
+                identifier("x"),
+                equality(identifier("A"), identifier("x"))
+            );
+            system.addAxiom(axiom1);
+
+            expect(() => system.eliminateForAll(axiom1, hole()))
+                .toThrowError("Cannot apply a forall to a non-stand-alone value");
+        });
+
+        test("can apply an universal quantifier that is an axiom", () => {
+            const system = new FormalSystem();
+            const axiom1 = forall(
+                identifier("x"),
+                equality(identifier("A"), identifier("x"))
+            );
+            system.addAxiom(axiom1);
+
+            system.eliminateForAll(axiom1, identifier("A"));
+
+            expect(system.theorems()).toEqual([
+                equality(identifier("A"), identifier("A"))
+            ]);
+        });
+
+        test("cannot apply an universal quantifier that is not an axiom", () => {
+            const system = new FormalSystem();
+            const axiom1 = forall(
+                identifier("x"),
+                equality(identifier("A"), identifier("x"))
+            );
+            const nonAxiom = axiom1.copy();
+            system.addAxiom(axiom1);
+
+            expect(() => system.eliminateForAll(nonAxiom, identifier("A")))
+                .toThrowError("Cannot eliminate a non-proved universal quantifier");
+        });
+
+        test("can apply an universal quantifier that is a subexpression of an axiom", () => {
+            const system = new FormalSystem();
+            let universalQuantifier!: ForAll;
+            const axiom1 = exists(identifier("w"),
+                universalQuantifier = forall(identifier("x"),
+                    equality(identifier("A"), identifier("x"))
+                )
+            );
+            system.addAxiom(axiom1);
+
+            system.eliminateForAll(universalQuantifier, identifier("A"));
+
+            expect(system.theorems()).toEqual([
+                exists(identifier("w"),
+                    equality(identifier("A"), identifier("A"))
+                )
+            ]);
+        });
+
+        test("can apply an universal quantifier from a theorem", () => {
+            const system = new FormalSystem();
+            const axiom1 = forall(identifier("w"),
+                forall(identifier("x"),
+                    equality(identifier("A"), identifier("w"))
+                )
+            );
+            system.addAxiom(axiom1);
+            const newTheorem = system.eliminateForAll(axiom1, identifier("A")) as ForAll;
+
+            system.eliminateForAll(newTheorem, identifier("A"));
+
+            expect(system.theorems()).toEqual([
+                forall(identifier("x"),
+                    equality(identifier("A"), identifier("A"))
+                ),
+                equality(identifier("A"), identifier("A"))
+            ]);
+        });
+
+        test("cannot apply an universal quantifier that would leave unknown free variables", () => {
+            const system = new FormalSystem();
+            const axiom1 = forall(
+                identifier("x"),
+                equality(identifier("A"), identifier("x"))
+            );
+            system.addAxiom(axiom1);
+
+            expect(() => system.eliminateForAll(axiom1, identifier("W")))
+                .toThrowError("Cannot apply a forall if it'd leave new unknown free variables");
         });
     });
 });
