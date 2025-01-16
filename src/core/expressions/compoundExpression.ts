@@ -5,10 +5,14 @@ import {Hole} from "./hole.ts";
 import {Binder} from "./binder.ts";
 
 export abstract class CompoundExpression<T extends ExpressionType = ExpressionType> extends Expression<T> {
-    protected readonly _subexpressions: Expression[];
+    protected _subexpressions!: Expression[];
 
     protected constructor(...subexpressions: Expression[]) {
         super();
+        this._setSubexpressions(subexpressions);
+    }
+
+    protected _setSubexpressions(subexpressions: Expression[]) {
         this._subexpressions = subexpressions;
         this._subexpressions.forEach(subexpression => {
             subexpression.insertedInto(this);

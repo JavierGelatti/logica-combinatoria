@@ -25,6 +25,10 @@ export abstract class ExpressionView<T extends Expression = Expression> {
             return existingView as V;
         }
 
+        return this.renewForExpression(expression);
+    }
+
+    static renewForExpression<E extends Expression, V extends ExpressionView<E>>(expression: E): V {
         const view = this._instantiateViewForExpression(expression);
         this.views.set(expression, new WeakRef(view));
         return view as unknown as V;
@@ -159,7 +163,7 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
         if (!this.expression.isRootExpression()) {
             newExpression = this.expression.detachFromParent().fillWith(newExpression);
         }
-        const newExpressionView = ExpressionView.forExpression(newExpression);
+        const newExpressionView = ExpressionView.renewForExpression(newExpression);
         this.domElement().replaceWith(newExpressionView.domElement());
     }
 

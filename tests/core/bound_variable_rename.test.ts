@@ -30,6 +30,27 @@ describe("variable renaming", () => {
             .toThrowError("Cannot rename: y is free in the expression");
     });
 
+    test("when a root expression is renamed, the same object is mutated", () => {
+        const aForAll = forall(identifier("x"), identity("x"));
+
+        const result = aForAll.renameVariableTo(identifier("y"));
+
+        expect(result).toBe(aForAll);
+    });
+
+    test("when a subexpression is renamed, a renamed copy is returned", () => {
+        let aForAll!: ForAll;
+        forall(identifier("y"),
+            aForAll = forall(identifier("x"), identity("x"))
+        );
+
+        const result = aForAll.renameVariableTo(identifier("y"));
+
+        expect(result).toEqual(forall(identifier("y"), identity("y")));
+        expect(result).not.toBe(aForAll);
+        expect(aForAll.copy()).toEqual(forall(identifier("x"), identity("x")));
+    });
+
     function identity(variableName: string) {
         return equality(identifier(variableName), identifier(variableName));
     }

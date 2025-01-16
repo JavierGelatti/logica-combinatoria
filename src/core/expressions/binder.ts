@@ -6,7 +6,7 @@ import {unificationFailure, UnificationResult} from "../unificationResult.ts";
 export abstract class Binder extends CompoundExpression<Truth> {
     protected _type: Truth = truthType;
 
-    private readonly _boundVariable: Identifier;
+    private _boundVariable: Identifier;
     private _body: Expression<Truth>;
 
     private readonly _species: { new(boundVariable: Identifier, expression: Expression<Truth>): Binder };
@@ -81,10 +81,19 @@ export abstract class Binder extends CompoundExpression<Truth> {
             throw new Error(`Cannot rename: ${newName} is free in the expression`);
         }
 
-        return new this._species(
-            newName.copy(),
-            this.applyTo(newName)
-        );
+        const newBody = this.applyTo(newName);
+        if (this.isRootExpression()) {
+            this._boundVariable = newName.copy();
+            this._body = newBody;
+            this._setSubexpressions([this._boundVariable, this._body]);
+
+            return this;
+        } else {
+            return new this._species(
+                newName.copy(),
+                newBody
+            );
+        }
     }
 
     public hasLocallyUnbound(newName: Identifier) {
