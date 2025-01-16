@@ -1,6 +1,7 @@
 import {Expression, ExpressionType, Value} from "./expression.ts";
 import {CompoundExpression} from "./compoundExpression.ts";
 import {UnificationResult} from "../unificationResult.ts";
+import {Identifier} from "./identifier.ts";
 
 export abstract class BinaryExpression<I extends ExpressionType, O extends ExpressionType> extends CompoundExpression<O> {
     private _left: Expression<I>;
@@ -68,5 +69,12 @@ export abstract class BinaryExpression<I extends ExpressionType, O extends Expre
             this._right = replacement as unknown as Expression<I>;
             return;
         }
+    }
+
+    rewriteWith(bindings: Map<Identifier, Expression>) {
+        return new this._species(
+            this._left.rewriteWith(bindings),
+            this._right.rewriteWith(bindings)
+        );
     }
 }

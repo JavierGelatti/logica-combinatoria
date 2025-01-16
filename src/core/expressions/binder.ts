@@ -109,4 +109,15 @@ export abstract class Binder extends CompoundExpression<Truth> {
     allOccurrencesOfBoundVariable(): Set<Identifier> {
         return this.boundVariable.allOccurrences();
     }
+
+    rewriteWith(bindings: Map<Identifier, Expression>): Expression<Truth> {
+        const withRewrittenBody = new this._species(
+            this.boundVariable.copy(),
+            this.body.rewriteWith(bindings)
+        );
+        const replacement = bindings.get(this.boundVariable);
+        if (replacement === undefined) return withRewrittenBody;
+
+        return withRewrittenBody.applyTo(replacement);
+    }
 }

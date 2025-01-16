@@ -126,4 +126,6 @@ export abstract class Expression<T extends ExpressionType = any> {
     protected successfulUnification(...bindings: [Identifier, Expression][]) {
         return successfulUnification(this.rootExpression(), ...bindings);
     }
+
+    abstract rewriteWith(bindings: Map<Identifier, Expression>): Expression<T>;
 }

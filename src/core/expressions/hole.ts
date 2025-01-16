@@ -52,4 +52,8 @@ export class Hole<T extends ExpressionType> extends AtomicExpression<T> {
     allOccurrencesOf(_lookedUpIdentifier: Identifier): Set<Identifier> {
         return new Set();
     }
+
+    rewriteWith(_bindings: Map<Identifier, Expression>) {
+        return this.copy();
+    }
 }

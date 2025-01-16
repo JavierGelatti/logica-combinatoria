@@ -126,4 +126,11 @@ export class Identifier extends AtomicExpression<Value> {
             return new Set();
         }
     }
+
+    rewriteWith(bindings: Map<Identifier, Expression>) {
+        const replacement = bindings.get(this);
+        if (replacement === undefined) return this.copy();
+
+        return replacement.copy();
+    }
 }

@@ -66,9 +66,7 @@ export class UnificationSuccess extends UnificationResult {
     }
 
     rewrite() {
-        if (this.bindings.size === 0) {
-            return this.rootExpression.copy();
-        }
+        return this.rootExpression.rewriteWith(this.bindings);
     }
 }
 

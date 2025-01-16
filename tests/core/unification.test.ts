@@ -229,5 +229,53 @@ describe("unification", () => {
             expect(rewriteResult).not.toBe(freeVariable);
             expect(rewriteResult).not.toBe(theSameFreeVariable);
         });
+
+        test("an unification with bindings rewrites by returning a copy of the expression with the variables changed", () => {
+            let anApplication!: Application;
+            forall(identifier("x"),
+                forall(identifier("y"),
+                    equality(
+                        anApplication = application(identifier("x"), identifier("y")),
+                        identifier("w")
+                    )
+                )
+            );
+            const anotherApplication = application(identifier("A"), identifier("B"));
+            const successfulUnification = anApplication.unifyWith(anotherApplication) as UnificationSuccess;
+
+            const rewriteResult = successfulUnification.rewrite();
+
+            expect(rewriteResult).toEqual(
+                equality(
+                    application(identifier("A"), identifier("B")),
+                    identifier("w")
+                )
+            );
+        });
+
+        test("a rewrite could leave some quantifiers in the result, if their variables were not unified", () => {
+            let anApplication!: Application;
+            forall(identifier("x"),
+                forall(identifier("y"),
+                    equality(
+                        anApplication = application(identifier("y"), identifier("y")),
+                        identifier("x")
+                    )
+                )
+            );
+            const anotherApplication = application(identifier("A"), identifier("A"));
+            const successfulUnification = anApplication.unifyWith(anotherApplication) as UnificationSuccess;
+
+            const rewriteResult = successfulUnification.rewrite();
+
+            expect(rewriteResult).toEqual(
+                forall(identifier("x"),
+                    equality(
+                        application(identifier("A"), identifier("A")),
+                        identifier("x")
+                    )
+                )
+            );
+        });
     });
 });
