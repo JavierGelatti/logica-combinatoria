@@ -1,5 +1,6 @@
-import {Expression, Truth} from "./expressions/expression.ts";
+import {Expression, Truth, Value} from "./expressions/expression.ts";
 import {Identifier} from "./expressions/identifier.ts";
+import {ForAll} from "./expressions/forAll.ts";
 
 export class FormalSystem {
     private readonly _axioms: Expression<Truth>[] = [];
@@ -31,5 +32,25 @@ export class FormalSystem {
 
     isWellKnownFreeVariable(identifier: Identifier) {
         return this._wellKnownObjects.some(o => o.equals(identifier));
+    }
+
+    universalQuantifiersThatCanBeAppliedTo(argument: Expression): ForAll[] {
+        if (!this._isCompleteStandAloneExpression(argument)) return [];
+
+        return this._axioms
+            .flatMap(expression => expression.allSubExpressions())
+            .filter(expression => expression instanceof ForAll)
+            .filter(forall => this._canApplyTo(argument, forall));
+    }
+
+    private _canApplyTo(argument: Expression<Value>, forall: ForAll) {
+        return [...argument.freeVariables()]
+            .every(freeVariable => {
+                return this.isWellKnownFreeVariable(freeVariable) || !forall.isFreeVariableInParent(freeVariable);
+            });
+    }
+
+    private _isCompleteStandAloneExpression(anExpression: Expression): anExpression is Expression<Value> {
+        return anExpression.isValue() && anExpression.isRootExpression() && anExpression.isComplete();
     }
 }
