@@ -31,10 +31,12 @@ export class Hole<T extends ExpressionType> extends AtomicExpression<T> {
         return new Set();
     }
 
-    fillWith(anExpression: Expression<T>) {
+    fillWith<S extends Expression<T>>(anExpression: S): S {
         if (this._parent === undefined) throw new Error("Cannot fill root hole");
 
-        this._parent.fillHole(this, anExpression);
+        const insertedExpression = anExpression.copy();
+        this._parent.fillHole(this, insertedExpression);
+        return insertedExpression;
     }
 
     allHolesOfType<S extends ExpressionType>(expressionType: S): Hole<S>[] {

@@ -5,10 +5,11 @@ import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
 import {ForAll} from "../core/expressions/forAll.ts";
-import {Identifier} from "../core/expressions/identifier.ts";
 import {Equality} from "../core/expressions/equality.ts";
+import {FormalSystem} from "../core/formalSystem.ts";
 
 export class ExpressionEditor {
+    private readonly _system: FormalSystem = new FormalSystem();
     private readonly _domElement: HTMLElement;
     private _systemElement!: HTMLElement;
     private _axiomsList!: HTMLOListElement;
@@ -18,7 +19,6 @@ export class ExpressionEditor {
     private _newExpressionDropTargetElement!: HTMLElement;
     private _deleteExpressionDropTargetElement!: HTMLElement;
     private _currentInteraction: UserInteraction | undefined = undefined;
-    private _wellKnownObjects: Identifier[] = [];
 
     constructor() {
         this._domElement = this._createDomElement();
@@ -56,18 +56,11 @@ export class ExpressionEditor {
     }
 
     addAxiom(expression: Expression) {
-        if (!expression.isRootExpression()) throw new Error("Non-root expression added as axiom");
+        this._system.addAxiom(expression);
 
-        [...expression.freeVariables()].forEach(freeVariable => {
-            if (this._wellKnownObjects.some(o => o.equals(freeVariable))) return;
-
-            this._wellKnownObjects.push(freeVariable);
-        });
-
-        const expressionView = ExpressionView.forExpression(expression);
         this._axiomsList.append(
             createElement("li", {}, [
-                expressionView.domElement()
+                ExpressionView.forExpression(expression).domElement()
             ])
         );
     }
@@ -111,7 +104,7 @@ export class ExpressionEditor {
             .filter(forall => {
                 return [...grabbedExpression.freeVariables()]
                     .every(freeVariable => {
-                        return !forall.isFreeVariableInParent(freeVariable) || this._isWellKnownFreeVariable(freeVariable);
+                        return !forall.isFreeVariableInParent(freeVariable) || this._system.isWellKnownFreeVariable(freeVariable);
                     });
             })
             .map(expression => ExpressionView.forExpression(expression))
@@ -131,10 +124,6 @@ export class ExpressionEditor {
                     }
                 );
             });
-    }
-
-    private _isWellKnownFreeVariable(freeVariable: Identifier) {
-        return this._wellKnownObjects.some(o => o.equals(freeVariable));
     }
 
     private _newExpressionDropTarget() {

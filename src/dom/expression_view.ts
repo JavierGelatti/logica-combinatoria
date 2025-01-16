@@ -155,9 +155,9 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
             return this.promptVariableRename("No se puede renombrar: el nombre aparece libre en la expresión", newIdentifier.toString());
         }
 
-        const newExpression = this.expression.renameVariableTo(newIdentifier);
+        let newExpression = this.expression.renameVariableTo(newIdentifier);
         if (!this.expression.isRootExpression()) {
-            this.expression.detachFromParent().fillWith(newExpression);
+            newExpression = this.expression.detachFromParent().fillWith(newExpression);
         }
         const newExpressionView = ExpressionView.forExpression(newExpression);
         this.domElement().replaceWith(newExpressionView.domElement());
@@ -231,9 +231,9 @@ export class HoleView<T extends ExpressionType> extends ExpressionView<Hole<T>> 
     fillWith(droppedExpressionView: ExpressionView) {
         const droppedExpression = droppedExpressionView.expression;
         if (droppedExpression.hasType(this.expressionType())) {
-            const droppedExpressionCopy = droppedExpression.copy();
-            this.expression.fillWith(droppedExpressionCopy);
-            const newExpressionView = ExpressionView.forExpression(droppedExpressionCopy);
+            const insertedExpression = this.expression.fillWith(droppedExpression);
+
+            const newExpressionView = ExpressionView.forExpression(insertedExpression);
             const newExpressionElement = newExpressionView.domElement();
             animateWith(newExpressionElement, "just-added");
             this.domElement().replaceWith(newExpressionElement);

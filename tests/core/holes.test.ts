@@ -39,6 +39,30 @@ describe("holes", () => {
         expect(expressionWithHole).toEqual(forall(identifier("x"), equality(identifier("y"), identifier("y"))));
     });
 
+    test("when filling a hole with a subexpression, it's equivalent to filling it with a root-copy of the subexpression", () => {
+        let theHole!: Hole<Truth>;
+        const expressionWithHole: Expression = forall(identifier("x"), theHole = truthHole());
+        let subexpression!: Expression;
+        forall(identifier("y"), subexpression = equality(identifier("y"), identifier("y")));
+
+        theHole.fillWith(subexpression);
+
+        expect(expressionWithHole).toEqual(forall(identifier("x"), equality(identifier("y"), identifier("y"))));
+    });
+
+    test("filling a hole returns the inserted expression", () => {
+        let theHole!: Hole<Truth>;
+        const expressionWithHole: Expression = forall(identifier("x"), theHole = truthHole());
+        let subexpression!: Expression;
+        forall(identifier("y"), subexpression = equality(identifier("y"), identifier("y")));
+
+        const insertedExpression = theHole.fillWith(subexpression);
+
+        expect(insertedExpression.equals(subexpression)).toBe(true);
+        expect(insertedExpression).not.toBe(subexpression);
+        expect(expressionWithHole.contains(insertedExpression));
+    });
+
     test("cannot fill a hole without parent (i.e. root hole)", () => {
         const rootHole = hole();
 
