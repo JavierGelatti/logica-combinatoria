@@ -4,7 +4,6 @@ import {Expression, ExpressionType, Truth, Value} from "../core/expressions/expr
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
-import {ForAll} from "../core/expressions/forAll.ts";
 import {Equality} from "../core/expressions/equality.ts";
 import {FormalSystem} from "../core/formalSystem.ts";
 
@@ -95,18 +94,7 @@ export class ExpressionEditor {
 
     private _forallBindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
         const grabbedExpression = grabbedExpressionView.expression.copy();
-        if (!grabbedExpression.isValue()) return [];
-        if (!grabbedExpression.isComplete()) return [];
-
-        return [...this._axiomExpressions(), ...this._theoremExpressions()]
-            .flatMap(expressionView => expressionView.expression.allSubExpressions())
-            .filter(expression => expression instanceof ForAll)
-            .filter(forall => {
-                return [...grabbedExpression.freeVariables()]
-                    .every(freeVariable => {
-                        return !forall.isFreeVariableInParent(freeVariable) || this._system.isWellKnownFreeVariable(freeVariable);
-                    });
-            })
+        return this._system.universalQuantifiersThatCanBeAppliedTo(grabbedExpression)
             .map(expression => ExpressionView.forExpression(expression))
             .map(forallView => {
                 const binderElement: HTMLElement = forallView.domElement().querySelector("& > .full-binder")!;
@@ -115,7 +103,12 @@ export class ExpressionEditor {
 
                 return new DropTarget(
                     binderElement,
-                    (droppedExpressionView) => this._applyForallTo(forallView, droppedExpressionView),
+                    (droppedExpressionView) => this._addTheorem(
+                        this._system.eliminateForAll(
+                            forallView.expression,
+                            droppedExpressionView.expression
+                        )
+                    ),
                     () => {
                         variableViews.forEach(view => view.domElement().classList.add("highlighted"))
                     },
@@ -218,16 +211,6 @@ export class ExpressionEditor {
 
         this._currentInteraction = undefined;
     }
-
-    private _applyForallTo(forallView: ExpressionView<ForAll>, droppedExpressionView: ExpressionView<Expression>) {
-        if (!droppedExpressionView.isValue()) throw new Error("Cannot apply forall to non-value");
-
-        const forallExpression = forallView.expression;
-        const resultingExpression = forallExpression.applyTo(droppedExpressionView.expression);
-        const newTheorem = forallExpression.rootExpression().replace(forallExpression, resultingExpression);
-        this._addTheorem(newTheorem);
-    }
-
     private _addTheorem(newTheorem: Expression<Truth>) {
         this._theoremsList.append(
             createElement("li", {}, [
