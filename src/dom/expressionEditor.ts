@@ -1,6 +1,6 @@
 import {ExpressionView, HoleView} from "./expression_view.ts";
 import {createElement} from "./essentials/createElement.ts";
-import {Expression, ExpressionType, Value} from "../core/expressions/expression.ts";
+import {Expression, ExpressionType, Truth, Value} from "../core/expressions/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
@@ -236,10 +236,14 @@ export class ExpressionEditor {
         const forallExpression = forallView.expression;
         const resultingExpression = forallExpression.applyTo(droppedExpressionView.expression);
         const newTheorem = forallExpression.rootExpression().replace(forallExpression, resultingExpression);
+        this._addTheorem(newTheorem);
+    }
+
+    private _addTheorem(newTheorem: Expression<Truth>) {
         this._theoremsList.append(
             createElement("li", {}, [
-                ExpressionView.forExpression(newTheorem).domElement()
-            ])
+                ExpressionView.forExpression(newTheorem).domElement(),
+            ]),
         );
     }
 
@@ -251,31 +255,30 @@ export class ExpressionEditor {
 
         return [...this._axiomExpressions(), ...this._theoremExpressions()]
             .flatMap(expressionView => expressionView.expression.allSubExpressions())
-            .filter(expression => expression.isValue())
-            .filter(expression => {
-                if (expression === grabbedExpression) return false;
+            .map(expression => {
+                if (!expression.isValue() || expression.rootExpression() === grabbedExpression.rootExpression()) return undefined;
+                const unificationResult = grabbedExpression.unifyWith(expression);
+                if (!unificationResult.isSuccessful()) return undefined;
+                const rewriteResult = unificationResult.rewrite();
+                if (!(rewriteResult instanceof Equality)) return undefined;
 
-                const unification = grabbedExpression.unifyWith(expression);
-                return unification.isSuccessful() && unification.bindings.size === 0;
-            })
-            .map(expression => ExpressionView.forExpression(expression))
-            .map(expressionView => {
+                const expressionView = ExpressionView.forExpression(expression);
                 return new DropTarget(
                     expressionView.domElement(),
                     (_droppedExpressionView) => {
-                        this._rewriteTo(expressionView, grabbedExpressionParent.left === grabbedExpression ? grabbedExpressionParent.right : grabbedExpressionParent.left);
+                        this._rewriteTo(
+                            expression,
+                            grabbedExpressionParent.left === grabbedExpression ? rewriteResult.right : rewriteResult.left
+                        );
                     }
                 );
-            });
+            })
+            .filter(result=> result !== undefined);
     }
 
-    private _rewriteTo(expressionView: ExpressionView<Expression<Value>>, newValue: Expression<Value>) {
-        const currentExpression = expressionView.expression;
-        debugger;
+    private _rewriteTo(currentExpression: Expression<Value>, newValue: Expression<Value>) {
         const newExpression = currentExpression.rootExpression().replace(currentExpression, newValue.copy());
 
-        // TODO: Agregar esto como nuevo teorema, en lugar de modificar en el lugar
-        ExpressionView.forExpression(currentExpression.rootExpression())
-            .domElement().replaceWith(ExpressionView.forExpression(newExpression).domElement());
+        this._addTheorem(newExpression);
     }
 }
