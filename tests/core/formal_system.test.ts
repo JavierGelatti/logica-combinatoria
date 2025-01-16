@@ -34,7 +34,7 @@ describe("a formal system", () => {
             const expression = equality(identifier("M"), hole());
 
             expect(() => system.addAxiom(expression))
-                .toThrowError("An expression with holes cannot be added as an axiom");
+                .toThrowError("A non-stand-alone expression cannot be added as an axiom");
         });
 
         test("non-root expressions cannot be added as axioms", () => {
@@ -43,7 +43,7 @@ describe("a formal system", () => {
             equality(subexpression = identifier("M"), identifier("X"));
 
             expect(() => system.addAxiom(subexpression))
-                .toThrowError("A non-root expression cannot be added as an axiom");
+                .toThrowError("A non-stand-alone expression cannot be added as an axiom");
         });
 
         test("the free variables in the axioms determine the well-known objects", () => {
