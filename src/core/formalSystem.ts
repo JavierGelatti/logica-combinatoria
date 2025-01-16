@@ -35,7 +35,7 @@ export class FormalSystem {
     }
 
     universalQuantifiersThatCanBeAppliedTo(argument: Expression): ForAll[] {
-        if (!this._isCompleteStandAloneExpression(argument)) return [];
+        if (!this._isCompleteStandAloneValue(argument)) return [];
 
         return this._axioms
             .flatMap(expression => expression.allSubExpressions())
@@ -50,7 +50,11 @@ export class FormalSystem {
             });
     }
 
-    private _isCompleteStandAloneExpression(anExpression: Expression): anExpression is Expression<Value> {
-        return anExpression.isValue() && anExpression.isRootExpression() && anExpression.isComplete();
+    private _isCompleteStandAloneValue(anExpression: Expression): anExpression is Expression<Value> {
+        return anExpression.isValue() && this._isCompleteStandAloneExpression(anExpression);
+    }
+
+    private _isCompleteStandAloneExpression(anExpression: Expression): boolean {
+        return anExpression.isRootExpression() && anExpression.isComplete();
     }
 }
