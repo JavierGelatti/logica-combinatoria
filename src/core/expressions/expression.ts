@@ -2,12 +2,15 @@ import {CompoundExpression} from "./compoundExpression.ts";
 import {successfulUnification, UnificationResult} from "../unificationResult.ts";
 import {Identifier} from "./identifier.ts";
 import {Hole} from "./hole.ts";
+import {Equality} from "./equality.ts";
 
 export const valueType = Symbol("valueType");
 export const truthType = Symbol("truthType");
 export type Value = typeof valueType;
 export type Truth = typeof truthType;
 export type ExpressionType = Value | Truth;
+
+export type EquationMember = { parent(): Equality } & Expression<Value>;
 
 export abstract class Expression<T extends ExpressionType = any> {
     protected abstract _type: T;
@@ -128,4 +131,13 @@ export abstract class Expression<T extends ExpressionType = any> {
     }
 
     abstract rewriteWith(bindings: Map<Identifier, Expression>): Expression<T>;
+
+    parent() {
+        return this._parent
+    }
+
+    isEquationMember(): this is EquationMember {
+        // We use a string here only to avoid circular imports.
+        return this._parent?.constructor.name === "Equality";
+    }
 }

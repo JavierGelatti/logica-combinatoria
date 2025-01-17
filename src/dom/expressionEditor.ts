@@ -1,10 +1,9 @@
 import {ExpressionView, HoleView} from "./expression_view.ts";
 import {createElement} from "./essentials/createElement.ts";
-import {Expression, ExpressionType, Truth, Value} from "../core/expressions/expression.ts";
+import {Expression, ExpressionType, Truth} from "../core/expressions/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
-import {Equality} from "../core/expressions/equality.ts";
 import {FormalSystem} from "../core/formalSystem.ts";
 
 export class ExpressionEditor {
@@ -103,10 +102,10 @@ export class ExpressionEditor {
 
                 return new DropTarget(
                     binderElement,
-                    (droppedExpressionView) => this._addTheorem(
+                    () => this._addTheorem(
                         this._system.eliminateForAll(
                             forallView.expression,
-                            droppedExpressionView.expression
+                            grabbedExpression
                         )
                     ),
                     () => {
@@ -132,20 +131,6 @@ export class ExpressionEditor {
 
     private _editorCanvasExpressions(): ExpressionView[] {
         return [...this._editorCanvas.children]
-            .filter(element => element instanceof HTMLElement)
-            .map(element => ExpressionView.forDomElement(element))
-            .filter(expressionView => expressionView !== undefined);
-    }
-
-    private _axiomExpressions(): ExpressionView[] {
-        return [...this._axiomsList.querySelectorAll("& > li > *")]
-            .filter(element => element instanceof HTMLElement)
-            .map(element => ExpressionView.forDomElement(element))
-            .filter(expressionView => expressionView !== undefined);
-    }
-
-    private _theoremExpressions(): ExpressionView[] {
-        return [...this._theoremsList.querySelectorAll("& > li > *")]
             .filter(element => element instanceof HTMLElement)
             .map(element => ExpressionView.forDomElement(element))
             .filter(expressionView => expressionView !== undefined);
@@ -211,6 +196,7 @@ export class ExpressionEditor {
 
         this._currentInteraction = undefined;
     }
+
     private _addTheorem(newTheorem: Expression<Truth>) {
         this._theoremsList.append(
             createElement("li", {}, [
@@ -221,36 +207,17 @@ export class ExpressionEditor {
 
     private _rewriteExpressionDropTargetsFor(grabbedExpressionView: ExpressionView) {
         const grabbedExpression = grabbedExpressionView.expression;
-        // FIXME: Acceso directo al parent
-        const grabbedExpressionParent = grabbedExpression._parent;
-        if (!(grabbedExpressionParent instanceof Equality)) return [];
 
-        return [...this._axiomExpressions(), ...this._theoremExpressions()]
-            .flatMap(expressionView => expressionView.expression.allSubExpressions())
-            .map(expression => {
-                if (!expression.isValue() || expression.rootExpression() === grabbedExpression.rootExpression()) return undefined;
-                const unificationResult = grabbedExpression.unifyWith(expression);
-                if (!unificationResult.isSuccessful()) return undefined;
-                const rewriteResult = unificationResult.rewrite();
-                if (!(rewriteResult instanceof Equality)) return undefined;
-
-                const expressionView = ExpressionView.forExpression(expression);
+        return this._system.rewriteCandidatesMatching(grabbedExpression)
+            .map(potentialTargetExpression => {
+                const expressionView = ExpressionView.forExpression(potentialTargetExpression);
                 return new DropTarget(
                     expressionView.domElement(),
-                    (_droppedExpressionView) => {
-                        this._rewriteTo(
-                            expression,
-                            grabbedExpressionParent.left === grabbedExpression ? rewriteResult.right : rewriteResult.left
-                        );
-                    }
+                    () => this._addTheorem(
+                        this._system.rewrite(grabbedExpression, potentialTargetExpression)
+                    )
                 );
             })
             .filter(result=> result !== undefined);
-    }
-
-    private _rewriteTo(currentExpression: Expression<Value>, newValue: Expression<Value>) {
-        const newExpression = currentExpression.rootExpression().replace(currentExpression, newValue.copy());
-
-        this._addTheorem(newExpression);
     }
 }

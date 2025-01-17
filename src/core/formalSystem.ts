@@ -1,14 +1,18 @@
-import {Expression, ExpressionType, Truth, Value} from "./expressions/expression.ts";
+import {EquationMember, Expression, ExpressionType, Truth, Value} from "./expressions/expression.ts";
 import {Identifier} from "./expressions/identifier.ts";
 import {ForAll} from "./expressions/forAll.ts";
+import {Equality} from "./expressions/equality.ts";
 
 const standAloneBrand = Symbol("standAloneBrand");
-type StandAlone = { [standAloneBrand]: any }
+type StandAlone = { [standAloneBrand]: any };
 type StandAloneExpression<T extends ExpressionType = any> = Expression<T> & StandAlone;
+type Proposition = StandAloneExpression<Truth>;
+
+type PropositionPart<T extends ExpressionType> = { rootExpression(): Proposition } & Expression<T>;
 
 export class FormalSystem {
-    private readonly _axioms: StandAloneExpression<Truth>[] = [];
-    private readonly _theorems: StandAloneExpression<Truth>[] = [];
+    private readonly _axioms: Proposition[] = [];
+    private readonly _theorems: Proposition[] = [];
     private readonly _wellKnownObjects: Identifier[] = [];
 
     axioms() {
@@ -16,7 +20,7 @@ export class FormalSystem {
     }
 
     addAxiom(expression: Expression<Truth>): void {
-        if (!this._isStandAloneTruth(expression)) throw new Error("A non-stand-alone expression cannot be added as an axiom");
+        if (!this._isProposition(expression)) throw new Error("A non-stand-alone expression cannot be added as an axiom");
 
         [...expression.freeVariables()]
             .forEach(freeVariable => this._registerAsWellKnownObject(freeVariable));
@@ -62,7 +66,7 @@ export class FormalSystem {
         return anExpression.isValue() && this._isStandAloneExpression(anExpression);
     }
 
-    private _isStandAloneTruth(anExpression: Expression): anExpression is StandAloneExpression<Truth> {
+    private _isProposition(anExpression: Expression): anExpression is Proposition {
         return !anExpression.isValue() && this._isStandAloneExpression(anExpression);
     }
 
@@ -79,15 +83,17 @@ export class FormalSystem {
 
         const newTheorem = provenRootExpression.replace(
             quantifierToEliminate,
-            quantifierToEliminate.applyTo(argument)
+            quantifierToEliminate.applyTo(argument),
         );
 
-        this._theorems.push(newTheorem as StandAloneExpression<Truth>);
+        this._theorems.push(newTheorem as Proposition);
         return newTheorem;
     }
 
-    private _provenExpressionContaining(expression: Expression) {
-        return this._provenExpressions().find(axiom => axiom.contains(expression));
+    private _provenExpressionContaining(expression: Expression): Proposition | undefined {
+        const rootExpression = expression.rootExpression();
+        return this._provenExpressions()
+            .find(expression => expression === rootExpression);
     }
 
     private _provenExpressions() {
@@ -96,5 +102,62 @@ export class FormalSystem {
 
     theorems() {
         return [...this._theorems];
+    }
+
+    rewriteCandidatesMatching(term: Expression) {
+        if (!term.isEquationMember()) return [];
+
+        const termProvenRoot = this._provenExpressionContaining(term);
+        if (termProvenRoot === undefined) return [];
+
+        return this._provenExpressions()
+            .filter(expression => expression !== termProvenRoot)
+            .flatMap(expression => expression.allSubExpressions())
+            .map(expression => this._rewriteEqualityUsing(term, expression) ? expression : undefined)
+            .filter(result=> result !== undefined);
+    }
+
+    private _rewriteEqualityUsing(equalityMember: EquationMember, targetExpression: Expression): Equality | undefined {
+        if (!targetExpression.isValue()) return undefined;
+        const unificationResult = equalityMember.unifyWith(targetExpression);
+        if (!unificationResult.isSuccessful()) return undefined;
+        const rewriteResult = unificationResult.rewrite();
+        if (!(rewriteResult instanceof Equality)) return undefined;
+        return rewriteResult;
+    }
+
+    private _isPartOfProvenProposition<T extends ExpressionType>(expression: Expression<T>): expression is PropositionPart<T> {
+        return this._provenExpressionContaining(expression) !== undefined;
+    }
+
+    rewrite(source: Expression<Value>, target: Expression<Value>) {
+        this._assertCouldRewrite(source, target);
+
+        const rewrittenEquation = this._rewriteEqualityUsing(source, target);
+        if (rewrittenEquation === undefined)
+            throw new Error("The rewrite target must fully unify with the source")
+
+        const sourceEquality = source.parent();
+        const newValue = source === sourceEquality.right ? rewrittenEquation.left : rewrittenEquation.right;
+        const newTheorem = target.rootExpression().replace(target, newValue.copy());
+
+        this._theorems.push(newTheorem as Proposition);
+        return newTheorem;
+    }
+
+    private _assertCouldRewrite(
+        source: Expression<Value>, target: Expression<Value>
+    ): asserts source is EquationMember & PropositionPart<Value> {
+        if (!source.isEquationMember())
+            throw new Error("Must use an equation member to perform a rewrite");
+
+        if (!this._isPartOfProvenProposition(source) || !this._isPartOfProvenProposition(target))
+            throw new Error("Cannot rewrite using non-proven expressions");
+
+        if (target.rootExpression() === source.rootExpression())
+            throw new Error("The rewrite target must be part of a different expresison of the source");
+
+        if (!target.isValue())
+            throw new Error("The rewrite target must be a value");
     }
 }
