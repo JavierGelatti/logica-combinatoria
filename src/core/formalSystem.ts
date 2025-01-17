@@ -159,7 +159,7 @@ export class FormalSystem {
             throw new Error("Cannot rewrite using non-proven expressions");
 
         if (target.rootExpression() === source.rootExpression())
-            throw new Error("The rewrite target must be part of a different expresison of the source");
+            throw new Error("The rewrite target must be part of a different expression of the source");
 
         if (!target.isValue())
             throw new Error("The rewrite target must be a value");
