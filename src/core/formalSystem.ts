@@ -8,11 +8,13 @@ type StandAlone = { [standAloneBrand]: any };
 type StandAloneExpression<T extends ExpressionType = any> = Expression<T> & StandAlone;
 type Proposition = StandAloneExpression<Truth>;
 
+export type PropositionIdentifier = ['A' | 'T', ...number[]];
+
 type PropositionPart<T extends ExpressionType> = { rootExpression(): Proposition } & Expression<T>;
 
 export class FormalSystem {
     private readonly _axioms: Proposition[] = [];
-    private readonly _theorems: Proposition[] = [];
+    private readonly _theorems: Proof[] = [];
     private readonly _wellKnownObjects: Identifier[] = [];
 
     axioms() {
@@ -77,16 +79,16 @@ export class FormalSystem {
     eliminateForAll(quantifierToEliminate: ForAll, argument: Expression) {
         if (!this._isStandAloneValue(argument)) throw new Error("Cannot apply a forall to a non-stand-alone value");
         if (!this._canApplyTo(quantifierToEliminate, argument)) throw new Error("Cannot apply a forall if it'd leave new unknown free variables");
+        if (!this._isPartOfProvenProposition(quantifierToEliminate)) throw new Error("Cannot eliminate a non-proved universal quantifier");
 
-        const provenRootExpression = this._provenExpressionContaining(quantifierToEliminate);
-        if (provenRootExpression === undefined) throw new Error("Cannot eliminate a non-proved universal quantifier");
-
-        const newTheorem = provenRootExpression.replace(
+        const newTheorem = quantifierToEliminate.rootExpression().replace(
             quantifierToEliminate,
             quantifierToEliminate.applyTo(argument),
-        );
+        ) as Proposition;
 
-        this._theorems.push(newTheorem as Proposition);
+        this._theorems.push(
+            new ForAllElimination(newTheorem, quantifierToEliminate, argument)
+        );
         return newTheorem;
     }
 
@@ -97,11 +99,11 @@ export class FormalSystem {
     }
 
     private _provenExpressions() {
-        return [...this._axioms, ...this._theorems];
+        return [...this.axioms(), ...this.theorems()];
     }
 
     theorems() {
-        return [...this._theorems];
+        return this._theorems.map(proof => proof.provenProposition);
     }
 
     rewriteCandidatesMatching(term: Expression) {
@@ -139,9 +141,11 @@ export class FormalSystem {
 
         const sourceEquality = source.parent();
         const newValue = source === sourceEquality.right ? rewrittenEquation.left : rewrittenEquation.right;
-        const newTheorem = target.rootExpression().replace(target, newValue.copy());
+        const newTheorem = target.rootExpression().replace(target, newValue.copy()) as Proposition;
 
-        this._theorems.push(newTheorem as Proposition);
+        this._theorems.push(
+            new TermRewriting(newTheorem, source, target as PropositionPart<Value>)
+        );
         return newTheorem;
     }
 
@@ -159,5 +163,57 @@ export class FormalSystem {
 
         if (!target.isValue())
             throw new Error("The rewrite target must be a value");
+    }
+
+    identifierOf(expression: Expression): PropositionIdentifier | undefined {
+        const expressionAsProposition = expression as Proposition;
+
+        const axiomIndex = this.axioms().indexOf(expressionAsProposition);
+        if (axiomIndex !== -1) {
+            return ['A', axiomIndex + 1];
+        }
+
+        const theoremIndex = this.theorems().indexOf(expressionAsProposition);
+        if (theoremIndex !== -1) {
+            return ['T', theoremIndex + 1];
+        }
+
+        return undefined;
+    }
+}
+
+abstract class Proof {
+    constructor(
+        public readonly provenProposition: Proposition
+    ) {}
+
+    abstract referencedPropositions(): Proposition[]
+}
+abstract class DirectProof extends Proof {}
+class ForAllElimination extends DirectProof {
+    constructor(
+        provenProposition: Proposition,
+        private readonly eliminatedForAll: PropositionPart<Truth> & ForAll,
+        private readonly argument: Expression<Value>
+    ) {
+        super(provenProposition);
+    }
+
+    referencedPropositions(): Proposition[] {
+        return [this.eliminatedForAll.rootExpression()];
+    }
+}
+
+class TermRewriting extends DirectProof {
+    constructor(
+        provenProposition: Proposition,
+        private readonly source: PropositionPart<Value> & EquationMember,
+        private readonly target: PropositionPart<Value>
+    ) {
+        super(provenProposition);
+    }
+
+    referencedPropositions(): Proposition[] {
+        return [this.source.rootExpression(), this.target.rootExpression()];
     }
 }
