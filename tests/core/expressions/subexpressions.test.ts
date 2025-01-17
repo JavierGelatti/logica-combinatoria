@@ -1,6 +1,6 @@
 import {describe, expect, test} from "vitest";
-import {equality, forall, identifier} from "../../src/core/expressions/expression_constructors.ts";
-import {Expression} from "../../src/core/expressions/expression.ts";
+import {equality, forall, identifier} from "../../../src/core/expressions/expression_constructors.ts";
+import {Expression} from "../../../src/core/expressions/expression.ts";
 
 describe("all subexpressions", () => {
     test("all subexpressions of an atomic expression returns itself", () => {

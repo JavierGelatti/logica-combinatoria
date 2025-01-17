@@ -7,9 +7,9 @@ import {
     hole,
     identifier,
     truthHole,
-} from "../../src/core/expressions/expression_constructors.ts";
-import {Expression, Truth, truthType, Value, valueType} from "../../src/core/expressions/expression.ts";
-import {Hole} from "../../src/core/expressions/hole.ts";
+} from "../../../src/core/expressions/expression_constructors.ts";
+import {Expression, Truth, truthType, Value, valueType} from "../../../src/core/expressions/expression.ts";
+import {Hole} from "../../../src/core/expressions/hole.ts";
 
 describe("holes", () => {
     test("can fill a hole at the left-hand position of an application", () => {

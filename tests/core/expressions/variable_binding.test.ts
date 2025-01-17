@@ -1,7 +1,7 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, forall, identifier} from "../../src/core/expressions/expression_constructors.ts";
-import {Identifier} from "../../src/core/expressions/identifier.ts";
-import {Expression} from "../../src/core/expressions/expression.ts";
+import {application, equality, forall, identifier} from "../../../src/core/expressions/expression_constructors.ts";
+import {Identifier} from "../../../src/core/expressions/identifier.ts";
+import {Expression} from "../../../src/core/expressions/expression.ts";
 
 describe("variable binding", () => {
     test("a variable without context is free", () => {

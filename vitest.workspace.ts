@@ -5,14 +5,14 @@ export default defineWorkspace([
     {
         test: {
             name: 'core',
-            include: ['tests/core/*.test.ts'],
+            include: ['tests/core/**/*.test.ts'],
             environment: "node"
         },
     },
     {
         test: {
             name: 'dom',
-            include: ['tests/dom/*.test.ts'],
+            include: ['tests/dom/**/*.test.ts'],
             browser: {
                 enabled: true,
                 api: {

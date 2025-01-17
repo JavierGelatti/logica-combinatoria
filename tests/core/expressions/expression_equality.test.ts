@@ -1,5 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, exists, forall, identifier} from "../../src/core/expressions/expression_constructors.ts";
+import {application, equality, exists, forall, identifier} from "../../../src/core/expressions/expression_constructors.ts";
 
 describe("expression equality", () => {
     test("a free variable is only equal to another free variable with the same name", () => {

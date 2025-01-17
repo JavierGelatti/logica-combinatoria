@@ -1,6 +1,6 @@
 import {describe, expect, test} from "vitest";
-import {application, identifier} from "../../src/core/expressions/expression_constructors.ts";
-import {Expression} from "../../src/core/expressions/expression.ts";
+import {application, identifier} from "../../../src/core/expressions/expression_constructors.ts";
+import {Expression} from "../../../src/core/expressions/expression.ts";
 
 describe("common ancestor", () => {
     test("two unrelated expressions have no common ancestor", () => {

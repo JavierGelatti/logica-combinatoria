@@ -1,6 +1,6 @@
 import {describe, expect, test} from "vitest";
-import {equality, forall, identifier} from "../../src/core/expressions/expression_constructors.ts";
-import {ForAll} from "../../src/core/expressions/forAll.ts";
+import {equality, forall, identifier} from "../../../../src/core/expressions/expression_constructors.ts";
+import {ForAll} from "../../../../src/core/expressions/forAll.ts";
 
 describe("variable renaming", () => {
     test("when the variable is renamed, all of its bound occurrences are renamed", () => {

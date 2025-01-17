@@ -1,9 +1,9 @@
 import {describe, expect, test} from "vitest";
-import {application, equality, exists, forall, identifier} from "../../src/core/expressions/expression_constructors.ts";
-import {Identifier} from "../../src/core/expressions/identifier.ts";
-import {successfulUnification, unificationFailure, UnificationSuccess} from "../../src/core/unificationResult.ts";
-import {Application} from "../../src/core/expressions/application.ts";
-import {Expression} from "../../src/core/expressions/expression.ts";
+import {application, equality, exists, forall, identifier} from "../../../../src/core/expressions/expression_constructors.ts";
+import {Identifier} from "../../../../src/core/expressions/identifier.ts";
+import {successfulUnification, unificationFailure, UnificationSuccess} from "../../../../src/core/unificationResult.ts";
+import {Application} from "../../../../src/core/expressions/application.ts";
+import {Expression} from "../../../../src/core/expressions/expression.ts";
 
 describe("unification", () => {
     describe("determination", () => {
