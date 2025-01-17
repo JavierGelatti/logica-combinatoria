@@ -15,19 +15,18 @@ export default defineWorkspace([
             include: ['tests/dom/**/*.test.ts'],
             browser: {
                 enabled: true,
-                api: {
-                    host: '0.0.0.0',
-                },
-                name: 'chrome',
+                api: { host: '0.0.0.0', port: 63315 },
                 provider: 'webdriverio',
-                providerOptions: {
+                instances: [{
+                    browser: 'chrome',
+                    // @ts-ignore
                     capabilities: {
                         browserName: 'chrome',
                         'goog:chromeOptions': {
                             args: ['--remote-debugging-port=9229'],
                         },
                     },
-                },
+                }],
             },
         },
     },
