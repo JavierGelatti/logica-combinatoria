@@ -48,6 +48,10 @@ body {
 
     --separation-margin: 3px;
 
+    .identifier {
+        height: 1em;
+    }
+
     &[draggable="true"], &[draggable="true"] * {
         touch-action: none;
 
@@ -202,6 +206,7 @@ body {
             display: flex;
             align-items: center;
             margin-left: .5em;
+            margin-bottom: .2em;
         }
 
         li::before {
@@ -211,7 +216,7 @@ body {
     }
 
     .axioms, .theorems {
-        .expression {
+        li > .expression {
             justify-content: left;
             width: fit-content;
         }
