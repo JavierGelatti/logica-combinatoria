@@ -3,6 +3,7 @@ import {Identifier} from "./identifier.ts";
 import {unificationFailure, UnificationResult} from "../unificationResult.ts";
 import {Hole} from "./hole.ts";
 import {Binder} from "./binder.ts";
+import {Equality} from "./equality.ts";
 
 export abstract class CompoundExpression<T extends ExpressionType = ExpressionType> extends Expression<T> {
     protected _subexpressions!: Expression[];
@@ -88,5 +89,9 @@ export abstract class CompoundExpression<T extends ExpressionType = ExpressionTy
         return this._subexpressions
             .map(subexpression => subexpression.allOccurrencesOf(lookedUpIdentifier))
             .reduce((previous, current) => previous.union(current));
+    }
+
+    isEquality(): this is Equality {
+        return false;
     }
 }

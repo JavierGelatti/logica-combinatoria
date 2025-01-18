@@ -11,4 +11,8 @@ export class Equality extends BinaryExpression<Value, Truth> {
     toString(): string {
         return `${this.left} = ${this.right}`;
     }
+
+    isEquality(): this is Equality {
+        return true;
+    }
 }

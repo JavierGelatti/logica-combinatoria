@@ -137,7 +137,6 @@ export abstract class Expression<T extends ExpressionType = any> {
     }
 
     isEquationMember(): this is EquationMember {
-        // We use a string here only to avoid circular imports.
-        return this._parent?.constructor.name === "Equality";
+        return this._parent?.isEquality() ?? false;
     }
 }
