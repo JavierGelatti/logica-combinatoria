@@ -1,10 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {
-    application,
-    equality,
-    forall,
-    identifier,
-} from "../../../src/core/expressions/expression_constructors.ts";
+import {application, equality, forall, identifier} from "../../../src/core/expressions/expression_constructors.ts";
 import {FormalSystem} from "../../../src/core/formalSystem.ts";
 import {Expression} from "../../../src/core/expressions/expression.ts";
 
@@ -167,7 +162,7 @@ describe("actual rewriting", () => {
         ));
 
         expect(() => system.rewrite(source, target))
-            .toThrowError("The rewrite target must be part of a different expresison of the source");
+            .toThrowError("The rewrite target must be part of a different expression of the source");
     });
 
     test("cannot rewrite if the target didn't unify with the source", () => {
@@ -192,9 +187,12 @@ describe("actual rewriting", () => {
         ));
         system.addAxiom(equality(target = identifier("B"), identifier("W")));
 
-        const newTheorem = system.rewrite(source, target);
-        expect(newTheorem).toEqual(equality(identifier("A"), identifier("W")))
-        expect(system.theorems()).toContain(newTheorem);
+        const newProof = system.rewrite(source, target);
+        expect(newProof.referencedPropositions()).toEqual(system.axioms());
+        expect(newProof.source).toEqual(source);
+        expect(newProof.target).toEqual(target);
+        expect(newProof.provenProposition).toEqual(equality(identifier("A"), identifier("W")))
+        expect(system.theorems()).toContain(newProof.provenProposition);
     });
 
     test("can rewrite with the right-hand-side if the expressions unify and fully determine the other side of the equation", () => {
@@ -206,8 +204,11 @@ describe("actual rewriting", () => {
         ));
         system.addAxiom(equality(target = identifier("B"), identifier("W")));
 
-        const newTheorem = system.rewrite(source, target);
-        expect(newTheorem).toEqual(equality(identifier("A"), identifier("W")))
-        expect(system.theorems()).toContain(newTheorem);
+        const newProof = system.rewrite(source, target);
+        expect(newProof.referencedPropositions()).toEqual(system.axioms());
+        expect(newProof.source).toEqual(source);
+        expect(newProof.target).toEqual(target);
+        expect(newProof.provenProposition).toEqual(equality(identifier("A"), identifier("W")))
+        expect(system.theorems()).toContain(newProof.provenProposition);
     });
 });

@@ -8,7 +8,7 @@ import {
     identifier,
 } from "../../../src/core/expressions/expression_constructors.ts";
 import {FormalSystem} from "../../../src/core/formalSystem.ts";
-import {Expression} from "../../../src/core/expressions/expression.ts";
+import {Expression, Truth} from "../../../src/core/expressions/expression.ts";
 import {ForAll} from "../../../src/core/expressions/forAll.ts";
 
 describe("determination of universal quantifiers candidate for elimination", () => {
@@ -145,10 +145,10 @@ describe("determination of universal quantifiers candidate for elimination", () 
             )
         );
         system.addAxiom(axiom1);
-        const newTheorem = system.eliminateForAll(axiom1, identifier("A"));
+        const newProof = system.eliminateForAll(axiom1, identifier("A"));
 
         expect(system.universalQuantifiersThatCanBeAppliedTo(identifier("A")))
-            .toContain(newTheorem);
+            .toContain(newProof.provenProposition);
     });
 });
 
@@ -203,13 +203,13 @@ describe("elimination of universal quantifiers", () => {
         );
         system.addAxiom(axiom1);
 
-        system.eliminateForAll(universalQuantifier, identifier("A"));
+        const newProof = system.eliminateForAll(universalQuantifier, identifier("A"));
 
-        expect(system.theorems()).toEqual([
-            exists(identifier("w"),
-                equality(identifier("A"), identifier("A"))
-            )
-        ]);
+        expect(newProof.referencedPropositions()).toEqual([axiom1]);
+        expect(newProof.eliminatedForAll).toEqual(universalQuantifier);
+        expect(newProof.argument).toEqual(identifier("A"));
+        expect(newProof.provenProposition).toEqual(exists(identifier("w"), equality(identifier("A"), identifier("A"))));
+        expect(system.theorems()).toEqual([newProof.provenProposition]);
     });
 
     test("can apply an universal quantifier from a theorem", () => {
@@ -220,9 +220,9 @@ describe("elimination of universal quantifiers", () => {
             )
         );
         system.addAxiom(axiom1);
-        const newTheorem = system.eliminateForAll(axiom1, identifier("A")) as ForAll;
+        const newTheorem: Expression<Truth> = system.eliminateForAll(axiom1, identifier("A")).provenProposition;
 
-        system.eliminateForAll(newTheorem, identifier("A"));
+        system.eliminateForAll(newTheorem as ForAll, identifier("A"));
 
         expect(system.theorems()).toEqual([
             forall(identifier("x"),

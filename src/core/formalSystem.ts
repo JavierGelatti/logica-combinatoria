@@ -86,10 +86,9 @@ export class FormalSystem {
             quantifierToEliminate.applyTo(argument),
         ) as Proposition;
 
-        this._theorems.push(
-            new ForAllElimination(newTheorem, quantifierToEliminate, argument)
-        );
-        return newTheorem;
+        const newProof = new ForAllElimination(newTheorem, quantifierToEliminate, argument);
+        this._theorems.push(newProof);
+        return newProof;
     }
 
     private _provenExpressionContaining(expression: Expression): Proposition | undefined {
@@ -143,10 +142,9 @@ export class FormalSystem {
         const newValue = source === sourceEquality.right ? rewrittenEquation.left : rewrittenEquation.right;
         const newTheorem = target.rootExpression().replace(target, newValue.copy()) as Proposition;
 
-        this._theorems.push(
-            new TermRewriting(newTheorem, source, target as PropositionPart<Value>)
-        );
-        return newTheorem;
+        const newProof = new TermRewriting(newTheorem, source, target as PropositionPart<Value>);
+        this._theorems.push(newProof);
+        return newProof;
     }
 
     private _assertCouldRewrite(
@@ -193,8 +191,8 @@ abstract class DirectProof extends Proof {}
 class ForAllElimination extends DirectProof {
     constructor(
         provenProposition: Proposition,
-        private readonly eliminatedForAll: PropositionPart<Truth> & ForAll,
-        private readonly argument: Expression<Value>
+        public readonly eliminatedForAll: PropositionPart<Truth> & ForAll,
+        public readonly argument: Expression<Value>
     ) {
         super(provenProposition);
     }
@@ -207,8 +205,8 @@ class ForAllElimination extends DirectProof {
 class TermRewriting extends DirectProof {
     constructor(
         provenProposition: Proposition,
-        private readonly source: PropositionPart<Value> & EquationMember,
-        private readonly target: PropositionPart<Value>
+        public readonly source: PropositionPart<Value> & EquationMember,
+        public readonly target: PropositionPart<Value>
     ) {
         super(provenProposition);
     }

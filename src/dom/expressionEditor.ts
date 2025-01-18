@@ -103,10 +103,8 @@ export class ExpressionEditor {
                 return new DropTarget(
                     binderElement,
                     () => this._addTheorem(
-                        this._system.eliminateForAll(
-                            forallView.expression,
-                            grabbedExpression
-                        )
+                        this._system.eliminateForAll(forallView.expression, grabbedExpression)
+                            .provenProposition
                     ),
                     () => {
                         variableViews.forEach(view => view.domElement().classList.add("highlighted"))
@@ -215,6 +213,7 @@ export class ExpressionEditor {
                     expressionView.domElement(),
                     () => this._addTheorem(
                         this._system.rewrite(grabbedExpression, potentialTargetExpression)
+                            .provenProposition
                     )
                 );
             })
