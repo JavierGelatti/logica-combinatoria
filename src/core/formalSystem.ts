@@ -2,6 +2,7 @@ import {EquationMember, Expression, ExpressionType, Truth, Value} from "./expres
 import {Identifier} from "./expressions/identifier.ts";
 import {ForAll} from "./expressions/forAll.ts";
 import {Equality} from "./expressions/equality.ts";
+import {forall} from "./expressions/expression_constructors.ts";
 
 const standAloneBrand = Symbol("standAloneBrand");
 type StandAlone = { [standAloneBrand]: any };
@@ -14,8 +15,9 @@ type PropositionPart<T extends ExpressionType> = { rootExpression(): Proposition
 
 export class FormalSystem {
     private readonly _axioms: Proposition[] = [];
-    private readonly _theorems: Proof[] = [];
     private readonly _wellKnownObjects: Identifier[] = [];
+    private readonly _theorems: Proof[] = [];
+    private _currentProof: Context | undefined;
 
     axioms() {
         return [...this._axioms];
@@ -41,7 +43,12 @@ export class FormalSystem {
     }
 
     isWellKnownFreeVariable(identifier: Identifier) {
-        return this._wellKnownObjects.some(o => o.equals(identifier));
+        return this.objectsInContext()
+            .some(o => o.equals(identifier));
+    }
+
+    private objectsInContext() {
+        return [...this._wellKnownObjects, ...(this._currentProof?.objectsInContext() ?? [])];
     }
 
     universalQuantifiersThatCanBeAppliedTo(argument: Expression): ForAll[] {
@@ -87,7 +94,7 @@ export class FormalSystem {
         ) as Proposition;
 
         const newProof = new ForAllElimination(newTheorem, quantifierToEliminate, argument);
-        this._theorems.push(newProof);
+        this._registerProof(newProof);
         return newProof;
     }
 
@@ -143,7 +150,7 @@ export class FormalSystem {
         const newTheorem = target.rootExpression().replace(target, newValue.copy()) as Proposition;
 
         const newProof = new TermRewriting(newTheorem, source, target as PropositionPart<Value>);
-        this._theorems.push(newProof);
+        this._registerProof(newProof);
         return newProof;
     }
 
@@ -178,6 +185,50 @@ export class FormalSystem {
 
         return undefined;
     }
+
+    startForAllIntroduction(newBoundVariable: Identifier) {
+        if (!this._isStandAloneExpression(newBoundVariable))
+            throw new Error("Cannot introduce a forall with a non-root identifier");
+
+        this._currentProof = new Context(newBoundVariable);
+    }
+
+    finishCurrentProof() {
+        const newProof = this._currentProof!.finishProof();
+        this._currentProof = undefined;
+        this._registerProof(newProof);
+    }
+
+    private _registerProof(newProof: Proof) {
+        if (this._currentProof) {
+            this._currentProof.registerStep(newProof);
+        } else {
+            this._theorems.push(newProof);
+        }
+    }
+}
+
+export class Context {
+    private readonly _steps: Proof[] = [];
+
+    constructor(
+        private readonly boundVariable: Identifier & StandAlone
+    ) {}
+
+    objectsInContext(): Identifier[] {
+        return [ this.boundVariable ];
+    }
+
+    registerStep(newProof: Proof) {
+        this._steps.push(newProof);
+    }
+
+    finishProof(): MultiStepProof {
+        return new MultiStepProof(
+            forall(this.boundVariable.copy(), this._steps[0].provenProposition) as Expression<Truth> as Proposition,
+            this._steps
+        );
+    }
 }
 
 export abstract class Proof {
@@ -189,6 +240,18 @@ export abstract class Proof {
 }
 
 export abstract class DirectProof extends Proof {}
+export class MultiStepProof extends Proof {
+    constructor(
+        provenProposition: Proposition,
+        steps: Proof[]
+    ) {
+        super(provenProposition);
+    }
+
+    referencedPropositions(): Proposition[] {
+        throw new Error("Method not implemented.");
+    }
+}
 
 export class ForAllElimination extends DirectProof {
     constructor(
