@@ -180,15 +180,17 @@ export class FormalSystem {
     }
 }
 
-abstract class Proof {
+export abstract class Proof {
     constructor(
         public readonly provenProposition: Proposition
     ) {}
 
     abstract referencedPropositions(): Proposition[]
 }
-abstract class DirectProof extends Proof {}
-class ForAllElimination extends DirectProof {
+
+export abstract class DirectProof extends Proof {}
+
+export class ForAllElimination extends DirectProof {
     constructor(
         provenProposition: Proposition,
         public readonly eliminatedForAll: PropositionPart<Truth> & ForAll,
@@ -202,7 +204,7 @@ class ForAllElimination extends DirectProof {
     }
 }
 
-class TermRewriting extends DirectProof {
+export class TermRewriting extends DirectProof {
     constructor(
         provenProposition: Proposition,
         public readonly source: PropositionPart<Value> & EquationMember,

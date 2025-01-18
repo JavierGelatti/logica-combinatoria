@@ -96,6 +96,16 @@ body {
     100% { transform: rotate(1deg); }
 }
 
+.highlight {
+    animation: highlight 1s;
+}
+
+@keyframes highlight {
+    0% { background: yellow; }
+    50% { background: yellow; }
+    100% { }
+}
+
 .enabled-drop-target {
     cursor: pointer !important;
 }
@@ -238,6 +248,44 @@ body {
 
         & > li::before {
             content: 'T' counters(section, ".") ". ";
+        }
+
+        .proof-reference {
+            display: flex;
+            flex-grow: 1;
+            justify-content: flex-end;
+            align-content: center;
+
+            &::before {
+                content: " ";
+                border-bottom: 1px dotted lightgray;
+                flex-grow: 1;
+                min-width: 10px;
+                transform: translateX(-.3em);
+            }
+
+            a {
+                font-size: .8em;
+                position: relative;
+                text-decoration: none;
+                background: rgb(from lightblue r g b / 50%);
+                color: color-mix(in srgb, lightblue, black 50%);
+                padding: .2em;
+                border-radius: 5px;
+
+                &:has(+ &) {
+                    margin-right: .5em;
+
+                    &::after {
+                        color: black;
+                        position: absolute;
+                        right: 0;
+                        bottom: 0;
+                        transform: translateX(.35em);
+                        content: ',';
+                    }
+                }
+            }
         }
     }
 }

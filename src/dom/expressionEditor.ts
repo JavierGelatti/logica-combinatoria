@@ -1,10 +1,10 @@
 import {ExpressionView, HoleView} from "./expression_view.ts";
 import {createElement} from "./essentials/createElement.ts";
-import {Expression, ExpressionType, Truth} from "../core/expressions/expression.ts";
+import {Expression, ExpressionType} from "../core/expressions/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
-import {FormalSystem} from "../core/formalSystem.ts";
+import {FormalSystem, Proof} from "../core/formalSystem.ts";
 
 export class ExpressionEditor {
     private readonly _system: FormalSystem = new FormalSystem();
@@ -57,7 +57,7 @@ export class ExpressionEditor {
         this._system.addAxiom(expression);
 
         this._axiomsList.append(
-            createElement("li", {}, [
+            createElement("li", { id: this._identifierOf(expression) }, [
                 ExpressionView.forExpression(expression).domElement()
             ])
         );
@@ -104,7 +104,6 @@ export class ExpressionEditor {
                     binderElement,
                     () => this._addTheorem(
                         this._system.eliminateForAll(forallView.expression, grabbedExpression)
-                            .provenProposition
                     ),
                     () => {
                         variableViews.forEach(view => view.domElement().classList.add("highlighted"))
@@ -195,12 +194,29 @@ export class ExpressionEditor {
         this._currentInteraction = undefined;
     }
 
-    private _addTheorem(newTheorem: Expression<Truth>) {
+    private _addTheorem(newProof: Proof) {
+        const newTheorem = newProof.provenProposition;
+        const proofId = this._identifierOf(newTheorem);
         this._theoremsList.append(
-            createElement("li", {}, [
+            createElement("li", { id: proofId }, [
                 ExpressionView.forExpression(newTheorem).domElement(),
+                createElement("div", { className: "proof-reference" }, [
+                    ...newProof.referencedPropositions()
+                        .map(proposition => {
+                            const propositionId = this._identifierOf(proposition);
+                            return createElement("a", {
+                                href: `#${propositionId}`,
+                                textContent: propositionId,
+                                onclick: () => animateWith(document.getElementById(propositionId)!, "highlight")
+                            })
+                        })
+                ])
             ]),
         );
+    }
+
+    private _identifierOf(provenExpression: Expression) {
+        return this._system.identifierOf(provenExpression)!.join(".");
     }
 
     private _rewriteExpressionDropTargetsFor(grabbedExpressionView: ExpressionView) {
@@ -213,7 +229,6 @@ export class ExpressionEditor {
                     expressionView.domElement(),
                     () => this._addTheorem(
                         this._system.rewrite(grabbedExpression, potentialTargetExpression)
-                            .provenProposition
                     )
                 );
             })
