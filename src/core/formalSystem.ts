@@ -3,6 +3,7 @@ import {Identifier} from "./expressions/identifier.ts";
 import {ForAll} from "./expressions/forAll.ts";
 import {Equality} from "./expressions/equality.ts";
 import {forall} from "./expressions/expression_constructors.ts";
+import {lastElementOf} from "./essentials/lastElement.ts";
 
 const standAloneBrand = Symbol("standAloneBrand");
 type StandAlone = { [standAloneBrand]: any };
@@ -17,7 +18,7 @@ export class FormalSystem {
     private readonly _axioms: Proposition[] = [];
     private readonly _wellKnownObjects: Identifier[] = [];
     private readonly _theorems: Proof[] = [];
-    private _currentProof: Context | undefined;
+    private _currentProofs: Context[] = [];
 
     axioms() {
         return [...this._axioms];
@@ -48,7 +49,10 @@ export class FormalSystem {
     }
 
     private objectsInContext() {
-        return [...this._wellKnownObjects, ...(this._currentProof?.objectsInContext() ?? [])];
+        return [
+            ...this._wellKnownObjects,
+            ...this._currentProofs.flatMap(proof => proof.objectsInContext())
+        ];
     }
 
     universalQuantifiersThatCanBeAppliedTo(argument: Expression): ForAll[] {
@@ -105,7 +109,7 @@ export class FormalSystem {
     }
 
     private _provenExpressions() {
-        return [...this.axioms(), ...this.theorems()];
+        return [...this.axioms(), ...this.theorems(), ...this._currentProofs.flatMap(proof => proof.provenExpressions())];
     }
 
     theorems() {
@@ -190,18 +194,23 @@ export class FormalSystem {
         if (!this._isStandAloneExpression(newBoundVariable))
             throw new Error("Cannot introduce a forall with a non-root identifier");
 
-        this._currentProof = new Context(newBoundVariable);
+        this._currentProofs.push(new Context(newBoundVariable));
     }
 
     finishCurrentProof() {
-        const newProof = this._currentProof!.finishProof();
-        this._currentProof = undefined;
+        const currentProof = this._currentProofs.pop();
+        if (currentProof === undefined)
+            throw new Error("Cannot finish non-started proof");
+
+        const newProof = currentProof.finishProof();
         this._registerProof(newProof);
+        return newProof;
     }
 
     private _registerProof(newProof: Proof) {
-        if (this._currentProof) {
-            this._currentProof.registerStep(newProof);
+        const currentProof = lastElementOf(this._currentProofs);
+        if (currentProof !== undefined) {
+            currentProof.registerStep(newProof);
         } else {
             this._theorems.push(newProof);
         }
@@ -223,9 +232,18 @@ export class Context {
         this._steps.push(newProof);
     }
 
+    provenExpressions() {
+        return this._steps.map(step => step.provenProposition);
+    }
+
     finishProof(): MultiStepProof {
+        const lastStep = lastElementOf(this._steps);
+
+        if (lastStep === undefined)
+            throw new Error("Cannot finish empty proof");
+
         return new MultiStepProof(
-            forall(this.boundVariable.copy(), this._steps[0].provenProposition) as Expression<Truth> as Proposition,
+            forall(this.boundVariable.copy(), lastStep.provenProposition) as Expression<Truth> as Proposition,
             this._steps
         );
     }
@@ -243,13 +261,13 @@ export abstract class DirectProof extends Proof {}
 export class MultiStepProof extends Proof {
     constructor(
         provenProposition: Proposition,
-        steps: Proof[]
+        public readonly steps: Proof[]
     ) {
         super(provenProposition);
     }
 
     referencedPropositions(): Proposition[] {
-        throw new Error("Method not implemented.");
+        return this.steps.flatMap(step => step.referencedPropositions());
     }
 }
 

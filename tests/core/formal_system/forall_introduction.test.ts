@@ -7,6 +7,8 @@ import {
 } from "../../../src/core/expressions/expression_constructors.ts";
 import {FormalSystem} from "../../../src/core/formalSystem.ts";
 import {Identifier} from "../../../src/core/expressions/identifier.ts";
+import {ForAll} from "../../../src/core/expressions/forAll.ts";
+import { Expression, Truth } from "../../../src/core/expressions/expression.ts";
 
 describe("forall introduction", () => {
     test("can introduce a forall without using the newly-bound variable", () => {
@@ -25,6 +27,38 @@ describe("forall introduction", () => {
             .toEqual([forall(identifier("A"), equality(identifier("M"), identifier("M")))]);
     });
 
+    test("can eliminate a forall during a forall introduction", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+        system.startForAllIntroduction(identifier("A"));
+
+        const step = system.eliminateForAll(axiom1, identifier("A"));
+
+        expect(step.provenProposition)
+            .toEqual(equality(identifier("A"), identifier("M")));
+        expect(system.theorems()).toEqual([]);
+    });
+
+    test("can eliminate two successive forall during a forall introduction", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(identifier("x"),
+            forall(identifier("y"), equality(identifier("x"), identifier("y")))
+        );
+        system.addAxiom(axiom1);
+        system.startForAllIntroduction(identifier("A"));
+
+        const step1 = system.eliminateForAll(axiom1, identifier("A"));
+        const step2 = system.eliminateForAll(step1.provenProposition as Expression<Truth> as ForAll, identifier("A"));
+
+        expect(step2.provenProposition)
+            .toEqual(equality(identifier("A"), identifier("A")));
+        expect(system.theorems()).toEqual([]);
+    });
+
     test("can introduce a forall that depends on the newly-bound variable", () => {
         const system = new FormalSystem();
         const axiom1 = forall(
@@ -35,10 +69,13 @@ describe("forall introduction", () => {
 
         system.startForAllIntroduction(identifier("A"));
         system.eliminateForAll(axiom1, identifier("A"));
-        system.finishCurrentProof();
+        const proof = system.finishCurrentProof();
 
-        expect(system.theorems())
-            .toEqual([forall(identifier("A"), equality(identifier("A"), identifier("M")))]);
+        expect(proof.referencedPropositions()).toEqual([axiom1]);
+        expect(proof.steps.length).toEqual(1);
+        expect(proof.provenProposition)
+            .toEqual(forall(identifier("A"), equality(identifier("A"), identifier("M"))));
+        expect(system.theorems()).toEqual([proof.provenProposition]);
     });
 
     test("cannot introduce a forall if the new identifier is not a root expression", () => {
@@ -53,5 +90,86 @@ describe("forall introduction", () => {
 
         expect(() => system.startForAllIntroduction(subexpression))
             .toThrowError("Cannot introduce a forall with a non-root identifier");
+    });
+
+    test("cannot finish a proof that did not start", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+
+        expect(() => system.finishCurrentProof())
+            .toThrowError("Cannot finish non-started proof");
+    });
+
+    test("cannot introduce a forall if there were no steps taken", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+        system.startForAllIntroduction(identifier("A"));
+
+        expect(() => system.finishCurrentProof())
+            .toThrowError("Cannot finish empty proof");
+    });
+
+    test("can introduce a nested forall", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+
+        system.startForAllIntroduction(identifier("A"));
+        system.startForAllIntroduction(identifier("B"));
+        system.eliminateForAll(axiom1, identifier("B"));
+        system.finishCurrentProof();
+        system.finishCurrentProof();
+
+        expect(system.theorems())
+            .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("B"), identifier("M"))))]);
+    });
+
+    test("can reference a previous bound variable while introducing a nested forall", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+
+        system.startForAllIntroduction(identifier("A"));
+        system.startForAllIntroduction(identifier("B"));
+        system.eliminateForAll(axiom1, identifier("A"));
+        system.finishCurrentProof();
+        system.finishCurrentProof();
+
+        expect(system.theorems())
+            .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("A"), identifier("M"))))]);
+    });
+
+    test("can reference a previous step while introducing a nested forall", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(identifier("x"),
+            forall(identifier("y"),
+                equality(identifier("x"), identifier("y"))
+            )
+        );
+        system.addAxiom(axiom1);
+
+        system.startForAllIntroduction(identifier("A"));
+        const step1 = system.eliminateForAll(axiom1, identifier("A")).provenProposition as Expression<Truth> as ForAll;
+        system.startForAllIntroduction(identifier("B"));
+        system.eliminateForAll(step1, identifier("B"));
+        system.finishCurrentProof();
+        system.finishCurrentProof();
+
+        expect(system.theorems())
+            .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("A"), identifier("B"))))]);
     });
 });
