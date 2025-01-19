@@ -185,6 +185,9 @@ export class FormalSystem {
         if (!this._isStandAloneExpression(newBoundVariable))
             throw new Error("Cannot introduce a forall with a non-root identifier");
 
+        if (this.isWellKnownFreeVariable(newBoundVariable))
+            throw new Error("Cannot introduce a forall with a known object identifier");
+
         this._currentProofs.push(new Context(newBoundVariable));
     }
 

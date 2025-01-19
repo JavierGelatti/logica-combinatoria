@@ -92,6 +92,18 @@ describe("forall introduction", () => {
             .toThrowError("Cannot introduce a forall with a non-root identifier");
     });
 
+    test("cannot introduce a forall if the new identifier is a known object", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+
+        expect(() => system.startForAllIntroduction(identifier("M")))
+            .toThrowError("Cannot introduce a forall with a known object identifier");
+    });
+
     test("cannot finish a proof that did not start", () => {
         const system = new FormalSystem();
         const axiom1 = forall(

@@ -253,9 +253,11 @@ export class ExpressionEditor {
             .filter(result=> result !== undefined);
     }
 
-    private startForAllIntroduction() {
-        const newBoundVariable = promptIdentifier("Nombre de la variable");
+    private startForAllIntroduction(promptText = "Nombre de la variable", promptInitialValue = ""): void {
+        const newBoundVariable = promptIdentifier(promptText, promptInitialValue);
         if (newBoundVariable === undefined) return;
+        if (this._system.isWellKnownFreeVariable(newBoundVariable))
+            return this.startForAllIntroduction("Ese nombre ya está ocupado", newBoundVariable.toString());
 
         let list!: HTMLOListElement;
         createElement("div", {}, [
