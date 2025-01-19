@@ -242,12 +242,36 @@ body {
     }
 
     .theorems {
+        li {
+            --item-name: "";
+
+            &[id] {
+                --item-name: attr(id) ".";
+            }
+        }
+
         li::before {
-            content: counters(section, ".") ". ";
+            content: var(--item-name);
         }
 
         & > li::before {
-            content: 'T' counters(section, ".") ". ";
+            content: attr(id) ".";
+        }
+
+        ol {
+            margin-left: 2em;
+            border-left: 1px solid gray;
+
+            li:first-child {
+                background-color: white;
+                margin-left: -2em;
+                border-left: none;
+
+                .identifier {
+                    margin-left: .2em;
+                    margin-right: .2em;
+                }
+            }
         }
 
         .proof-reference {
