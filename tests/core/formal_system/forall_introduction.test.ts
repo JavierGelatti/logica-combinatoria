@@ -129,8 +129,9 @@ describe("forall introduction", () => {
         system.startForAllIntroduction(identifier("B"));
         system.eliminateForAll(axiom1, identifier("B"));
         system.finishCurrentProof();
-        system.finishCurrentProof();
+        const proof = system.finishCurrentProof();
 
+        expect(proof.referencedPropositions()).toEqual([axiom1]);
         expect(system.theorems())
             .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("B"), identifier("M"))))]);
     });
@@ -147,8 +148,9 @@ describe("forall introduction", () => {
         system.startForAllIntroduction(identifier("B"));
         system.eliminateForAll(axiom1, identifier("A"));
         system.finishCurrentProof();
-        system.finishCurrentProof();
+        const proof = system.finishCurrentProof();
 
+        expect(proof.referencedPropositions()).toEqual([axiom1]);
         expect(system.theorems())
             .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("A"), identifier("M"))))]);
     });
@@ -167,9 +169,25 @@ describe("forall introduction", () => {
         system.startForAllIntroduction(identifier("B"));
         system.eliminateForAll(step1, identifier("B"));
         system.finishCurrentProof();
-        system.finishCurrentProof();
+        const proof = system.finishCurrentProof();
 
+        expect(proof.referencedPropositions()).toEqual([axiom1]);
         expect(system.theorems())
             .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("A"), identifier("B"))))]);
+    });
+
+    test("the proven proposition must be a root expression", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+
+        system.startForAllIntroduction(identifier("A"));
+        const step = system.eliminateForAll(axiom1, identifier("M"));
+        system.finishCurrentProof();
+
+        expect(step.provenProposition.isRootExpression()).toBe(true);
     });
 });

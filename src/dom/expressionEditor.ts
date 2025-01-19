@@ -42,9 +42,13 @@ export class ExpressionEditor {
                 this._theoremsList = createElement("ol", {className: "theorems"}),
                 createElement("div", {className: "actions"}, [
                     createElement("button", {
-                        textContent: "New binding",
+                        textContent: "Nueva variable",
                         onclick: () => this.startForAllIntroduction()
-                    })
+                    }),
+                    createElement("button", {
+                        textContent: "Introducir para todo",
+                        onclick: () => this.endForAllIntroduction()
+                    }),
                 ])
             ]),
             createElement("div", {className: "expression-editor"}, [
@@ -258,7 +262,8 @@ export class ExpressionEditor {
             list = createElement("ol", {}, [
                 createElement("li", {}, [
                     "Sea ",
-                    ExpressionView.forExpression(newBoundVariable).domElement()
+                    ExpressionView.forExpression(newBoundVariable).domElement(),
+                    " un pájaro cualquiera"
                 ])
             ])
         ]);
@@ -266,5 +271,11 @@ export class ExpressionEditor {
         this._currentProofTheoremsList.push(list);
 
         this._system.startForAllIntroduction(newBoundVariable);
+    }
+
+    private endForAllIntroduction() {
+        const proof = this._system.finishCurrentProof();
+        this._currentProofTheoremsList.pop();
+        this._addTheorem(proof);
     }
 }

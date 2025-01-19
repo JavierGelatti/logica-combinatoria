@@ -236,7 +236,7 @@ export class Context {
             throw new Error("Cannot finish empty proof");
 
         return new MultiStepProof(
-            forall(this.boundVariable.copy(), lastStep.provenProposition) as Expression<Truth> as Proposition,
+            forall(this.boundVariable.copy(), lastStep.provenProposition.copy()) as Expression<Truth> as Proposition,
             this._steps
         );
     }
@@ -264,7 +264,14 @@ export class MultiStepProof extends Proof {
     }
 
     referencedPropositions(): Proposition[] {
-        return this.steps.flatMap(step => step.referencedPropositions());
+        const ownPropositions = this._ownPropositions();
+        return this.steps
+            .flatMap(step => step.referencedPropositions())
+            .filter(proposition => !ownPropositions.includes(proposition));
+    }
+
+    private _ownPropositions() {
+        return this.steps.map(step => step.provenProposition);
     }
 }
 
