@@ -219,4 +219,20 @@ describe("forall introduction", () => {
 
         expect(proof.referencedPropositions()).toEqual([axiom1]);
     });
+
+    test("can introduce a multi-variable forall", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+
+        system.startForAllIntroduction(identifier("A"), identifier("B"));
+        system.eliminateForAll(axiom1, identifier("M"));
+        system.finishCurrentProof();
+
+        expect(system.theorems())
+            .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("M"), identifier("M"))))]);
+    });
 });

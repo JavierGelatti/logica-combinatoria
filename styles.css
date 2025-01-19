@@ -204,70 +204,79 @@ body {
     }
 }
 
+ol.collection {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    margin-left: .2em;
+    margin-right: .2em;
+
+    & > li {
+        display: flex;
+        align-items: center;
+
+        & + & {
+            &::before {
+                color: black;
+                margin-right: .2em;
+                content: ',';
+            }
+
+            &:last-child::before {
+                margin-left: .2em;
+                content: 'y';
+            }
+        }
+    }
+}
+
 .logic-system {
     margin: 1em;
 
-    ol {
-        counter-reset: section;
+    .axioms, .theorems, .theorem-steps {
         list-style-type: none;
         padding: 0;
 
-        li {
+        & > li {
             display: flex;
             align-items: center;
             margin-left: .5em;
             margin-bottom: .2em;
-        }
 
-        li::before {
-            counter-increment: section;
-            padding-right: .5em;
-        }
-    }
+            --item-name: "";
 
-    .axioms, .theorems {
-        li > .expression {
-            justify-content: left;
-            width: fit-content;
+            &[id] {
+                --item-name: attr(id) ".";
+            }
+
+            &::before {
+                content: var(--item-name);
+                padding-right: .5em;
+            }
+
+            & > .expression {
+                justify-content: left;
+                width: fit-content;
+            }
         }
     }
 
     .axioms {
         border-bottom: 1px solid gray;
         margin-bottom: 1em;
-
-        li::before {
-            content: 'A' counter(section) ". ";
-        }
     }
 
     .theorems {
-        li {
-            --item-name: "";
-
-            &[id] {
-                --item-name: attr(id) ".";
-            }
-        }
-
-        li::before {
-            content: var(--item-name);
-        }
-
-        & > li::before {
-            content: attr(id) ".";
-        }
-
-        ol {
+        .theorem-steps {
             margin-left: 2em;
             border-left: 1px solid gray;
 
-            li:first-child {
+            & > li:first-child {
                 background-color: white;
                 margin-left: -2em;
                 border-left: none;
 
-                .identifier {
+                & > .identifier {
                     margin-left: .2em;
                     margin-right: .2em;
                 }
@@ -290,25 +299,11 @@ body {
 
             a {
                 font-size: .8em;
-                position: relative;
                 text-decoration: none;
                 background: rgb(from lightblue r g b / 50%);
                 color: color-mix(in srgb, lightblue, black 50%);
                 padding: .2em;
                 border-radius: 5px;
-
-                &:has(+ &) {
-                    margin-right: .5em;
-
-                    &::after {
-                        color: black;
-                        position: absolute;
-                        right: 0;
-                        bottom: 0;
-                        transform: translateX(.35em);
-                        content: ',';
-                    }
-                }
             }
         }
     }

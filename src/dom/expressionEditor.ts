@@ -5,8 +5,9 @@ import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
 import {FormalSystem, Proof} from "../core/formalSystem.ts";
-import {promptIdentifier} from "./prompt_identifier.ts";
+import {promptIdentifiers} from "./prompt_identifier.ts";
 import {lastElementOf} from "../core/essentials/lastElement.ts";
+import {Identifier} from "../core/expressions/identifier.ts";
 
 export class ExpressionEditor {
     private readonly _system: FormalSystem = new FormalSystem();
@@ -213,7 +214,7 @@ export class ExpressionEditor {
         this._currentProofTheorems().append(
             createElement("li", { id: proofId }, [
                 ExpressionView.forExpression(newTheorem).domElement(),
-                createElement("div", { className: "proof-reference" }, [
+                collectionOf([
                     ...newProof.referencedPropositions()
                         .map(proposition => {
                             const propositionId = this._identifierOf(proposition);
@@ -223,7 +224,7 @@ export class ExpressionEditor {
                                 onclick: () => animateWith(document.getElementById(propositionId)!, "highlight")
                             })
                         })
-                ])
+                ], { className: "proof-reference" })
             ]),
         );
     }
@@ -253,26 +254,44 @@ export class ExpressionEditor {
             .filter(result=> result !== undefined);
     }
 
-    private startForAllIntroduction(promptText = "Nombre de la variable", promptInitialValue = ""): void {
-        const newBoundVariable = promptIdentifier(promptText, promptInitialValue);
-        if (newBoundVariable === undefined) return;
-        if (this._system.isWellKnownFreeVariable(newBoundVariable))
-            return this.startForAllIntroduction("Ese nombre ya está ocupado", newBoundVariable.toString());
+    private startForAllIntroduction(promptText = "Nombre de las variables", promptInitialValue = ""): void {
+        const newBoundVariables = promptIdentifiers(promptText, promptInitialValue);
+        if (newBoundVariables === undefined) return;
+
+        const knownIdentifier = newBoundVariables.find(identifier => this._system.isWellKnownFreeVariable(identifier));
+        if (knownIdentifier !== undefined) return this.startForAllIntroduction(
+            `El nombre ${knownIdentifier.toString()} ya está ocupado`,
+            newBoundVariables.map(identifier => identifier.toString()).join(", ")
+        );
 
         let list!: HTMLOListElement;
         createElement("div", {}, [
-            list = createElement("ol", {}, [
-                createElement("li", {}, [
-                    "Sea ",
-                    ExpressionView.forExpression(newBoundVariable).domElement(),
-                    " un pájaro cualquiera"
-                ])
+            list = createElement("ol", {className: "theorem-steps"}, [
+                createElement("li", {}, this._elementsForNewVariables(newBoundVariables))
             ])
         ]);
         this._currentProofTheorems().append(list);
         this._currentProofTheoremsList.push(list);
 
-        this._system.startForAllIntroduction(newBoundVariable);
+        this._system.startForAllIntroduction(...newBoundVariables);
+    }
+
+    private _elementsForNewVariables(newBoundVariables: Identifier[]): (Node | string)[] {
+        if (newBoundVariables.length === 1) {
+            return [
+                "Sea ",
+                ExpressionView.forExpression(newBoundVariables[0]).domElement(),
+                " un pájaro cualquiera",
+            ];
+        } else {
+            return [
+                "Sean ",
+                collectionOf(
+                    newBoundVariables.map(variable => ExpressionView.forExpression(variable).domElement())
+                ),
+                " pájaros cualquiera",
+            ];
+        }
     }
 
     private endForAllIntroduction() {
@@ -280,4 +299,11 @@ export class ExpressionEditor {
         this._currentProofTheoremsList.pop();
         this._addTheorem(proof);
     }
+}
+
+function collectionOf(elements: HTMLElement[], properties: Parameters<typeof createElement>[1] = {}) {
+    const classNames = properties.classNames ?? [];
+    return createElement("ol", {...properties, classNames: [...classNames, "collection"]},
+        elements.map(element => createElement("li", {}, [element]))
+    );
 }

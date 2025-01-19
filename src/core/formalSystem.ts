@@ -181,14 +181,22 @@ export class FormalSystem {
         return this._propositionIds.get(expression as Proposition);
     }
 
-    startForAllIntroduction(newBoundVariable: Identifier) {
-        if (!this._isStandAloneExpression(newBoundVariable))
-            throw new Error("Cannot introduce a forall with a non-root identifier");
+    startForAllIntroduction(...newBoundVariables: Identifier[]) {
+        this._assertValidIdentifiersForForAllIntroduction(newBoundVariables);
 
-        if (this.isWellKnownFreeVariable(newBoundVariable))
-            throw new Error("Cannot introduce a forall with a known object identifier");
+        this._currentProofs.push(new Context(newBoundVariables));
+    }
 
-        this._currentProofs.push(new Context(newBoundVariable));
+    private _assertValidIdentifiersForForAllIntroduction(
+        identifiers: Identifier[]
+    ): asserts identifiers is (Identifier & StandAlone)[] {
+        identifiers.forEach(identifier => {
+            if (!this._isStandAloneExpression(identifier))
+                throw new Error("Cannot introduce a forall with a non-root identifier");
+
+            if (this.isWellKnownFreeVariable(identifier))
+                throw new Error("Cannot introduce a forall with a known object identifier");
+        });
     }
 
     finishCurrentProof() {
@@ -219,11 +227,11 @@ export class Context {
     private readonly _steps: Proof[] = [];
 
     constructor(
-        private readonly boundVariable: Identifier & StandAlone
+        private readonly boundVariables: (Identifier & StandAlone)[]
     ) {}
 
     objectsInContext(): Identifier[] {
-        return [ this.boundVariable ];
+        return [...this.boundVariables];
     }
 
     registerStep(newProof: Proof) {
@@ -240,10 +248,22 @@ export class Context {
         if (lastStep === undefined)
             throw new Error("Cannot finish empty proof");
 
+        const lastStepProvenProposition = lastStep.provenProposition.copy();
         return new MultiStepProof(
-            forall(this.boundVariable.copy(), lastStep.provenProposition.copy()) as Expression<Truth> as Proposition,
+            this._buildProvenProposition(lastStepProvenProposition),
             this._steps
         );
+    }
+
+    private _buildProvenProposition(lastStepProvenProposition: Proposition, boundVariables = this.boundVariables): Proposition {
+        if (boundVariables.length === 0) return lastStepProvenProposition;
+
+        const [boundVariable, ...restOfBoundVariables] = boundVariables;
+
+        return forall(
+            boundVariable.copy(),
+            this._buildProvenProposition(lastStepProvenProposition, restOfBoundVariables)
+        ) as Expression<Truth> as Proposition;
     }
 
     numberOfSteps() {
