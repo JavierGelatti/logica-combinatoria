@@ -190,4 +190,21 @@ describe("forall introduction", () => {
 
         expect(step.provenProposition.isRootExpression()).toBe(true);
     });
+
+    test("the referenced propositions don't have repeated elements", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(identifier("x"),
+            forall(identifier("y"),
+                equality(identifier("x"), identifier("y"))
+            )
+        );
+        system.addAxiom(axiom1);
+
+        system.startForAllIntroduction(identifier("A"));
+        system.eliminateForAll(axiom1, identifier("A"));
+        system.eliminateForAll(axiom1, identifier("A"));
+        const proof = system.finishCurrentProof();
+
+        expect(proof.referencedPropositions()).toEqual([axiom1]);
+    });
 });

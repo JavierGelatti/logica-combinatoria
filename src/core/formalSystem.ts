@@ -4,6 +4,7 @@ import {ForAll} from "./expressions/forAll.ts";
 import {Equality} from "./expressions/equality.ts";
 import {forall} from "./expressions/expression_constructors.ts";
 import {lastElementOf} from "./essentials/lastElement.ts";
+import {withoutDuplicates} from "./essentials/withoutDuplicates.ts";
 
 const standAloneBrand = Symbol("standAloneBrand");
 type StandAlone = { [standAloneBrand]: any };
@@ -265,9 +266,9 @@ export class MultiStepProof extends Proof {
 
     referencedPropositions(): Proposition[] {
         const ownPropositions = this._ownPropositions();
-        return this.steps
-            .flatMap(step => step.referencedPropositions())
-            .filter(proposition => !ownPropositions.includes(proposition));
+        return withoutDuplicates(
+            this.steps.flatMap(step => step.referencedPropositions())
+        ).filter(proposition => !ownPropositions.includes(proposition));
     }
 
     private _ownPropositions() {
