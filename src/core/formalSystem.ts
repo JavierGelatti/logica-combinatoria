@@ -5,6 +5,7 @@ import {Equality} from "./expressions/equality.ts";
 import {forall} from "./expressions/expression_constructors.ts";
 import {lastElementOf} from "./essentials/lastElement.ts";
 import {withoutDuplicates} from "./essentials/withoutDuplicates.ts";
+import {Exists} from "./expressions/exists.ts";
 
 const standAloneBrand = Symbol("standAloneBrand");
 type StandAlone = { [standAloneBrand]: any };
@@ -42,20 +43,16 @@ export class FormalSystem {
         this._wellKnownObjects.push(freeVariable.copy());
     }
 
-    wellKnownObjects(): Identifier[] {
-        return [...this._wellKnownObjects];
-    }
-
-    isWellKnownFreeVariable(identifier: Identifier) {
-        return this.objectsInContext()
-            .some(o => o.equals(identifier));
-    }
-
-    private objectsInContext() {
+    objectsInContext(): Identifier[] {
         return [
             ...this._wellKnownObjects,
             ...this._currentProofs.flatMap(proof => proof.objectsInContext())
         ];
+    }
+
+    isKnownObject(identifier: Identifier) {
+        return this.objectsInContext()
+            .some(o => o.equals(identifier));
     }
 
     universalQuantifiersThatCanBeAppliedTo(argument: Expression): ForAll[] {
@@ -74,7 +71,7 @@ export class FormalSystem {
     private _canApplyTo(forall: ForAll, argument: StandAloneExpression<Value>) {
         return [...argument.freeVariables()]
             .every(freeVariable => {
-                return this.isWellKnownFreeVariable(freeVariable) === forall.isFreeVariableInParent(freeVariable);
+                return this.isKnownObject(freeVariable) === forall.isFreeVariableInParent(freeVariable);
             });
     }
 
@@ -141,6 +138,10 @@ export class FormalSystem {
         return rewriteResult;
     }
 
+    private _isProven(expression: Proposition): boolean {
+        return this._provenExpressions().includes(expression);
+    }
+
     private _isPartOfProvenProposition<T extends ExpressionType>(expression: Expression<T>): expression is PropositionPart<T> {
         return this._provenExpressionContaining(expression) !== undefined;
     }
@@ -194,7 +195,7 @@ export class FormalSystem {
             if (!this._isStandAloneExpression(identifier))
                 throw new Error("Cannot introduce a forall with a non-root identifier");
 
-            if (this.isWellKnownFreeVariable(identifier))
+            if (this.isKnownObject(identifier))
                 throw new Error("Cannot introduce a forall with a known object identifier");
         });
     }
@@ -221,20 +222,52 @@ export class FormalSystem {
             this._propositionIds.set(newProof.provenProposition, ['T', this._theorems.length]);
         }
     }
+
+    existentialQuantifiersCandidateForElimination(): (Exists & StandAlone)[] {
+        return this._provenExpressions()
+            .filter(expression => expression instanceof Exists);
+    }
+
+    eliminateExists(existentialToEliminate: Exists, newIdentifier: Identifier) {
+        if (!existentialToEliminate.isRootExpression())
+            throw new Error("Cannot eliminate a non-root existential quantifier");
+
+        if (!this._isProposition(existentialToEliminate) || !this._isProven(existentialToEliminate))
+            throw new Error("Cannot eliminate a non-proven existential quantifier");
+
+        if (this.isKnownObject(newIdentifier))
+            throw new Error("Cannot eliminate an existential quantifier with a known object");
+
+        if (!this._isStandAloneValue(newIdentifier))
+            throw new Error("Cannot eliminate an existential quantifier with a non-root identifier");
+
+        const provenProposition = existentialToEliminate.applyTo(newIdentifier) as Proposition;
+        const newProof = new ExistsElimination(
+            provenProposition,
+            existentialToEliminate,
+            newIdentifier
+        );
+        this._registerProof(newProof)
+        return newProof;
+    }
 }
 
 export class Context {
     private readonly _steps: Proof[] = [];
+    private readonly _extraBoundVariables: (Identifier & StandAlone)[] = [];
 
     constructor(
-        private readonly boundVariables: (Identifier & StandAlone)[]
+        private readonly ownBoundVariables: (Identifier & StandAlone)[]
     ) {}
 
     objectsInContext(): Identifier[] {
-        return [...this.boundVariables];
+        return [...this.ownBoundVariables, ...this._extraBoundVariables];
     }
 
     registerStep(newProof: Proof) {
+        if (newProof instanceof ExistsElimination) {
+            this._extraBoundVariables.push(newProof.newBoundVariable);
+        }
         this._steps.push(newProof);
     }
 
@@ -248,15 +281,22 @@ export class Context {
         if (lastStep === undefined)
             throw new Error("Cannot finish empty proof");
 
-        const lastStepProvenProposition = lastStep.provenProposition.copy();
+        if (this._thereAreExtraFreeVariablesIn(lastStep.provenProposition))
+            throw new Error("Cannot finish proof with free variables");
+
         return new MultiStepProof(
-            this._buildProvenProposition(lastStepProvenProposition),
+            this._buildProvenProposition(lastStep.provenProposition),
             this._steps
         );
     }
 
-    private _buildProvenProposition(lastStepProvenProposition: Proposition, boundVariables = this.boundVariables): Proposition {
-        if (boundVariables.length === 0) return lastStepProvenProposition;
+    private _thereAreExtraFreeVariablesIn(proposition: Proposition) {
+        return this._extraBoundVariables
+            .some(variable => proposition.freeVariablesContain(variable));
+    }
+
+    private _buildProvenProposition(lastStepProvenProposition: Proposition, boundVariables = this.ownBoundVariables): Proposition {
+        if (boundVariables.length === 0) return lastStepProvenProposition.copy();
 
         const [boundVariable, ...restOfBoundVariables] = boundVariables;
 
@@ -311,6 +351,20 @@ export class ForAllElimination extends DirectProof {
 
     referencedPropositions(): Proposition[] {
         return [this.eliminatedForAll.rootExpression()];
+    }
+}
+
+export class ExistsElimination extends DirectProof {
+    constructor(
+        provenProposition: Proposition,
+        public readonly eliminatedExistential: Proposition & Exists,
+        public readonly newBoundVariable: Identifier & StandAlone
+    ) {
+        super(provenProposition);
+    }
+
+    referencedPropositions(): Proposition[] {
+        return [this.eliminatedExistential];
     }
 }
 

@@ -258,7 +258,7 @@ export class ExpressionEditor {
         const newBoundVariables = promptIdentifiers(promptText, promptInitialValue);
         if (newBoundVariables === undefined) return;
 
-        const knownIdentifier = newBoundVariables.find(identifier => this._system.isWellKnownFreeVariable(identifier));
+        const knownIdentifier = newBoundVariables.find(identifier => this._system.isKnownObject(identifier));
         if (knownIdentifier !== undefined) return this.startForAllIntroduction(
             `El nombre ${knownIdentifier.toString()} ya está ocupado`,
             newBoundVariables.map(identifier => identifier.toString()).join(", ")

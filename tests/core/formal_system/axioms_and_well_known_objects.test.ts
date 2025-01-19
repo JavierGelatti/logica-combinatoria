@@ -15,7 +15,7 @@ describe("axioms and well-known objects", () => {
 
         expect(system.axioms()).toEqual([]);
         expect(system.theorems()).toEqual([]);
-        expect(system.wellKnownObjects()).toEqual([]);
+        expect(system.objectsInContext()).toEqual([]);
     });
 
     test("complete truth-expressions can be added as axioms", () => {
@@ -56,9 +56,9 @@ describe("axioms and well-known objects", () => {
 
         system.addAxiom(expression);
 
-        expect(system.wellKnownObjects()).toEqual([identifier("M"), identifier("w")])
-        expect(system.isWellKnownFreeVariable(identifier("M"))).toBe(true);
-        expect(system.isWellKnownFreeVariable(identifier("x"))).toBe(false);
+        expect(system.objectsInContext()).toEqual([identifier("M"), identifier("w")])
+        expect(system.isKnownObject(identifier("M"))).toBe(true);
+        expect(system.isKnownObject(identifier("x"))).toBe(false);
     });
 });
 

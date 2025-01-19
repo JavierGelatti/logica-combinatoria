@@ -126,7 +126,7 @@ describe("forall introduction", () => {
         system.startForAllIntroduction(identifier("A"));
 
         expect(() => system.finishCurrentProof()).toThrowError("Cannot finish empty proof");
-        expect(system.isWellKnownFreeVariable(identifier("A"))).toBe(true);
+        expect(system.isKnownObject(identifier("A"))).toBe(true);
     });
 
     test("can introduce a nested forall", () => {
