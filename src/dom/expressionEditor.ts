@@ -5,6 +5,8 @@ import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
 import {FormalSystem, Proof} from "../core/formalSystem.ts";
+import {promptIdentifier} from "./prompt_identifier.ts";
+import {lastElementOf} from "../core/essentials/lastElement.ts";
 
 export class ExpressionEditor {
     private readonly _system: FormalSystem = new FormalSystem();
@@ -17,6 +19,7 @@ export class ExpressionEditor {
     private _newExpressionDropTargetElement!: HTMLElement;
     private _deleteExpressionDropTargetElement!: HTMLElement;
     private _currentInteraction: UserInteraction | undefined = undefined;
+    private _currentProofTheoremsList: HTMLOListElement[] = [];
 
     constructor() {
         this._domElement = this._createDomElement();
@@ -37,6 +40,12 @@ export class ExpressionEditor {
             this._systemElement = createElement("div", {className: "logic-system"}, [
                 this._axiomsList = createElement("ol", {className: "axioms"}),
                 this._theoremsList = createElement("ol", {className: "theorems"}),
+                createElement("div", {className: "actions"}, [
+                    createElement("button", {
+                        textContent: "New binding",
+                        onclick: () => this.startForAllIntroduction()
+                    })
+                ])
             ]),
             createElement("div", {className: "expression-editor"}, [
                 this._editorPallete = createElement("div", {className: "pallete"}, [
@@ -197,7 +206,7 @@ export class ExpressionEditor {
     private _addTheorem(newProof: Proof) {
         const newTheorem = newProof.provenProposition;
         const proofId = this._identifierOf(newTheorem);
-        this._theoremsList.append(
+        this._currentProofTheorems().append(
             createElement("li", { id: proofId }, [
                 ExpressionView.forExpression(newTheorem).domElement(),
                 createElement("div", { className: "proof-reference" }, [
@@ -213,6 +222,10 @@ export class ExpressionEditor {
                 ])
             ]),
         );
+    }
+
+    private _currentProofTheorems() {
+        return lastElementOf(this._currentProofTheoremsList) ?? this._theoremsList;
     }
 
     private _identifierOf(provenExpression: Expression) {
@@ -233,5 +246,24 @@ export class ExpressionEditor {
                 );
             })
             .filter(result=> result !== undefined);
+    }
+
+    private startForAllIntroduction() {
+        const newBoundVariable = promptIdentifier("Nombre de la variable");
+        if (newBoundVariable === undefined) return;
+
+        let list!: HTMLOListElement;
+        createElement("div", {}, [
+            list = createElement("ol", {}, [
+                createElement("li", {}, [
+                    "Sea ",
+                    ExpressionView.forExpression(newBoundVariable).domElement()
+                ])
+            ])
+        ]);
+        this._currentProofTheorems().append(list);
+        this._currentProofTheoremsList.push(list);
+
+        this._system.startForAllIntroduction(newBoundVariable);
     }
 }

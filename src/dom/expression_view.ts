@@ -8,8 +8,8 @@ import {createElement} from "./essentials/createElement.ts";
 import {Hole} from "../core/expressions/hole.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {Binder} from "../core/expressions/binder.ts";
-import {identifier} from "../core/expressions/expression_constructors.ts";
 import {GrabInteraction} from "./user_interactions/grabInteraction.ts";
+import {promptIdentifier} from "./prompt_identifier.ts";
 
 export abstract class ExpressionView<T extends Expression = Expression> {
     private static readonly modelKey = Symbol("model");
@@ -138,18 +138,8 @@ abstract class BinderView<T extends Binder> extends ExpressionView<T> {
         promptText: string = "Nuevo nombre",
         promptInitialValue: string = this.expression.boundVariable.toString()
     ): void {
-        const newName = prompt(promptText, promptInitialValue)?.trim();
-        if (newName === undefined) return;
-
-        const nameRegex = /^([^\s\d]\S*?)_?(\d*)$/;
-        const matchResult = newName.match(nameRegex);
-        if (matchResult === null) {
-            return this.promptVariableRename("Nombre inválido", newName);
-        }
-
-        const name = matchResult[1];
-        const subscript = matchResult[2] !== "" ? Number(matchResult[2]) : undefined;
-        const newIdentifier = identifier(name, subscript);
+        const newIdentifier = promptIdentifier(promptText, promptInitialValue);
+        if (newIdentifier === undefined) return;
 
         if (this.expression.hasLocallyUnbound(newIdentifier)) {
             return this.promptVariableRename("No se puede renombrar: el nombre aparece libre en la expresión", newIdentifier.toString());
