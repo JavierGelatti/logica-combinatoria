@@ -6,7 +6,6 @@ import {
     identifier,
 } from "../../../src/core/expressions/expression_constructors.ts";
 import {FormalSystem} from "../../../src/core/formalSystem.ts";
-import {Expression, Truth} from "../../../src/core/expressions/expression.ts";
 import {ForAll} from "../../../src/core/expressions/forAll.ts";
 
 describe("proposition identifiers", () => {
