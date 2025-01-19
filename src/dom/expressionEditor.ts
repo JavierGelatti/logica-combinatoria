@@ -229,7 +229,8 @@ export class ExpressionEditor {
     }
 
     private _identifierOf(provenExpression: Expression) {
-        return this._system.identifierOf(provenExpression)!.join(".");
+        const [type, ...indexes] = this._system.identifierOf(provenExpression)!;
+        return type + indexes.join(".");
     }
 
     private _rewriteExpressionDropTargetsFor(grabbedExpressionView: ExpressionView) {
