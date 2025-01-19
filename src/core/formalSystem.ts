@@ -19,6 +19,7 @@ export class FormalSystem {
     private readonly _wellKnownObjects: Identifier[] = [];
     private readonly _theorems: Proof[] = [];
     private _currentProofs: Context[] = [];
+    private _propositionIds: WeakMap<Proposition, PropositionIdentifier> = new WeakMap();
 
     axioms() {
         return [...this._axioms];
@@ -31,6 +32,7 @@ export class FormalSystem {
             .forEach(freeVariable => this._registerAsWellKnownObject(freeVariable));
 
         this._axioms.push(expression);
+        this._propositionIds.set(expression, ['A', this._axioms.length]);
     }
 
     private _registerAsWellKnownObject(freeVariable: Identifier) {
@@ -175,19 +177,7 @@ export class FormalSystem {
     }
 
     identifierOf(expression: Expression): PropositionIdentifier | undefined {
-        const expressionAsProposition = expression as Proposition;
-
-        const axiomIndex = this.axioms().indexOf(expressionAsProposition);
-        if (axiomIndex !== -1) {
-            return ['A', axiomIndex + 1];
-        }
-
-        const theoremIndex = this.theorems().indexOf(expressionAsProposition);
-        if (theoremIndex !== -1) {
-            return ['T', theoremIndex + 1];
-        }
-
-        return undefined;
+        return this._propositionIds.get(expression as Proposition);
     }
 
     startForAllIntroduction(newBoundVariable: Identifier) {
@@ -211,8 +201,11 @@ export class FormalSystem {
         const currentProof = lastElementOf(this._currentProofs);
         if (currentProof !== undefined) {
             currentProof.registerStep(newProof);
+            const steps = this._currentProofs.map(context => context.numberOfSteps());
+            this._propositionIds.set(newProof.provenProposition, ['T', this._theorems.length + 1, ...steps]);
         } else {
             this._theorems.push(newProof);
+            this._propositionIds.set(newProof.provenProposition, ['T', this._theorems.length]);
         }
     }
 }
@@ -246,6 +239,10 @@ export class Context {
             forall(this.boundVariable.copy(), lastStep.provenProposition) as Expression<Truth> as Proposition,
             this._steps
         );
+    }
+
+    numberOfSteps() {
+        return this._steps.length;
     }
 }
 
