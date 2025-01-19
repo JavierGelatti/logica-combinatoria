@@ -192,11 +192,12 @@ export class FormalSystem {
     }
 
     finishCurrentProof() {
-        const currentProof = this._currentProofs.pop();
+        const currentProof = lastElementOf(this._currentProofs);
         if (currentProof === undefined)
             throw new Error("Cannot finish non-started proof");
 
         const newProof = currentProof.finishProof();
+        this._currentProofs.pop();
         this._registerProof(newProof);
         return newProof;
     }

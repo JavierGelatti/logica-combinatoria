@@ -116,7 +116,7 @@ describe("forall introduction", () => {
             .toThrowError("Cannot finish non-started proof");
     });
 
-    test("cannot introduce a forall if there were no steps taken", () => {
+    test("cannot introduce a forall if there were no steps taken, but this doesn't interrupt the current proof", () => {
         const system = new FormalSystem();
         const axiom1 = forall(
             identifier("x"),
@@ -125,8 +125,8 @@ describe("forall introduction", () => {
         system.addAxiom(axiom1);
         system.startForAllIntroduction(identifier("A"));
 
-        expect(() => system.finishCurrentProof())
-            .toThrowError("Cannot finish empty proof");
+        expect(() => system.finishCurrentProof()).toThrowError("Cannot finish empty proof");
+        expect(system.isWellKnownFreeVariable(identifier("A"))).toBe(true);
     });
 
     test("can introduce a nested forall", () => {
