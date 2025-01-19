@@ -74,7 +74,7 @@ export class FormalSystem {
     private _canApplyTo(forall: ForAll, argument: StandAloneExpression<Value>) {
         return [...argument.freeVariables()]
             .every(freeVariable => {
-                return this.isWellKnownFreeVariable(freeVariable) || !forall.isFreeVariableInParent(freeVariable);
+                return this.isWellKnownFreeVariable(freeVariable) === forall.isFreeVariableInParent(freeVariable);
             });
     }
 

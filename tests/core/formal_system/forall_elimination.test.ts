@@ -150,6 +150,37 @@ describe("determination of universal quantifiers candidate for elimination", () 
         expect(system.universalQuantifiersThatCanBeAppliedTo(identifier("A")))
             .toContain(newProof.provenProposition);
     });
+
+    describe("interaction with known-objects (to avoid confusion)", () => {
+        test("if the argument is not a known object, it can be used even if it'll become bound after the application", () => {
+            const system = new FormalSystem();
+            let innerForAll!: ForAll;
+            const axiom1 = forall(identifier("A"),
+                innerForAll = forall(identifier("x"),
+                    equality(identifier("A"), identifier("x"))
+                )
+            );
+            system.addAxiom(axiom1);
+
+            expect(system.universalQuantifiersThatCanBeAppliedTo(identifier("A")))
+                .toEqual([innerForAll]);
+        });
+
+        test("if the argument is equal to a known object, it cannot be used if it'll become bound after the application", () => {
+            const system = new FormalSystem();
+            const axiom1 = forall(identifier("A"),
+                forall(identifier("x"),
+                    equality(identifier("A"), identifier("x"))
+                )
+            );
+            const axiom2 = equality(identifier("A"), identifier("A"));
+            system.addAxiom(axiom1);
+            system.addAxiom(axiom2);
+
+            expect(system.universalQuantifiersThatCanBeAppliedTo(identifier("A")))
+                .toEqual([axiom1]);
+        });
+    });
 });
 
 describe("elimination of universal quantifiers", () => {
