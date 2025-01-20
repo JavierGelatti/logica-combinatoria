@@ -2,7 +2,7 @@ import {EquationMember, Expression, ExpressionType, Truth, truthType, Value} fro
 import {Identifier} from "./expressions/identifier.ts";
 import {ForAll} from "./expressions/forAll.ts";
 import {Equality} from "./expressions/equality.ts";
-import {equality, forall} from "./expressions/expression_constructors.ts";
+import {equality, exists, forall} from "./expressions/expression_constructors.ts";
 import {lastElementOf} from "./essentials/lastElement.ts";
 import {withoutDuplicates} from "./essentials/withoutDuplicates.ts";
 import {Exists} from "./expressions/exists.ts";
@@ -143,8 +143,8 @@ export class FormalSystem {
         return rewriteResult;
     }
 
-    private _isProven(expression: Proposition): boolean {
-        return this._provenExpressions().includes(expression);
+    private _isProven(expression: Expression): expression is Proposition {
+        return this._provenExpressions().includes(expression as Proposition);
     }
 
     private _isPartOfProvenProposition<T extends ExpressionType>(expression: Expression<T>): expression is PropositionPart<T> {
@@ -302,6 +302,21 @@ export class FormalSystem {
 
     private _containsUnknownFreeVariables(expression: Expression) {
         return ![...expression.freeVariables()].every(freeVariable => this.isKnownObject(freeVariable));
+    }
+
+    introduceExists(identifier: Identifier, expression: Expression<Truth>) {
+        if (!this._isProven(expression))
+            throw new Error("Cannot introduce an existential of a non-proven expression");
+
+        if (!expression.freeVariablesContain(identifier))
+            throw new Error("Cannot introduce an existential of a non-free variable");
+
+        const newProof = new ExistsIntroduction(
+            exists(identifier.copy(), expression.copy()) as Exists & Proposition,
+            expression
+        );
+        this._registerProof(newProof);
+        return newProof;
     }
 }
 
@@ -478,6 +493,19 @@ export class ExistsElimination extends NewBinding {
 
     referencedPropositions(): Proposition[] {
         return [this.eliminatedExistential];
+    }
+}
+
+export class ExistsIntroduction extends DirectProof {
+    constructor(
+        provenProposition: Proposition & Exists,
+        public readonly eliminatedProposition: Expression<typeof truthType> & StandAlone,
+    ) {
+        super(provenProposition);
+    }
+
+    referencedPropositions(): Proposition[] {
+        return [this.eliminatedProposition];
     }
 }
 
