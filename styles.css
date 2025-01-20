@@ -267,6 +267,16 @@ ol.collection {
     }
 
     .theorems {
+        .new-binding {
+            display: flex;
+            align-items: center;
+
+            & > .expression {
+                margin-left: .2em;
+                margin-right: .2em;
+            }
+        }
+
         .theorem-steps {
             margin-left: 2em;
             border-left: 1px solid gray;
@@ -274,12 +284,6 @@ ol.collection {
             & > li:first-child {
                 background-color: white;
                 margin-left: -2em;
-                border-left: none;
-
-                & > .identifier {
-                    margin-left: .2em;
-                    margin-right: .2em;
-                }
             }
         }
 

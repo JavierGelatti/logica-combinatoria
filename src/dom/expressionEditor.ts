@@ -4,8 +4,8 @@ import {Expression, ExpressionType} from "../core/expressions/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
-import {FormalSystem, Proof} from "../core/formalSystem.ts";
-import {promptIdentifiers} from "./prompt_identifier.ts";
+import {ExistsElimination, FormalSystem, Proof} from "../core/formalSystem.ts";
+import {promptIdentifier, promptIdentifiers} from "./prompt_identifier.ts";
 import {lastElementOf} from "../core/essentials/lastElement.ts";
 import {Identifier} from "../core/expressions/identifier.ts";
 
@@ -54,7 +54,11 @@ export class ExpressionEditor {
             ]),
             createElement("div", {className: "expression-editor"}, [
                 this._editorPallete = createElement("div", {className: "pallete"}, [
-                    this._deleteExpressionDropTargetElement = createElement("div", {className: "delete-expression-drop-target"})
+                    this._deleteExpressionDropTargetElement = createElement("div", {className: "delete-expression-drop-target"}),
+                    createElement("button", {
+                        textContent: "Insertar variable",
+                        onclick: () => this.insertIdentifierInCanvas()
+                    })
                 ]),
                 this._editorCanvas = createElement("div", {className: "canvas"}, [
                     this._newExpressionDropTargetElement = createElement("div", {className: "new-expression-drop-target"}),
@@ -93,7 +97,7 @@ export class ExpressionEditor {
         return [
             this._newExpressionDropTarget(),
             ...this._holesInCanvasDropTargetsFor(grabbedExpressionView),
-            ...this._forallBindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView)
+            ...this._bindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView)
         ];
     }
 
@@ -105,7 +109,14 @@ export class ExpressionEditor {
         ));
     }
 
-    private _forallBindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
+    private _bindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
+        return [
+            ...this._forallBindersDropTargets(grabbedExpressionView),
+            ...this._existentialBindersDropTargets(grabbedExpressionView)
+        ];
+    }
+
+    private _forallBindersDropTargets(grabbedExpressionView: ExpressionView<Expression>): DropTarget[] {
         const grabbedExpression = grabbedExpressionView.expression.copy();
         return this._system.universalQuantifiersThatCanBeAppliedTo(grabbedExpression)
             .map(expression => ExpressionView.forExpression(expression))
@@ -118,6 +129,32 @@ export class ExpressionEditor {
                     binderElement,
                     () => this._addTheorem(
                         this._system.eliminateForAll(forallView.expression, grabbedExpression)
+                    ),
+                    () => {
+                        variableViews.forEach(view => view.domElement().classList.add("highlighted"))
+                    },
+                    () => {
+                        variableViews.forEach(view => view.domElement().classList.remove("highlighted"))
+                    }
+                );
+            });
+    }
+
+    private _existentialBindersDropTargets(grabbedExpressionView: ExpressionView<Expression>): DropTarget[] {
+        const grabbedExpression = grabbedExpressionView.expression.copy();
+        if (!(grabbedExpression instanceof Identifier)) return [];
+
+        return this._system.existentialQuantifiersThatCanBeReplacedWith(grabbedExpression)
+            .map(expression => ExpressionView.forExpression(expression))
+            .map(existsView => {
+                const binderElement: HTMLElement = existsView.domElement().querySelector("& > .full-binder")!;
+                const variableViews = [...existsView.expression.allOccurrencesOfBoundVariable()]
+                    .map(identifier => ExpressionView.forExpression(identifier));
+
+                return new DropTarget(
+                    binderElement,
+                    () => this._addBindingTheorem(
+                        this._system.eliminateExists(existsView.expression, grabbedExpression)
                     ),
                     () => {
                         variableViews.forEach(view => view.domElement().classList.add("highlighted"))
@@ -167,7 +204,7 @@ export class ExpressionEditor {
             this._deleteExpressionDropTarget(),
             this._newExpressionDropTarget(),
             ...this._holesInCanvasDropTargetsFor(grabbedExpressionView),
-            ...this._forallBindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView)
+            ...this._bindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView)
         ];
     }
 
@@ -209,11 +246,26 @@ export class ExpressionEditor {
     }
 
     private _addTheorem(newProof: Proof) {
-        const newTheorem = newProof.provenProposition;
-        const proofId = this._identifierOf(newTheorem);
+        this._addTheoremWithView(newProof, ExpressionView.forExpression(newProof.provenProposition).domElement());
+    }
+
+    private _addBindingTheorem(newProof: ExistsElimination) {
+        this._addTheoremWithView(
+            newProof,
+            createElement("div", {className: "new-binding"}, [
+                "Sea ",
+                ExpressionView.forExpression(newProof.newBoundVariable).domElement(),
+                " tal que ",
+                ExpressionView.forExpression(newProof.provenProposition).domElement(),
+            ])
+        );
+    }
+
+    private _addTheoremWithView(newProof: Proof, htmlElement: HTMLElement) {
+        const proofId = this._identifierOf(newProof.provenProposition);
         this._currentProofTheorems().append(
-            createElement("li", { id: proofId }, [
-                ExpressionView.forExpression(newTheorem).domElement(),
+            createElement("li", {id: proofId}, [
+                htmlElement,
                 collectionOf([
                     ...newProof.referencedPropositions()
                         .map(proposition => {
@@ -221,10 +273,10 @@ export class ExpressionEditor {
                             return createElement("a", {
                                 href: `#${propositionId}`,
                                 textContent: propositionId,
-                                onclick: () => animateWith(document.getElementById(propositionId)!, "highlight")
-                            })
-                        })
-                ], { className: "proof-reference" })
+                                onclick: () => animateWith(document.getElementById(propositionId)!, "highlight"),
+                            });
+                        }),
+                ], {className: "proof-reference"}),
             ]),
         );
     }
@@ -267,7 +319,7 @@ export class ExpressionEditor {
         let list!: HTMLOListElement;
         createElement("div", {}, [
             list = createElement("ol", {className: "theorem-steps"}, [
-                createElement("li", {}, this._elementsForNewVariables(newBoundVariables))
+                createElement("li", {className: "new-binding"}, this._elementsForNewVariables(newBoundVariables))
             ])
         ]);
         this._currentProofTheorems().append(list);
@@ -298,6 +350,12 @@ export class ExpressionEditor {
         const proof = this._system.finishCurrentProof();
         this._currentProofTheoremsList.pop();
         this._addTheorem(proof);
+    }
+
+    private insertIdentifierInCanvas() {
+        const newIdentifier = promptIdentifier("Nombre de la variable");
+        if (newIdentifier === undefined) return;
+        this.addNewExpressionToCanvas(newIdentifier);
     }
 }
 

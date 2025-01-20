@@ -25,8 +25,26 @@ describe("determination of existential quantifiers candidate for elimination", (
         system.addAxiom(axiom1);
         system.addAxiom(axiom2);
 
-        expect(system.existentialQuantifiersCandidateForElimination())
+        expect(system.existentialQuantifiersThatCanBeReplacedWith(identifier("W")))
             .toEqual([axiom2]);
+    });
+
+    test("there are no existential quantifiers that can be replaced with known objects", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(identifier("x"),
+            exists(identifier("y"),
+                equality(identifier("x"), identifier("y"))
+            )
+        );
+        const axiom2 = exists(
+            identifier("x"),
+            equality(identifier("A"), identifier("x"))
+        );
+        system.addAxiom(axiom1);
+        system.addAxiom(axiom2);
+
+        expect(system.existentialQuantifiersThatCanBeReplacedWith(identifier("A")))
+            .toEqual([]);
     });
 });
 

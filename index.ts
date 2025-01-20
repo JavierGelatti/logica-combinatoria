@@ -4,8 +4,6 @@ import {ExpressionEditor} from "./src/dom/expressionEditor";
 const editor = new ExpressionEditor();
 [
     identifier("x"),
-    identifier("y"),
-    identifier("z"),
     identifier("M"),
     application(hole(), hole()),
     equality(hole(), hole()),

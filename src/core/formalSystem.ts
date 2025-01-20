@@ -223,7 +223,9 @@ export class FormalSystem {
         }
     }
 
-    existentialQuantifiersCandidateForElimination(): (Exists & StandAlone)[] {
+    existentialQuantifiersThatCanBeReplacedWith(identifier: Identifier): (Exists & StandAlone)[] {
+        if (this.isKnownObject(identifier)) return [];
+
         return this._provenExpressions()
             .filter(expression => expression instanceof Exists);
     }
