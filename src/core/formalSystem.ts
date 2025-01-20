@@ -6,6 +6,7 @@ import {forall} from "./expressions/expression_constructors.ts";
 import {lastElementOf} from "./essentials/lastElement.ts";
 import {withoutDuplicates} from "./essentials/withoutDuplicates.ts";
 import {Exists} from "./expressions/exists.ts";
+import {removeElementFrom} from "./essentials/removeElementFrom.ts";
 
 const standAloneBrand = Symbol("standAloneBrand");
 type StandAlone = { [standAloneBrand]: any };
@@ -238,12 +239,16 @@ export class FormalSystem {
     }
 
     existentialQuantifiersThatCanBeReplacedWith(identifier: Identifier): (Exists & StandAlone)[] {
-        if (this.isKnownObject(identifier)) return [];
+        if (this.isNotAvailableKnownObject(identifier)) return [];
 
         return this._provenExpressions().filter(expression => {
             // noinspection SuspiciousTypeOfGuard
             return expression instanceof Exists;
         });
+    }
+
+    private isNotAvailableKnownObject(identifier: Identifier) {
+        return this.isKnownObject(identifier) && !this._currentOngoingProof()?.ownsUnused(identifier);
     }
 
     eliminateExists(existentialToEliminate: Exists, newIdentifier: Identifier) {
@@ -253,15 +258,17 @@ export class FormalSystem {
         if (!this._isProposition(existentialToEliminate) || !this._isProven(existentialToEliminate))
             throw new Error("Cannot eliminate a non-proven existential quantifier");
 
-        if (this.isKnownObject(newIdentifier))
+        if (this.isNotAvailableKnownObject(newIdentifier))
             throw new Error("Cannot eliminate an existential quantifier with a known object");
 
         if (!this._isStandAloneValue(newIdentifier))
             throw new Error("Cannot eliminate an existential quantifier with a non-root identifier");
 
-        const currentProof = this._currentOngoingProof();
+        let currentProof = this._currentOngoingProof();
         if (currentProof === undefined) this.startNewProof();
+        currentProof = this._currentOngoingProof()!;
 
+        if (currentProof.owns(newIdentifier)) currentProof.removeBinding(newIdentifier);
         const provenProposition = existentialToEliminate.applyTo(newIdentifier) as Proposition;
         const newProof = new ExistsElimination(
             provenProposition,
@@ -345,6 +352,30 @@ export class Context {
 
     addBoundVariables(newBoundVariables: (Identifier & StandAlone)[]) {
         this._ownBoundVariables.push(...newBoundVariables);
+    }
+
+    ownsUnused(variable: Identifier) {
+        const foundOwnVariable = this._ownVariableEqualTo(variable);
+        if (foundOwnVariable === undefined) return false;
+
+        return !this._steps
+            .some(step => step.provenProposition.freeVariablesContain(variable));
+    }
+
+    owns(variable: Identifier) {
+        return this._ownVariableEqualTo(variable) !== undefined;
+    }
+
+    private _ownVariableEqualTo(variable: Identifier) {
+        return this._ownBoundVariables.find(v => v.equals(variable));
+    }
+
+    removeBinding(variable: Identifier) {
+        debugger;
+        removeElementFrom(
+            this._ownVariableEqualTo(variable),
+            this._ownBoundVariables
+        );
     }
 }
 

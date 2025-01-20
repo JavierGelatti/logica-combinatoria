@@ -52,7 +52,7 @@ export class ExpressionEditor {
                     }),
                     createElement("button", {
                         textContent: "Finalizar demostración",
-                        onclick: () => this.endForAllIntroduction()
+                        onclick: () => this.endCurrentProof()
                     }),
                 ])
             ]),
@@ -254,6 +254,8 @@ export class ExpressionEditor {
     }
 
     private _addBindingTheorem(newProof: ExistsElimination) {
+        debugger;
+        this._updateTheoremHeader();
         this._addTheoremWithView(
             newProof,
             createElement("div", {className: "new-binding"}, [
@@ -320,14 +322,19 @@ export class ExpressionEditor {
             newBoundVariables.map(identifier => identifier.toString()).join(", ")
         );
 
-        let currentTheoremHeader = this._currentTheoremHeader();
-        if (currentTheoremHeader === null) this.startNestedProof();
-        currentTheoremHeader = this._currentTheoremHeader()!;
-
+        this._updateViewToNewProofIfNoOngoingProof();
         this._system.newArbitraryVariables(...newBoundVariables);
-        currentTheoremHeader.replaceChildren(
-            ...this._elementsForNewVariables(this._system.arbitraryObjectsInCurrentOngoingProof())
+        this._updateTheoremHeader();
+    }
+
+    private _updateTheoremHeader() {
+        this._currentTheoremHeader()!.replaceChildren(
+            ...this._elementsForNewVariables(this._system.arbitraryObjectsInCurrentOngoingProof()),
         );
+    }
+
+    private _updateViewToNewProofIfNoOngoingProof() {
+        if (this._currentTheoremHeader() === null) this.startNestedProof();
     }
 
     private _currentTheoremHeader() {
@@ -352,7 +359,7 @@ export class ExpressionEditor {
         }
     }
 
-    private endForAllIntroduction() {
+    private endCurrentProof() {
         const proof = this._system.finishCurrentProof();
         this._currentProofTheoremsList.pop();
         this._addTheorem(proof);
