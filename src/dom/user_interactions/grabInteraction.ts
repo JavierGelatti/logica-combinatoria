@@ -46,6 +46,10 @@ export class GrabInteraction extends UserInteraction {
         super(editor);
     }
 
+    public currentExpression() {
+        return this.expressionView.expression;
+    }
+
     protected _start(): void {
         this.expressionView.startGrabInteraction(this);
         this._activateDropTargets();

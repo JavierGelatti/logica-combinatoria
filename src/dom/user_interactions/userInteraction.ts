@@ -1,4 +1,5 @@
 import {ExpressionEditor} from "../expressionEditor.ts";
+import {Expression} from "../../core/expressions/expression.ts";
 
 export abstract class UserInteraction {
     protected constructor(
@@ -12,6 +13,8 @@ export abstract class UserInteraction {
     }
 
     protected abstract _start(): void;
+
+    abstract currentExpression(): Expression | undefined;
 
     cancel(): void {
         this._cancel();

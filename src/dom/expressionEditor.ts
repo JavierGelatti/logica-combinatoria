@@ -4,7 +4,7 @@ import {Expression, ExpressionType} from "../core/expressions/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
 import {DropTarget, GrabInteraction} from "./user_interactions/grabInteraction.ts";
 import {UserInteraction} from "./user_interactions/userInteraction.ts";
-import {ExistsElimination, FormalSystem, Proof} from "../core/formalSystem.ts";
+import {ExistsElimination, FormalSystem, Proof, TermNaming} from "../core/formalSystem.ts";
 import {promptIdentifier, promptIdentifiers} from "./prompt_identifier.ts";
 import {lastElementOf} from "../core/essentials/lastElement.ts";
 import {Identifier} from "../core/expressions/identifier.ts";
@@ -48,7 +48,7 @@ export class ExpressionEditor {
                     }),
                     createElement("button", {
                         textContent: "Nueva variable",
-                        onclick: () => this.addNewArbitraryVariables()
+                        onclick: () => this.addNewVariables()
                     }),
                     createElement("button", {
                         textContent: "Finalizar demostración",
@@ -157,7 +157,7 @@ export class ExpressionEditor {
 
                 return new DropTarget(
                     binderElement,
-                    () => this._addBindingTheorem(
+                    () => this._addExistsTheorem(
                         this._system.eliminateExists(existsView.expression, grabbedExpression)
                     ),
                     () => {
@@ -253,8 +253,7 @@ export class ExpressionEditor {
         this._addTheoremWithView(newProof, ExpressionView.forExpression(newProof.provenProposition).domElement());
     }
 
-    private _addBindingTheorem(newProof: ExistsElimination) {
-        debugger;
+    private _addExistsTheorem(newProof: ExistsElimination) {
         this._updateTheoremHeader();
         this._addTheoremWithView(
             newProof,
@@ -262,6 +261,17 @@ export class ExpressionEditor {
                 "Sea ",
                 ExpressionView.forExpression(newProof.newBoundVariable).domElement(),
                 " tal que ",
+                ExpressionView.forExpression(newProof.provenProposition).domElement(),
+            ])
+        );
+    }
+
+    private _addNamingTheorem(newProof: TermNaming) {
+        this._updateTheoremHeader();
+        this._addTheoremWithView(
+            newProof,
+            createElement("div", {className: "new-binding"}, [
+                "Sea ",
                 ExpressionView.forExpression(newProof.provenProposition).domElement(),
             ])
         );
@@ -312,6 +322,15 @@ export class ExpressionEditor {
             .filter(result=> result !== undefined);
     }
 
+    private addNewVariables() {
+        const currentExpression = this._currentInteraction?.currentExpression();
+        if (currentExpression === undefined) {
+            this.addNewArbitraryVariables();
+        } else {
+            this.nameExpression(currentExpression);
+        }
+    }
+
     private addNewArbitraryVariables(promptText = "Nombre de las variables", promptInitialValue = ""): void {
         const newBoundVariables = promptIdentifiers(promptText, promptInitialValue);
         if (newBoundVariables === undefined) return;
@@ -325,6 +344,14 @@ export class ExpressionEditor {
         this._updateViewToNewProofIfNoOngoingProof();
         this._system.newArbitraryVariables(...newBoundVariables);
         this._updateTheoremHeader();
+    }
+
+    private nameExpression(expressionToName: Expression) {
+        const identifier = promptIdentifier("Nombre para la expresión");
+        if (identifier === undefined) return;
+
+        const newProof = this._system.nameTerm(identifier, expressionToName.copy());
+        this._addNamingTheorem(newProof);
     }
 
     private _updateTheoremHeader() {

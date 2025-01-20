@@ -1,8 +1,8 @@
-import {EquationMember, Expression, ExpressionType, Truth, Value} from "./expressions/expression.ts";
+import {EquationMember, Expression, ExpressionType, Truth, truthType, Value} from "./expressions/expression.ts";
 import {Identifier} from "./expressions/identifier.ts";
 import {ForAll} from "./expressions/forAll.ts";
 import {Equality} from "./expressions/equality.ts";
-import {forall} from "./expressions/expression_constructors.ts";
+import {equality, forall} from "./expressions/expression_constructors.ts";
 import {lastElementOf} from "./essentials/lastElement.ts";
 import {withoutDuplicates} from "./essentials/withoutDuplicates.ts";
 import {Exists} from "./expressions/exists.ts";
@@ -190,11 +190,7 @@ export class FormalSystem {
     newArbitraryVariables(...newBoundVariables: Identifier[]) {
         this._assertValidNewIdentifiers(newBoundVariables);
 
-        let currentProof = this._currentOngoingProof();
-        if (currentProof === undefined) {
-            this.startNewProof();
-            currentProof = this._currentOngoingProof()!;
-        }
+        const currentProof = this._forceCurrentOngoingProof();
 
         currentProof.addBoundVariables(newBoundVariables);
     }
@@ -264,23 +260,48 @@ export class FormalSystem {
         if (!this._isStandAloneValue(newIdentifier))
             throw new Error("Cannot eliminate an existential quantifier with a non-root identifier");
 
-        let currentProof = this._currentOngoingProof();
-        if (currentProof === undefined) this.startNewProof();
-        currentProof = this._currentOngoingProof()!;
+        const currentProof = this._forceCurrentOngoingProof();
 
         if (currentProof.owns(newIdentifier)) currentProof.removeBinding(newIdentifier);
         const provenProposition = existentialToEliminate.applyTo(newIdentifier) as Proposition;
-        const newProof = new ExistsElimination(
-            provenProposition,
-            existentialToEliminate,
-            newIdentifier
-        );
-        this._registerProof(newProof)
+        const newProof = new ExistsElimination(provenProposition, newIdentifier, existentialToEliminate);
+        this._registerProof(newProof);
         return newProof;
+    }
+
+    private _forceCurrentOngoingProof(): Context {
+        let currentProof = this._currentOngoingProof();
+        if (currentProof !== undefined) return currentProof;
+
+        this.startNewProof();
+        return this._currentOngoingProof()!;
     }
 
     startNewProof() {
         this._currentProofs.push(new Context());
+    }
+
+    nameTerm(identifier: Identifier, term: Expression) {
+        if (!this._isStandAloneValue(term))
+            throw new Error("Cannot name a non-root or non-value expression");
+
+        if (!this._isStandAloneValue(identifier))
+            throw new Error("Cannot use a non-root identifier as name");
+
+        if (this._containsUnknownFreeVariables(term))
+            throw new Error("Cannot name an expression with unknown free variables");
+
+        const newProof = new TermNaming(
+            equality(identifier.copy(), term) as Equality & Proposition,
+            identifier
+        );
+        this._forceCurrentOngoingProof();
+        this._registerProof(newProof);
+        return newProof;
+    }
+
+    private _containsUnknownFreeVariables(expression: Expression) {
+        return ![...expression.freeVariables()].every(freeVariable => this.isKnownObject(freeVariable));
     }
 }
 
@@ -302,7 +323,7 @@ export class Context {
     }
 
     registerStep(newProof: Proof) {
-        if (newProof instanceof ExistsElimination) {
+        if (newProof instanceof NewBinding) {
             this._extraBoundVariables.push(newProof.newBoundVariable);
         }
         this._steps.push(newProof);
@@ -371,7 +392,6 @@ export class Context {
     }
 
     removeBinding(variable: Identifier) {
-        debugger;
         removeElementFrom(
             this._ownVariableEqualTo(variable),
             this._ownBoundVariables
@@ -422,13 +442,38 @@ export class ForAllElimination extends DirectProof {
     }
 }
 
-export class ExistsElimination extends DirectProof {
-    constructor(
+export abstract class NewBinding extends DirectProof {
+    public readonly newBoundVariable: Identifier & StandAlone;
+
+    protected constructor(
         provenProposition: Proposition,
-        public readonly eliminatedExistential: Proposition & Exists,
-        public readonly newBoundVariable: Identifier & StandAlone
+        newBoundVariable: Identifier & StandAlone
     ) {
         super(provenProposition);
+        this.newBoundVariable = newBoundVariable;
+    }
+}
+
+export class TermNaming extends NewBinding {
+    constructor(
+        provenProposition: Proposition & Equality,
+        newBoundVariable: Identifier & StandAlone
+    ) {
+        super(provenProposition, newBoundVariable);
+    }
+
+    referencedPropositions(): Proposition[] {
+        return [];
+    }
+}
+
+export class ExistsElimination extends NewBinding {
+    constructor(
+        provenProposition: Proposition,
+        newBoundVariable: Identifier & StandAlone,
+        public readonly eliminatedExistential: Expression<typeof truthType> & StandAlone & Exists,
+    ) {
+        super(provenProposition, newBoundVariable);
     }
 
     referencedPropositions(): Proposition[] {
