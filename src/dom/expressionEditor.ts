@@ -43,11 +43,15 @@ export class ExpressionEditor {
                 this._theoremsList = createElement("ol", {className: "theorems"}),
                 createElement("div", {className: "actions"}, [
                     createElement("button", {
-                        textContent: "Nueva variable",
-                        onclick: () => this.startForAllIntroduction()
+                        textContent: "Nueva demostración",
+                        onclick: () => this.startNestedProof()
                     }),
                     createElement("button", {
-                        textContent: "Introducir para todo",
+                        textContent: "Nueva variable",
+                        onclick: () => this.addNewArbitraryVariables()
+                    }),
+                    createElement("button", {
+                        textContent: "Finalizar demostración",
                         onclick: () => this.endForAllIntroduction()
                     }),
                 ])
@@ -306,26 +310,28 @@ export class ExpressionEditor {
             .filter(result=> result !== undefined);
     }
 
-    private startForAllIntroduction(promptText = "Nombre de las variables", promptInitialValue = ""): void {
+    private addNewArbitraryVariables(promptText = "Nombre de las variables", promptInitialValue = ""): void {
         const newBoundVariables = promptIdentifiers(promptText, promptInitialValue);
         if (newBoundVariables === undefined) return;
 
         const knownIdentifier = newBoundVariables.find(identifier => this._system.isKnownObject(identifier));
-        if (knownIdentifier !== undefined) return this.startForAllIntroduction(
+        if (knownIdentifier !== undefined) return this.addNewArbitraryVariables(
             `El nombre ${knownIdentifier.toString()} ya está ocupado`,
             newBoundVariables.map(identifier => identifier.toString()).join(", ")
         );
 
-        let list!: HTMLOListElement;
-        createElement("div", {}, [
-            list = createElement("ol", {className: "theorem-steps"}, [
-                createElement("li", {className: "new-binding"}, this._elementsForNewVariables(newBoundVariables))
-            ])
-        ]);
-        this._currentProofTheorems().append(list);
-        this._currentProofTheoremsList.push(list);
+        let currentTheoremHeader = this._currentTheoremHeader();
+        if (currentTheoremHeader === null) this.startNestedProof();
+        currentTheoremHeader = this._currentTheoremHeader()!;
 
-        this._system.startForAllIntroduction(...newBoundVariables);
+        this._system.newArbitraryVariables(...newBoundVariables);
+        currentTheoremHeader.replaceChildren(
+            ...this._elementsForNewVariables(this._system.arbitraryObjectsInCurrentOngoingProof())
+        );
+    }
+
+    private _currentTheoremHeader() {
+        return this._currentProofTheorems().querySelector<HTMLLIElement>("li.theorem-header");
     }
 
     private _elementsForNewVariables(newBoundVariables: Identifier[]): (Node | string)[] {
@@ -356,6 +362,16 @@ export class ExpressionEditor {
         const newIdentifier = promptIdentifier("Nombre de la variable");
         if (newIdentifier === undefined) return;
         this.addNewExpressionToCanvas(newIdentifier);
+    }
+
+    private startNestedProof() {
+        this._system.startNewProof();
+
+        const list = createElement("ol", {className: "theorem-steps"}, [
+            createElement("li", {className: "theorem-header", textContent: "Nuevo contexto"})
+        ]);
+        this._currentProofTheorems().append(list);
+        this._currentProofTheoremsList.push(list);
     }
 }
 

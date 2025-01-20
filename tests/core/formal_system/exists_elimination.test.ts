@@ -107,7 +107,7 @@ describe("elimination of existential quantifiers", () => {
             equality(identifier("A"), identifier("x"))
         );
         system.addAxiom(axiom1);
-        system.startForAllIntroduction(identifier("B"))
+        system.newArbitraryVariables(identifier("B"))
         const newProof = system.eliminateExists(axiom1, identifier("W"));
 
         expect(newProof.newBoundVariable).toEqual(identifier("W"));
@@ -124,7 +124,7 @@ describe("elimination of existential quantifiers", () => {
             equality(identifier("A"), identifier("x"))
         );
         system.addAxiom(axiom1);
-        system.startForAllIntroduction(identifier("B"))
+        system.newArbitraryVariables(identifier("B"))
         system.eliminateExists(axiom1, identifier("W"));
 
         expect(() => system.finishCurrentProof())

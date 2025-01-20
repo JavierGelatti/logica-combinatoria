@@ -267,7 +267,7 @@ ol.collection {
     }
 
     .theorems {
-        .new-binding {
+        .theorem-header, .new-binding {
             display: flex;
             align-items: center;
 
@@ -281,7 +281,8 @@ ol.collection {
             margin-left: 2em;
             border-left: 1px solid gray;
 
-            & > li:first-child {
+            & > li.theorem-header {
+                min-height: 32px;
                 background-color: white;
                 margin-left: -2em;
             }

@@ -49,15 +49,35 @@ describe("proposition identifiers", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
         const step1 = system.eliminateForAll(axiom1, identifier("A")).provenProposition;
         const step2 = system.eliminateForAll(axiom1, identifier("A")).provenProposition;
-        system.startForAllIntroduction(identifier("B"));
+        system.newArbitraryVariables(identifier("B"));
+        const step3 = system.eliminateForAll(step1 as unknown as ForAll, identifier("B")).provenProposition;
+
+        expect(system.identifierOf(step1)).toEqual(['T', 1, 1]);
+        expect(system.identifierOf(step2)).toEqual(['T', 1, 2]);
+        expect(system.identifierOf(step3)).toEqual(['T', 1, 3]);
+    });
+
+    test("are generated for nested proof steps", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(identifier("x"),
+            forall(identifier("y"),
+                equality(identifier("x"), identifier("y"))
+            )
+        );
+        system.addAxiom(axiom1);
+
+        system.newArbitraryVariables(identifier("A"));
+        const step1 = system.eliminateForAll(axiom1, identifier("A")).provenProposition;
+        const step2 = system.eliminateForAll(axiom1, identifier("A")).provenProposition;
+        system.startNewProof();
+        system.newArbitraryVariables(identifier("B"));
         const step3 = system.eliminateForAll(step1 as unknown as ForAll, identifier("B")).provenProposition;
 
         expect(system.identifierOf(step1)).toEqual(['T', 1, 1]);
         expect(system.identifierOf(step2)).toEqual(['T', 1, 2]);
         expect(system.identifierOf(step3)).toEqual(['T', 1, 2, 1]);
     });
-
 });

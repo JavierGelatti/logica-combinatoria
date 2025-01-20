@@ -50,6 +50,10 @@ export class FormalSystem {
         ];
     }
 
+    arbitraryObjectsInCurrentOngoingProof() {
+        return lastElementOf(this._currentProofs)?.ownBoundVariables() ?? [];
+    }
+
     isKnownObject(identifier: Identifier) {
         return this.objectsInContext()
             .some(o => o.equals(identifier));
@@ -182,13 +186,19 @@ export class FormalSystem {
         return this._propositionIds.get(expression as Proposition);
     }
 
-    startForAllIntroduction(...newBoundVariables: Identifier[]) {
-        this._assertValidIdentifiersForForAllIntroduction(newBoundVariables);
+    newArbitraryVariables(...newBoundVariables: Identifier[]) {
+        this._assertValidNewIdentifiers(newBoundVariables);
 
-        this._currentProofs.push(new Context(newBoundVariables));
+        let currentProof = this._currentOngoingProof();
+        if (currentProof === undefined) {
+            this.startNewProof();
+            currentProof = this._currentOngoingProof()!;
+        }
+
+        currentProof.addBoundVariables(newBoundVariables);
     }
 
-    private _assertValidIdentifiersForForAllIntroduction(
+    private _assertValidNewIdentifiers(
         identifiers: Identifier[]
     ): asserts identifiers is (Identifier & StandAlone)[] {
         identifiers.forEach(identifier => {
@@ -201,7 +211,7 @@ export class FormalSystem {
     }
 
     finishCurrentProof() {
-        const currentProof = lastElementOf(this._currentProofs);
+        const currentProof = this._currentOngoingProof();
         if (currentProof === undefined)
             throw new Error("Cannot finish non-started proof");
 
@@ -211,8 +221,12 @@ export class FormalSystem {
         return newProof;
     }
 
+    private _currentOngoingProof() {
+        return lastElementOf(this._currentProofs);
+    }
+
     private _registerProof(newProof: Proof) {
-        const currentProof = lastElementOf(this._currentProofs);
+        const currentProof = this._currentOngoingProof();
         if (currentProof !== undefined) {
             currentProof.registerStep(newProof);
             const steps = this._currentProofs.map(context => context.numberOfSteps());
@@ -245,6 +259,9 @@ export class FormalSystem {
         if (!this._isStandAloneValue(newIdentifier))
             throw new Error("Cannot eliminate an existential quantifier with a non-root identifier");
 
+        const currentProof = this._currentOngoingProof();
+        if (currentProof === undefined) this.startNewProof();
+
         const provenProposition = existentialToEliminate.applyTo(newIdentifier) as Proposition;
         const newProof = new ExistsElimination(
             provenProposition,
@@ -254,18 +271,27 @@ export class FormalSystem {
         this._registerProof(newProof)
         return newProof;
     }
+
+    startNewProof() {
+        this._currentProofs.push(new Context());
+    }
 }
 
 export class Context {
-    private readonly _steps: Proof[] = [];
+    private readonly _ownBoundVariables: (Identifier & StandAlone)[];
     private readonly _extraBoundVariables: (Identifier & StandAlone)[] = [];
+    private readonly _steps: Proof[] = [];
 
-    constructor(
-        private readonly ownBoundVariables: (Identifier & StandAlone)[]
-    ) {}
+    constructor(ownBoundVariables: (Identifier & StandAlone)[] = []) {
+        this._ownBoundVariables = ownBoundVariables;
+    }
 
     objectsInContext(): Identifier[] {
-        return [...this.ownBoundVariables, ...this._extraBoundVariables];
+        return [...this._ownBoundVariables, ...this._extraBoundVariables];
+    }
+
+    ownBoundVariables() {
+        return [...this._ownBoundVariables];
     }
 
     registerStep(newProof: Proof) {
@@ -299,19 +325,26 @@ export class Context {
             .some(variable => proposition.freeVariablesContain(variable));
     }
 
-    private _buildProvenProposition(lastStepProvenProposition: Proposition, boundVariables = this.ownBoundVariables): Proposition {
+    private _buildProvenProposition(lastStepProvenProposition: Proposition, boundVariables = this._ownBoundVariables): Proposition {
         if (boundVariables.length === 0) return lastStepProvenProposition.copy();
 
         const [boundVariable, ...restOfBoundVariables] = boundVariables;
-
-        return forall(
-            boundVariable.copy(),
-            this._buildProvenProposition(lastStepProvenProposition, restOfBoundVariables)
-        ) as Expression<Truth> as Proposition;
+        if (lastStepProvenProposition.freeVariablesContain(boundVariable)) {
+            return forall(
+                boundVariable.copy(),
+                this._buildProvenProposition(lastStepProvenProposition, restOfBoundVariables)
+            ) as Expression<Truth> as Proposition;
+        } else {
+            return this._buildProvenProposition(lastStepProvenProposition, restOfBoundVariables);
+        }
     }
 
     numberOfSteps() {
         return this._steps.length;
+    }
+
+    addBoundVariables(newBoundVariables: (Identifier & StandAlone)[]) {
+        this._ownBoundVariables.push(...newBoundVariables);
     }
 }
 

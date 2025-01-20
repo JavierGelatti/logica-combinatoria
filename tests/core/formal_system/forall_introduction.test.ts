@@ -11,7 +11,7 @@ import {ForAll} from "../../../src/core/expressions/forAll.ts";
 import { Expression, Truth } from "../../../src/core/expressions/expression.ts";
 
 describe("forall introduction", () => {
-    test("can introduce a forall without using the newly-bound variable", () => {
+    test("if the newly-bound variable is not used, the proposition is proven as-is (wihout adding a for all)", () => {
         const system = new FormalSystem();
         const axiom1 = forall(
             identifier("x"),
@@ -19,12 +19,12 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
         system.eliminateForAll(axiom1, identifier("M"));
         system.finishCurrentProof();
 
         expect(system.theorems())
-            .toEqual([forall(identifier("A"), equality(identifier("M"), identifier("M")))]);
+            .toEqual([equality(identifier("M"), identifier("M"))]);
     });
 
     test("can eliminate a forall during a forall introduction", () => {
@@ -34,7 +34,7 @@ describe("forall introduction", () => {
             equality(identifier("x"), identifier("M"))
         );
         system.addAxiom(axiom1);
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
 
         const step = system.eliminateForAll(axiom1, identifier("A"));
 
@@ -49,7 +49,7 @@ describe("forall introduction", () => {
             forall(identifier("y"), equality(identifier("x"), identifier("y")))
         );
         system.addAxiom(axiom1);
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
 
         const step1 = system.eliminateForAll(axiom1, identifier("A"));
         const step2 = system.eliminateForAll(step1.provenProposition as Expression<Truth> as ForAll, identifier("A"));
@@ -67,7 +67,7 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
         system.eliminateForAll(axiom1, identifier("A"));
         const proof = system.finishCurrentProof();
 
@@ -88,7 +88,7 @@ describe("forall introduction", () => {
         let subexpression!: Identifier;
         application(subexpression = identifier("A"), identifier("A"))
 
-        expect(() => system.startForAllIntroduction(subexpression))
+        expect(() => system.newArbitraryVariables(subexpression))
             .toThrowError("Cannot introduce a forall with a non-root identifier");
     });
 
@@ -100,7 +100,7 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        expect(() => system.startForAllIntroduction(identifier("M")))
+        expect(() => system.newArbitraryVariables(identifier("M")))
             .toThrowError("Cannot introduce a forall with a known object identifier");
     });
 
@@ -123,13 +123,13 @@ describe("forall introduction", () => {
             equality(identifier("x"), identifier("M"))
         );
         system.addAxiom(axiom1);
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
 
         expect(() => system.finishCurrentProof()).toThrowError("Cannot finish empty proof");
         expect(system.isKnownObject(identifier("A"))).toBe(true);
     });
 
-    test("can introduce a nested forall", () => {
+    test("can introduce many new variables", () => {
         const system = new FormalSystem();
         const axiom1 = forall(
             identifier("x"),
@@ -137,18 +137,17 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"));
-        system.startForAllIntroduction(identifier("B"));
+        system.newArbitraryVariables(identifier("A"));
+        system.newArbitraryVariables(identifier("B"));
         system.eliminateForAll(axiom1, identifier("B"));
-        system.finishCurrentProof();
         const proof = system.finishCurrentProof();
 
         expect(proof.referencedPropositions()).toEqual([axiom1]);
         expect(system.theorems())
-            .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("B"), identifier("M"))))]);
+            .toEqual([forall(identifier("B"), equality(identifier("B"), identifier("M")))]);
     });
 
-    test("can reference a previous bound variable while introducing a nested forall", () => {
+    test("can reference a previous bound variable while introducing a forall", () => {
         const system = new FormalSystem();
         const axiom1 = forall(
             identifier("x"),
@@ -156,15 +155,14 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"));
-        system.startForAllIntroduction(identifier("B"));
+        system.newArbitraryVariables(identifier("A"));
+        system.newArbitraryVariables(identifier("B"));
         system.eliminateForAll(axiom1, identifier("A"));
-        system.finishCurrentProof();
         const proof = system.finishCurrentProof();
 
         expect(proof.referencedPropositions()).toEqual([axiom1]);
         expect(system.theorems())
-            .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("A"), identifier("M"))))]);
+            .toEqual([forall(identifier("A"), equality(identifier("A"), identifier("M")))]);
     });
 
     test("can reference a previous step while introducing a nested forall", () => {
@@ -176,11 +174,10 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
         const step1 = system.eliminateForAll(axiom1, identifier("A")).provenProposition as Expression<Truth> as ForAll;
-        system.startForAllIntroduction(identifier("B"));
+        system.newArbitraryVariables(identifier("B"));
         system.eliminateForAll(step1, identifier("B"));
-        system.finishCurrentProof();
         const proof = system.finishCurrentProof();
 
         expect(proof.referencedPropositions()).toEqual([axiom1]);
@@ -196,7 +193,7 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
         const step = system.eliminateForAll(axiom1, identifier("M"));
         system.finishCurrentProof();
 
@@ -212,7 +209,7 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"));
+        system.newArbitraryVariables(identifier("A"));
         system.eliminateForAll(axiom1, identifier("A"));
         system.eliminateForAll(axiom1, identifier("A"));
         const proof = system.finishCurrentProof();
@@ -220,7 +217,7 @@ describe("forall introduction", () => {
         expect(proof.referencedPropositions()).toEqual([axiom1]);
     });
 
-    test("can introduce a multi-variable forall", () => {
+    test("can introduce many variables at once", () => {
         const system = new FormalSystem();
         const axiom1 = forall(
             identifier("x"),
@@ -228,11 +225,29 @@ describe("forall introduction", () => {
         );
         system.addAxiom(axiom1);
 
-        system.startForAllIntroduction(identifier("A"), identifier("B"));
-        system.eliminateForAll(axiom1, identifier("M"));
+        system.newArbitraryVariables(identifier("A"), identifier("B"));
+        system.eliminateForAll(axiom1, identifier("A"));
         system.finishCurrentProof();
 
         expect(system.theorems())
-            .toEqual([forall(identifier("A"), forall(identifier("B"), equality(identifier("M"), identifier("M"))))]);
+            .toEqual([forall(identifier("A"), equality(identifier("A"), identifier("M")))]);
+    });
+
+    test("each theorem knows its own variables", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("M"))
+        );
+        system.addAxiom(axiom1);
+
+        system.newArbitraryVariables(identifier("A"), identifier("B"));
+        expect(system.arbitraryObjectsInCurrentOngoingProof())
+            .toEqual([identifier("A"), identifier("B")]);
+
+        system.startNewProof();
+        system.newArbitraryVariables(identifier("C"));
+        expect(system.arbitraryObjectsInCurrentOngoingProof())
+            .toEqual([identifier("C")]);
     });
 });
