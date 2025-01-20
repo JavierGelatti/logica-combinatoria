@@ -1,14 +1,11 @@
 import {describe, expect, test} from "vitest";
 import {
-    application,
     equality,
     exists,
     forall,
     identifier,
 } from "../../../src/core/expressions/expression_constructors.ts";
 import {FormalSystem} from "../../../src/core/formalSystem.ts";
-import {Exists} from "../../../src/core/expressions/exists.ts";
-import {Identifier} from "../../../src/core/expressions/identifier.ts";
 
 describe("introduction of existential quantifiers", () => {
     test("cannot introduce an existential quantifier of a non-proven expression", () => {
