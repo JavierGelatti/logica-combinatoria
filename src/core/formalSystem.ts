@@ -226,8 +226,10 @@ export class FormalSystem {
     existentialQuantifiersThatCanBeReplacedWith(identifier: Identifier): (Exists & StandAlone)[] {
         if (this.isKnownObject(identifier)) return [];
 
-        return this._provenExpressions()
-            .filter(expression => expression instanceof Exists);
+        return this._provenExpressions().filter(expression => {
+            // noinspection SuspiciousTypeOfGuard
+            return expression instanceof Exists;
+        });
     }
 
     eliminateExists(existentialToEliminate: Exists, newIdentifier: Identifier) {
