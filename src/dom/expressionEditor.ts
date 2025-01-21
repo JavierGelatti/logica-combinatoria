@@ -80,7 +80,7 @@ export class ExpressionEditor {
 
         this._axiomsList.append(
             createElement("li", { id: this._identifierOf(expression) }, [
-                ExpressionView.forExpression(expression).domElement()
+                this._elementFor(expression)
             ])
         );
     }
@@ -93,8 +93,7 @@ export class ExpressionEditor {
     }
 
     addToPallete(expression: Expression) {
-        const expressionView = ExpressionView.forExpression(expression.copy());
-        this._editorPallete.append(expressionView.domElement());
+        this._editorPallete.append(this._elementFor(expression.copy()));
     }
 
     private _palleteExpressionDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
@@ -190,10 +189,10 @@ export class ExpressionEditor {
 
     private addNewExpressionToCanvas(requestedExpressionToAdd: Expression) {
         const newExpression = requestedExpressionToAdd.copy();
-        const newExpressionView = ExpressionView.forExpression(newExpression);
+        const newExpressionElement = this._elementFor(newExpression);
 
-        this._editorCanvas.insertBefore(newExpressionView.domElement(), this._newExpressionDropTargetElement);
-        animateWith(newExpressionView.domElement(), "just-added");
+        this._editorCanvas.insertBefore(newExpressionElement, this._newExpressionDropTargetElement);
+        animateWith(newExpressionElement, "just-added");
     }
 
     private _canvasHolesOfType(expressionType: ExpressionType): HoleView<any>[] {
@@ -250,7 +249,7 @@ export class ExpressionEditor {
     }
 
     private _addTheorem(newProof: Proof) {
-        this._addTheoremWithView(newProof, ExpressionView.forExpression(newProof.provenProposition).domElement());
+        this._addTheoremWithView(newProof, this._elementFor(newProof.provenProposition));
     }
 
     private _addExistsTheorem(newProof: ExistsElimination) {
@@ -259,9 +258,9 @@ export class ExpressionEditor {
             newProof,
             createElement("div", {className: "new-binding"}, [
                 "Sea ",
-                ExpressionView.forExpression(newProof.newBoundVariable).domElement(),
+                this._elementFor(newProof.newBoundVariable),
                 " tal que ",
-                ExpressionView.forExpression(newProof.provenProposition).domElement(),
+                this._elementFor(newProof.provenProposition),
             ])
         );
     }
@@ -272,7 +271,7 @@ export class ExpressionEditor {
             newProof,
             createElement("div", {className: "new-binding"}, [
                 "Sea ",
-                ExpressionView.forExpression(newProof.provenProposition).domElement(),
+                this._elementFor(newProof.provenProposition),
             ])
         );
     }
@@ -372,14 +371,14 @@ export class ExpressionEditor {
         if (newBoundVariables.length === 1) {
             return [
                 "Sea ",
-                ExpressionView.forExpression(newBoundVariables[0]).domElement(),
+                this._elementFor(newBoundVariables[0]),
                 " un pájaro cualquiera",
             ];
         } else {
             return [
                 "Sean ",
                 collectionOf(
-                    newBoundVariables.map(variable => ExpressionView.forExpression(variable).domElement())
+                    newBoundVariables.map(variable => this._elementFor(variable))
                 ),
                 " pájaros cualquiera",
             ];
@@ -406,6 +405,10 @@ export class ExpressionEditor {
         ]);
         this._currentProofTheorems().append(list);
         this._currentProofTheoremsList.push(list);
+    }
+
+    private _elementFor(expression: Expression) {
+        return ExpressionView.forExpression(expression).domElement();
     }
 }
 
