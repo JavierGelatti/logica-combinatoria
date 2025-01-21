@@ -1,4 +1,4 @@
-import {ExpressionView, HoleView} from "./expression_view.ts";
+import {ExpressionView, HoleView, IdentifierView} from "./expression_view.ts";
 import {createElement} from "./essentials/createElement.ts";
 import {Expression, ExpressionType} from "../core/expressions/expression.ts";
 import {animateWith} from "./essentials/animation.ts";
@@ -188,9 +188,10 @@ export class ExpressionEditor {
                     ),
                     () => {},
                     () => {},
-                    () => {
-                        targetElement.textContent = `∃${grabbedExpression}`;
-                    }
+                    () => targetElement.replaceChildren(
+                        "∃",
+                        IdentifierView.createRawElementFor(grabbedExpression, false)
+                    )
                 );
             })
             .filter(dropTarget => dropTarget !== undefined);

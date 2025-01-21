@@ -197,15 +197,15 @@ export class EqualityView extends ExpressionView<Equality> {
     }
 }
 export class IdentifierView extends ExpressionView<Identifier> {
-    protected _createDomElement(): HTMLElement {
-        const identifier = this.expression;
-
-        const isFree = identifier.isFree();
+    static createRawElementFor(identifier: Identifier, isFree = identifier.isFree()): HTMLElement {
         const subscriptElement = identifier.subscript !== undefined && createElement("sub", {textContent: String(identifier.subscript)});
         return createElement("span", { className: "identifier", classNames: isFree ? ["free"] : ["bound"] }, [
             String(identifier.name),
             ...(subscriptElement ? [subscriptElement] : [])
         ]);
+    }
+    protected _createDomElement(): HTMLElement {
+        return IdentifierView.createRawElementFor(this.expression);
     }
 }
 
