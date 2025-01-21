@@ -291,6 +291,9 @@ export class FormalSystem {
         if (this._containsUnknownFreeVariables(term))
             throw new Error("Cannot name an expression with unknown free variables");
 
+        if (this.isKnownObject(identifier))
+            throw new Error(`The name ${identifier} is already taken`);
+
         const newProof = new TermNaming(
             equality(identifier.copy(), term) as Equality & Proposition,
             identifier

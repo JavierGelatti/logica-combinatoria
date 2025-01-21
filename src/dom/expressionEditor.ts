@@ -392,10 +392,14 @@ export class ExpressionEditor {
         this._updateTheoremHeader();
     }
 
-    private nameExpression(expressionToName: Expression) {
-        const identifier = promptIdentifier("Nombre para la expresión");
+    private nameExpression(expressionToName: Expression, promptText = "Nombre para la expresión", promptInitialValue = ""): void {
+        const identifier = promptIdentifier(promptText, promptInitialValue);
         if (identifier === undefined) return;
 
+        if (this._system.isKnownObject(identifier))
+            return this.nameExpression(expressionToName, "Ese nombre ya está ocupado", identifier.toString());
+
+        this._updateViewToNewProofIfNoOngoingProof();
         const newProof = this._system.nameTerm(identifier, expressionToName.copy());
         this._addNamingTheorem(newProof);
     }

@@ -53,6 +53,17 @@ describe("naming terms", () => {
             .toThrowError("Cannot name an expression with unknown free variables");
     });
 
+    test("the chosen name must not be a known object", () => {
+        const system = new FormalSystem();
+        system.addAxiom(forall(
+            identifier("x"),
+            equality(identifier("x"), identifier("A"))
+        ));
+
+        expect(() => system.nameTerm(identifier("A"), application(identifier("A"), identifier("A"))))
+            .toThrowError("The name A is already taken");
+    });
+
     test("a valid value expression can be given a name", () => {
         const system = new FormalSystem();
         system.addAxiom(forall(
