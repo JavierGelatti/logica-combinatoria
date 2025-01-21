@@ -318,6 +318,11 @@ export class FormalSystem {
         this._registerProof(newProof);
         return newProof;
     }
+
+    candidatesForExistentialQuantificationOf(identifier: Identifier) {
+        return this._provenExpressions()
+            .filter(expression => expression.freeVariablesContain(identifier));
+    }
 }
 
 export class Context {

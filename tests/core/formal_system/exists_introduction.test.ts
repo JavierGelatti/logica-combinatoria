@@ -7,6 +7,24 @@ import {
 } from "../../../src/core/expressions/expression_constructors.ts";
 import {FormalSystem} from "../../../src/core/formalSystem.ts";
 
+describe("determination of expressions candidate for introduction of existential quantifier", () => {
+    test("finds proven expressions where the selected variable is free", () => {
+        const system = new FormalSystem();
+        const axiom1 = forall(
+            identifier("x"),
+            equality(identifier("A"), identifier("x"))
+        );
+        const axiom2 = equality(identifier("A"), identifier("B"));
+        system.addAxiom(axiom1);
+        system.addAxiom(axiom2);
+
+        expect(system.candidatesForExistentialQuantificationOf(identifier("A"))).toEqual([axiom1, axiom2]);
+        expect(system.candidatesForExistentialQuantificationOf(identifier("B"))).toEqual([axiom2]);
+        expect(system.candidatesForExistentialQuantificationOf(identifier("x"))).toEqual([]);
+        expect(system.candidatesForExistentialQuantificationOf(identifier("W"))).toEqual([]);
+    });
+});
+
 describe("introduction of existential quantifiers", () => {
     test("cannot introduce an existential quantifier of a non-proven expression", () => {
         const system = new FormalSystem();

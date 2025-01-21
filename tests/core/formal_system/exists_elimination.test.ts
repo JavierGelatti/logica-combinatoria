@@ -170,7 +170,7 @@ describe("elimination of existential quantifiers", () => {
         expect(system.theorems()).toEqual([]);
     });
 
-    test("can eliminate an existential quantifier with a unused known object owned by the current context, and the object is no longer arbitary", () => {
+    test("can eliminate an existential quantifier with a unused known object owned by the current context, and the object is no longer arbitrary", () => {
         const system = new FormalSystem();
         const axiom1 = exists(
             identifier("x"),

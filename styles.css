@@ -1,3 +1,8 @@
+:root {
+    --create-green-active:   rgba(34, 139, 34, .2);
+    --create-green-inactive: rgba(34, 139, 34, .05);
+}
+
 @font-face {
     font-family: 'KaTeX_Main';
     src:
@@ -120,12 +125,12 @@ body {
     opacity: .5;
 
     &.enabled-drop-target {
-        background: rgba(34, 139, 34, .05);
+        background: var(--create-green-inactive);
         transform: scale(1);
         opacity: 1;
 
         &.active-drop-target {
-            background: rgba(34, 139, 34, .2);
+            background: var(--create-green-active);
             transform: scale(1.2);
             opacity: .8;
         }
@@ -170,10 +175,10 @@ body {
     }
 
     &:hover {
-        background: rgba(34, 139, 34, .1);
+        background: var(--create-green-inactive);
     }
     &:active {
-        background: rgba(34, 139, 34, .2);
+        background: var(--create-green-active);
     }
 }
 
@@ -202,6 +207,38 @@ body {
             scale(.7);
         margin-right: -2px;
     }
+}
+
+.exists-drop-target {
+    position: absolute;
+    font-size: .7em;
+    font-family: 'KaTeX_Math', serif;
+    border: 1px dashed dimgray;
+    border-radius: 4px;
+    padding: 2px 2px 0;
+
+    --displacementX: calc(-100% - 5px);
+    transform: translateX(var(--displacementX));
+    transform-origin: calc(var(--displacementX)/2) 50%;
+    scale: 0;
+    transition: scale .2s;
+
+    &.enabled-drop-target {
+        scale: 1;
+        background-color: white;
+        background-image: linear-gradient(
+            var(--create-green-inactive),
+            var(--create-green-inactive)
+        );
+
+        &.active-drop-target {
+            background-image: linear-gradient(
+                var(--create-green-active),
+                var(--create-green-active)
+            );
+        }
+    }
+
 }
 
 ol.collection {
@@ -402,7 +439,7 @@ ol.collection {
             flex-grow: 1;
 
             &.enabled-drop-target {
-                background: rgba(34, 139, 34, .05);
+                background: var(--create-green-inactive);
                 border: 1px dashed dimgray;
                 transition: background-color .2s;
 
@@ -416,7 +453,7 @@ ol.collection {
                 }
 
                 &.active-drop-target {
-                    background: rgba(34, 139, 34, .2);
+                    background: var(--create-green-active);
                 }
             }
         }

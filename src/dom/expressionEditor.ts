@@ -80,7 +80,7 @@ export class ExpressionEditor {
 
         this._axiomsList.append(
             createElement("li", { id: this._identifierOf(expression) }, [
-                this._elementFor(expression)
+                this._elementWithExistsDropTargetFor(expression)
             ])
         );
     }
@@ -115,7 +115,8 @@ export class ExpressionEditor {
     private _bindersInAxiomsOrTheoremsDropTargetsFor(grabbedExpressionView: ExpressionView): DropTarget[] {
         return [
             ...this._forallBindersDropTargets(grabbedExpressionView),
-            ...this._existentialBindersDropTargets(grabbedExpressionView)
+            ...this._existingExistentialBindersDropTargets(grabbedExpressionView),
+            ...this._newExistentialBindersDropTargets(grabbedExpressionView)
         ];
     }
 
@@ -143,7 +144,7 @@ export class ExpressionEditor {
             });
     }
 
-    private _existentialBindersDropTargets(grabbedExpressionView: ExpressionView<Expression>): DropTarget[] {
+    private _existingExistentialBindersDropTargets(grabbedExpressionView: ExpressionView<Expression>): DropTarget[] {
         const grabbedExpression = grabbedExpressionView.expression.copy();
         if (!(grabbedExpression instanceof Identifier)) return [];
 
@@ -164,6 +165,29 @@ export class ExpressionEditor {
                     },
                     () => {
                         variableViews.forEach(view => view.domElement().classList.remove("highlighted"))
+                    }
+                );
+            });
+    }
+
+    private _newExistentialBindersDropTargets(grabbedExpressionView: ExpressionView): DropTarget[] {
+        const grabbedExpression = grabbedExpressionView.expression.copy();
+        if (!(grabbedExpression instanceof Identifier)) return [];
+
+        return this._system.candidatesForExistentialQuantificationOf(grabbedExpression)
+            .map(proposition => ExpressionView.forExpression(proposition))
+            .map(propositionView => {
+                const targetElement: HTMLElement = propositionView.domElement().querySelector("& > .exists-drop-target")!;
+
+                return new DropTarget(
+                    targetElement,
+                    () => this._addTheorem(
+                        this._system.introduceExists(grabbedExpression, propositionView.expression)
+                    ),
+                    () => {},
+                    () => {},
+                    () => {
+                        targetElement.textContent = `∃${grabbedExpression}`;
                     }
                 );
             });
@@ -249,7 +273,10 @@ export class ExpressionEditor {
     }
 
     private _addTheorem(newProof: Proof) {
-        this._addTheoremWithView(newProof, this._elementFor(newProof.provenProposition));
+        this._addTheoremWithView(
+            newProof,
+            this._elementWithExistsDropTargetFor(newProof.provenProposition)
+        );
     }
 
     private _addExistsTheorem(newProof: ExistsElimination) {
@@ -260,7 +287,7 @@ export class ExpressionEditor {
                 "Sea ",
                 this._elementFor(newProof.newBoundVariable),
                 " tal que ",
-                this._elementFor(newProof.provenProposition),
+                this._elementWithExistsDropTargetFor(newProof.provenProposition),
             ])
         );
     }
@@ -405,6 +432,14 @@ export class ExpressionEditor {
         ]);
         this._currentProofTheorems().append(list);
         this._currentProofTheoremsList.push(list);
+    }
+
+    private _elementWithExistsDropTargetFor(provenProposition: Expression) {
+        const element = this._elementFor(provenProposition);
+        element.prepend(
+            createElement("span", {className: "exists-drop-target"})
+        );
+        return element;
     }
 
     private _elementFor(expression: Expression) {

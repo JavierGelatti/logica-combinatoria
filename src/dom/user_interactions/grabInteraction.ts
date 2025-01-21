@@ -57,18 +57,21 @@ export class GrabInteraction extends UserInteraction {
 
     private _activateDropTargets() {
         this._dropTargetDeactivators = this.currentDropTargets(this.expressionView)
-            .map(dropTarget => makeDropTargetExpecting(
-                dropTarget.element,
-                this.expressionView.domElement(),
-                {
-                    onDrop: () => {
-                        dropTarget.onDrop(this.expressionView);
-                        this.finish();
+            .map(dropTarget => {
+                dropTarget.onActivate();
+                return makeDropTargetExpecting(
+                    dropTarget.element,
+                    this.expressionView.domElement(),
+                    {
+                        onDrop: () => {
+                            dropTarget.onDrop(this.expressionView);
+                            this.finish();
+                        },
+                        onActivate: () => dropTarget.onEnter(),
+                        onDeactivate: () => dropTarget.onLeave(),
                     },
-                    onActivate: () => dropTarget.onActivate(),
-                    onDeactivate: () => dropTarget.onDeactivate()
-                },
-            ));
+                );
+            });
     }
 
     protected _cancel() {
@@ -97,7 +100,8 @@ export class DropTarget {
     constructor(
         public readonly element: HTMLElement,
         public readonly onDrop: (droppedExpressionView: ExpressionView) => void,
+        public readonly onEnter: () => void = () => {},
+        public readonly onLeave: () => void = () => {},
         public readonly onActivate: () => void = () => {},
-        public readonly onDeactivate: () => void = () => {},
     ) {}
 }
