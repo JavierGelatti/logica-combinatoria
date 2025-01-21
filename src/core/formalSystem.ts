@@ -323,6 +323,10 @@ export class FormalSystem {
         return this._provenExpressions()
             .filter(expression => expression.freeVariablesContain(identifier));
     }
+
+    thereIsAnOngoingProof() {
+        return this._currentOngoingProof() !== undefined;
+    }
 }
 
 export class Context {

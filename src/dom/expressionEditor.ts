@@ -177,7 +177,9 @@ export class ExpressionEditor {
         return this._system.candidatesForExistentialQuantificationOf(grabbedExpression)
             .map(proposition => ExpressionView.forExpression(proposition))
             .map(propositionView => {
-                const targetElement: HTMLElement = propositionView.domElement().querySelector("& > .exists-drop-target")!;
+                const targetElement = propositionView.domElement()
+                    .querySelector<HTMLElement>("& > .exists-drop-target");
+                if (targetElement === null) return undefined;
 
                 return new DropTarget(
                     targetElement,
@@ -190,7 +192,8 @@ export class ExpressionEditor {
                         targetElement.textContent = `∃${grabbedExpression}`;
                     }
                 );
-            });
+            })
+            .filter(dropTarget => dropTarget !== undefined);
     }
 
     private _newExpressionDropTarget() {
@@ -387,7 +390,7 @@ export class ExpressionEditor {
     }
 
     private _updateViewToNewProofIfNoOngoingProof() {
-        if (this._currentTheoremHeader() === null) this.startNestedProof();
+        if (!this._system.thereIsAnOngoingProof()) this.startNestedProof();
     }
 
     private _currentTheoremHeader() {
