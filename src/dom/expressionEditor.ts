@@ -415,6 +415,9 @@ export class ExpressionEditor {
     }
 
     private _elementsForNewVariables(newBoundVariables: Identifier[]): (Node | string)[] {
+        if (newBoundVariables.length === 0) {
+            return ["Nuevo contexto"];
+        }
         if (newBoundVariables.length === 1) {
             return [
                 "Sea ",
@@ -447,10 +450,12 @@ export class ExpressionEditor {
         this._system.startNewProof();
 
         const list = createElement("ol", {className: "theorem-steps"}, [
-            createElement("li", {className: "theorem-header", textContent: "Nuevo contexto"})
+            createElement("li", {className: "theorem-header"})
         ]);
+
         this._currentProofTheorems().append(list);
         this._currentProofTheoremsList.push(list);
+        this._updateTheoremHeader();
     }
 
     private _elementWithExistsDropTargetFor(provenProposition: Expression) {
