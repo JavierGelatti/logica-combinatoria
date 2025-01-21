@@ -275,10 +275,11 @@ export class ExpressionEditor {
         this._currentInteraction = undefined;
     }
 
-    private _addTheorem(newProof: Proof) {
+    private _addTheorem(newProof: Proof, steps?: HTMLOListElement) {
         this._addTheoremWithView(
             newProof,
-            this._elementWithExistsDropTargetFor(newProof.provenProposition)
+            this._elementWithExistsDropTargetFor(newProof.provenProposition),
+            steps
         );
     }
 
@@ -306,24 +307,40 @@ export class ExpressionEditor {
         );
     }
 
-    private _addTheoremWithView(newProof: Proof, htmlElement: HTMLElement) {
+    private _addTheoremWithView(newProof: Proof, htmlElement: HTMLElement, steps?: HTMLOListElement) {
         const proofId = this._identifierOf(newProof.provenProposition);
-        this._currentProofTheorems().append(
-            createElement("li", {id: proofId}, [
-                htmlElement,
-                collectionOf([
-                    ...newProof.referencedPropositions()
-                        .map(proposition => {
-                            const propositionId = this._identifierOf(proposition);
-                            return createElement("a", {
-                                href: `#${propositionId}`,
-                                textContent: propositionId,
-                                onclick: () => animateWith(document.getElementById(propositionId)!, "highlight"),
-                            });
-                        }),
-                ], {className: "proof-reference"}),
-            ]),
-        );
+        const proofListItem = createElement("li", {id: proofId}, [
+            htmlElement,
+            collectionOf([
+                ...newProof.referencedPropositions()
+                    .map(proposition => {
+                        const propositionId = this._identifierOf(proposition);
+                        return createElement("a", {
+                            href: `#${propositionId}`,
+                            textContent: propositionId,
+                            onclick: () => animateWith(document.getElementById(propositionId)!, "highlight"),
+                        });
+                    }),
+            ], {className: "proof-reference"}),
+        ]);
+
+        if (steps !== undefined) {
+            proofListItem.prepend(
+                createElement("div", {
+                    role: "button",
+                    title: "Colapsar demostración",
+                    className: "collapse-proof-marker",
+                    onclick: event => {
+                        const currentTarget = event.currentTarget as HTMLElement;
+                        steps.classList.toggle("hidden",
+                            currentTarget.classList.toggle("collapsed")
+                        );
+                    }
+                })
+            )
+        }
+
+        this._currentProofTheorems().append(proofListItem);
     }
 
     private _currentProofTheorems() {
@@ -417,8 +434,7 @@ export class ExpressionEditor {
 
     private endCurrentProof() {
         const proof = this._system.finishCurrentProof();
-        this._currentProofTheoremsList.pop();
-        this._addTheorem(proof);
+        this._addTheorem(proof, this._currentProofTheoremsList.pop());
     }
 
     private insertIdentifierInCanvas() {

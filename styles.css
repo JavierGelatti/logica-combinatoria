@@ -243,6 +243,7 @@ ol.collection {
         padding: 0;
 
         & > li {
+            position: relative;
             display: flex;
             align-items: center;
             margin-left: .5em;
@@ -262,6 +263,23 @@ ol.collection {
             & > .expression {
                 justify-content: left;
                 width: fit-content;
+            }
+
+            & > .collapse-proof-marker {
+                position: absolute;
+                left: 0;
+                translate: calc(-100%) 0;
+                padding: 0 5px;
+                cursor: pointer;
+
+                &::before {
+                    content: '▴';
+                    line-height: 1em;
+                    vertical-align: top;
+                }
+                &.collapsed::before {
+                    content: '▸';
+                }
             }
         }
 
@@ -462,4 +480,8 @@ ol.collection {
             }
         }
     }
+}
+
+.hidden {
+    display: none;
 }
