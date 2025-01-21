@@ -43,7 +43,7 @@ export function makeDraggableDelegator<E extends { domElement(): HTMLElement }>(
         targetElement.classList.add("grabbed");
         event.stopPropagation();
 
-        document.body.addEventListener("click", () => {
+        document.documentElement.addEventListener("click", () => {
             onDragCancel?.(target)
             endGrab();
         }, {once: true, signal: grabbingAbortController.signal });
