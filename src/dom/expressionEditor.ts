@@ -326,22 +326,24 @@ export class ExpressionEditor {
         ]);
 
         if (steps !== undefined) {
+            const collapseProof = () => {
+                steps.classList.toggle("hidden",
+                    proofListItem.classList.toggle("collapsed")
+                );
+            };
             proofListItem.prepend(
                 createElement("div", {
                     role: "button",
                     title: "Colapsar demostración",
                     className: "collapse-proof-marker",
-                    onclick: event => {
-                        const currentTarget = event.currentTarget as HTMLElement;
-                        steps.classList.toggle("hidden",
-                            currentTarget.classList.toggle("collapsed")
-                        );
-                    }
+                    onclick: collapseProof
                 })
-            )
+            );
+            collapseProof();
+            this._currentProofTheorems().append(proofListItem, steps);
+        } else {
+            this._currentProofTheorems().append(proofListItem);
         }
-
-        this._currentProofTheorems().append(proofListItem);
     }
 
     private _currentProofTheorems() {

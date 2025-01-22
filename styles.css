@@ -273,13 +273,14 @@ ol.collection {
                 cursor: pointer;
 
                 &::before {
-                    content: '▴';
+                    content: '▾';
                     line-height: 1em;
                     vertical-align: top;
                 }
-                &.collapsed::before {
-                    content: '▸';
-                }
+            }
+
+            &.collapsed > .collapse-proof-marker::before {
+                content: '▸';
             }
         }
 
