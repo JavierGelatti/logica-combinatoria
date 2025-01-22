@@ -11,15 +11,6 @@ const editor = new ExpressionEditor();
     exists(identifier("x"), truthHole())
 ].forEach(e => editor.addToPallete(e));
 
-const mockingbird = forall(
-    identifier("x"),
-    equality(
-        application(identifier("M"), identifier("x")),
-        application(identifier("x"), identifier("x")),
-    )
-);
-editor.addAxiom(mockingbird);
-
 const composition = forall(identifier("A"),
     forall(identifier("B"),
         exists(identifier("C"),
@@ -33,6 +24,15 @@ const composition = forall(identifier("A"),
     )
 );
 editor.addAxiom(composition);
+
+const mockingbird = forall(
+    identifier("x"),
+    equality(
+        application(identifier("M"), identifier("x")),
+        application(identifier("x"), identifier("x")),
+    )
+);
+editor.addAxiom(mockingbird);
 
 
 document.body.append(editor.domElement());
