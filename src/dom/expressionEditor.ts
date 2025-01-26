@@ -278,6 +278,7 @@ export class ExpressionEditor {
         }
 
         this._currentInteraction = undefined;
+        this._updateActionButtons();
     }
 
     cancelledInteraction(interaction: UserInteraction) {
@@ -286,6 +287,7 @@ export class ExpressionEditor {
         }
 
         this._currentInteraction = undefined;
+        this._updateActionButtons();
     }
 
     private _addTheorem(newProof: Proof, steps?: HTMLOListElement) {
