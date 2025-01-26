@@ -218,6 +218,15 @@ export class FormalSystem {
         return newProof;
     }
 
+    canFinishCurrentProof() {
+        const currentOngoingProof = this._currentOngoingProof();
+        return currentOngoingProof !== undefined && currentOngoingProof.canFinishProof();
+    }
+
+    theresAProofOngoing() {
+        return this._currentOngoingProof() !== undefined;
+    }
+
     private _currentOngoingProof() {
         return lastElementOf(this._currentProofs);
     }
@@ -285,11 +294,11 @@ export class FormalSystem {
         if (!this._isStandAloneValue(term))
             throw new Error("Cannot name a non-root or non-value expression");
 
-        if (!this._isStandAloneValue(identifier))
-            throw new Error("Cannot use a non-root identifier as name");
-
         if (this._containsUnknownFreeVariables(term))
             throw new Error("Cannot name an expression with unknown free variables");
+
+        if (!this._isStandAloneValue(identifier))
+            throw new Error("Cannot use a non-root identifier as name");
 
         if (this.isKnownObject(identifier))
             throw new Error(`The name ${identifier} is already taken`);
@@ -301,6 +310,10 @@ export class FormalSystem {
         this._forceCurrentOngoingProof();
         this._registerProof(newProof);
         return newProof;
+    }
+
+    canNameTerm(term: Expression) {
+        return this._isStandAloneValue(term) && !this._containsUnknownFreeVariables(term);
     }
 
     private _containsUnknownFreeVariables(expression: Expression) {
@@ -361,6 +374,15 @@ export class Context {
     }
 
     finishProof(): MultiStepProof {
+        this._assertCanFinishProof();
+
+        return new MultiStepProof(
+            this._buildProvenProposition(lastElementOf(this._steps)!.provenProposition),
+            this._steps
+        );
+    }
+
+    private _assertCanFinishProof() {
         const lastStep = lastElementOf(this._steps);
 
         if (lastStep === undefined)
@@ -368,11 +390,15 @@ export class Context {
 
         if (this._thereAreExtraFreeVariablesIn(lastStep.provenProposition))
             throw new Error("Cannot finish proof with free variables");
+    }
 
-        return new MultiStepProof(
-            this._buildProvenProposition(lastStep.provenProposition),
-            this._steps
-        );
+    canFinishProof() {
+        try {
+            this._assertCanFinishProof();
+            return true;
+        } catch (error) {
+            return false;
+        }
     }
 
     private _thereAreExtraFreeVariablesIn(proposition: Proposition) {

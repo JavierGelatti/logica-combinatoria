@@ -15,6 +15,9 @@ export class ExpressionEditor {
     private _systemElement!: HTMLElement;
     private _axiomsList!: HTMLOListElement;
     private _theoremsList!: HTMLOListElement;
+    private _startProofButton!: HTMLButtonElement;
+    private _newVariableButton!: HTMLButtonElement;
+    private _endProofButton!: HTMLButtonElement;
     private _editorPallete!: HTMLElement;
     private _editorCanvas!: HTMLElement;
     private _newExpressionDropTargetElement!: HTMLElement;
@@ -24,6 +27,7 @@ export class ExpressionEditor {
 
     constructor() {
         this._domElement = this._createDomElement();
+        this._updateActionButtons();
 
         GrabInteraction.setupOn(this, this._editorPallete, (grabbedExpressionView: ExpressionView) => {
             return this._palleteExpressionDropTargetsFor(grabbedExpressionView);
@@ -44,15 +48,14 @@ export class ExpressionEditor {
                     this._axiomsList = createElement("ol", {className: "axioms"}),
                     this._theoremsList = createElement("ol", {className: "theorems"}),
                     createElement("div", {className: "actions"}, [
-                        createElement("button", {
+                        this._startProofButton = createElement("button", {
                             textContent: "Nueva demostración",
                             onclick: () => this.startNestedProof()
                         }),
-                        createElement("button", {
-                            textContent: "Nueva variable",
+                        this._newVariableButton = createElement("button", {
                             onclick: () => this.addNewVariables()
                         }),
-                        createElement("button", {
+                        this._endProofButton = createElement("button", {
                             textContent: "Finalizar demostración",
                             onclick: () => this.endCurrentProof()
                         }),
@@ -266,6 +269,7 @@ export class ExpressionEditor {
         }
 
         this._currentInteraction = newInteraction;
+        this._updateActionButtons();
     }
 
     completedInteraction(interaction: UserInteraction) {
@@ -353,6 +357,7 @@ export class ExpressionEditor {
             this._currentProofTheorems().append(proofListItem);
         }
 
+        this._updateActionButtons();
         htmlElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
         animateWith(htmlElement, "just-added");
     }
@@ -383,12 +388,20 @@ export class ExpressionEditor {
     }
 
     private addNewVariables() {
-        const currentExpression = this._currentInteraction?.currentExpression();
-        if (currentExpression === undefined) {
-            this.addNewArbitraryVariables();
+        if (this._canNameCurrentExpression()) {
+            this.nameExpression(this._selectedExpression()!);
         } else {
-            this.nameExpression(currentExpression);
+            this.addNewArbitraryVariables();
         }
+    }
+
+    private _canNameCurrentExpression() {
+        const currentExpression = this._selectedExpression();
+        return currentExpression !== undefined && this._system.canNameTerm(currentExpression);
+    }
+
+    private _selectedExpression() {
+        return this._currentInteraction?.currentExpression();
     }
 
     private addNewArbitraryVariables(promptText = "Nombre de las variables", promptInitialValue = ""): void {
@@ -413,6 +426,7 @@ export class ExpressionEditor {
         if (this._system.isKnownObject(identifier))
             return this.nameExpression(expressionToName, "Ese nombre ya está ocupado", identifier.toString());
 
+        this._currentInteraction?.finish();
         this._updateViewToNewProofIfNoOngoingProof();
         const newProof = this._system.nameTerm(identifier, expressionToName.copy());
         this._addNamingTheorem(newProof);
@@ -473,6 +487,7 @@ export class ExpressionEditor {
 
         this._currentProofTheorems().append(list);
         this._currentProofTheoremsList.push(list);
+        this._updateActionButtons();
         this._updateTheoremHeader();
     }
 
@@ -486,6 +501,17 @@ export class ExpressionEditor {
 
     private _elementFor(expression: Expression) {
         return ExpressionView.forExpression(expression).domElement();
+    }
+
+    private _updateActionButtons() {
+        this._endProofButton.classList.toggle("hidden", !this._system.theresAProofOngoing());
+        this._endProofButton.disabled = !this._system.canFinishCurrentProof();
+
+        if (this._canNameCurrentExpression()) {
+            this._newVariableButton.textContent = "Nombrar expresión";
+        } else {
+            this._newVariableButton.textContent = "Nueva variable";
+        }
     }
 }
 

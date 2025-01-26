@@ -21,7 +21,7 @@ export class GrabInteraction extends UserInteraction {
                         currentDropTargets,
                     ).start();
                 },
-                onDragCancel: target => target.currentGrabInteraction()!.cancel(),
+                onDragCancel: target => target.currentGrabInteraction()?.cancel(),
                 textOnDrop: target => target.expression.toString(),
             },
         );
