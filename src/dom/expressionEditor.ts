@@ -37,36 +37,44 @@ export class ExpressionEditor {
     }
 
     private _createDomElement(): HTMLElement {
-        return createElement("div", {}, [
-            this._systemElement = createElement("div", {className: "logic-system"}, [
-                this._axiomsList = createElement("ol", {className: "axioms"}),
-                this._theoremsList = createElement("ol", {className: "theorems"}),
-                createElement("div", {className: "actions"}, [
-                    createElement("button", {
-                        textContent: "Nueva demostración",
-                        onclick: () => this.startNestedProof()
-                    }),
-                    createElement("button", {
-                        textContent: "Nueva variable",
-                        onclick: () => this.addNewVariables()
-                    }),
-                    createElement("button", {
-                        textContent: "Finalizar demostración",
-                        onclick: () => this.endCurrentProof()
-                    }),
-                ])
+        return createElement("main", {}, [
+            createElement("div", { className: "scroll-container"}, [
+                this._systemElement = createElement("div", {className: "logic-system"}, [
+                    createElement("h2", { textContent: "Axiomas & Teoremas" }),
+                    this._axiomsList = createElement("ol", {className: "axioms"}),
+                    this._theoremsList = createElement("ol", {className: "theorems"}),
+                    createElement("div", {className: "actions"}, [
+                        createElement("button", {
+                            textContent: "Nueva demostración",
+                            onclick: () => this.startNestedProof()
+                        }),
+                        createElement("button", {
+                            textContent: "Nueva variable",
+                            onclick: () => this.addNewVariables()
+                        }),
+                        createElement("button", {
+                            textContent: "Finalizar demostración",
+                            onclick: () => this.endCurrentProof()
+                        }),
+                    ])
+                ]),
             ]),
-            createElement("div", {className: "expression-editor"}, [
-                this._editorPallete = createElement("div", {className: "pallete"}, [
-                    this._deleteExpressionDropTargetElement = createElement("div", {className: "delete-expression-drop-target"}),
-                    createElement("button", {
-                        textContent: "Insertar variable",
-                        onclick: () => this.insertIdentifierInCanvas()
-                    })
+            createElement("details", {className: "expression-editor"}, [
+                createElement("summary", {}, [
+                    createElement("h2", { textContent: "Nueva expresión" }),
                 ]),
-                this._editorCanvas = createElement("div", {className: "canvas"}, [
-                    this._newExpressionDropTargetElement = createElement("div", {className: "new-expression-drop-target"}),
-                ]),
+                createElement("div", {className: "editor"}, [
+                    this._editorPallete = createElement("div", {className: "pallete"}, [
+                        this._deleteExpressionDropTargetElement = createElement("div", {className: "delete-expression-drop-target"}),
+                        createElement("button", {
+                            textContent: "Insertar variable",
+                            onclick: () => this.insertIdentifierInCanvas()
+                        })
+                    ]),
+                    this._editorCanvas = createElement("div", {className: "canvas"}, [
+                        this._newExpressionDropTargetElement = createElement("div", {className: "new-expression-drop-target"}),
+                    ]),
+                ])
             ])
         ]);
     }
@@ -344,6 +352,9 @@ export class ExpressionEditor {
         } else {
             this._currentProofTheorems().append(proofListItem);
         }
+
+        htmlElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        animateWith(htmlElement, "just-added");
     }
 
     private _currentProofTheorems() {

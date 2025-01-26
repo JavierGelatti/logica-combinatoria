@@ -1,13 +1,11 @@
-:root {
-    --create-green-active:   rgba(34, 139, 34, .2);
-    --create-green-inactive: rgba(34, 139, 34, .05);
-}
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@1,600&display=swap');
 
 @font-face {
     font-family: 'KaTeX_Main';
     src:
-        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Main-Regular.woff2') format('woff2'),
-        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Main-Regular.woff')  format('woff');
+            url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Main-Regular.woff2') format('woff2'),
+            url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Main-Regular.woff')  format('woff');
     font-weight: normal;
     font-style: normal;
 }
@@ -15,8 +13,8 @@
 @font-face {
     font-family: 'KaTeX_Math';
     src:
-        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Math-Italic.woff2') format('woff2'),
-        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Math-Italic.woff')  format('woff');
+            url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Math-Italic.woff2') format('woff2'),
+            url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Math-Italic.woff')  format('woff');
     font-weight: normal;
     font-style: italic;
 }
@@ -24,20 +22,38 @@
 @font-face {
     font-family: 'KaTeX_Size1';
     src:
-        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Size1-Regular.woff2') format('woff2'),
-        url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Size1-Regular.woff')  format('woff');
+            url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Size1-Regular.woff2') format('woff2'),
+            url('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/KaTeX_Size1-Regular.woff')  format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
+:root {
+    --create-green-active:   rgba(34, 139, 34, .2);
+    --create-green-inactive: rgba(34, 139, 34, .05);
+    --drop-target-border: 2px dashed dimgray;
+
+    font-size: 18px;
+    font-family: "Source Serif 4", serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+
 body {
-    max-width: 700px;
-    margin: 0 auto;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "EB Garamond", serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-style: italic;
 }
 
 .expression, .full-binder {
     font-family: 'KaTeX_Size1', serif;
-    font-size: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -48,6 +64,11 @@ body {
     user-select: none;
     margin: 0;
     border: 1px solid transparent;
+    font-size: 1.25em;
+
+    & & {
+        font-size: inherit;
+    }
 
     /*border: 1px solid rgba(255, 0, 0, .5);*/
 
@@ -79,26 +100,33 @@ body {
     }
 
     &.just-added {
-        animation: shake .3s;
+        animation: added-expression .2s;
 
         --text-shadow: rgba(255, 255, 0, 0.2);
     }
 
     &.enabled-drop-target {
         background: rgba(255, 255, 0, .1);
-        border: 1px dashed dimgray;
+        border: var(--drop-target-border);
     }
     &.active-drop-target:not(:has(.active-drop-target)) {
         background: yellow;
     }
 }
 
-@keyframes shake {
-    0% { transform: rotate(0deg); text-shadow: 0 0 5px var(--text-shadow); }
-    25% { transform: rotate(-1deg); text-shadow: 0 0 10px var(--text-shadow); }
-    50% { transform: rotate(1deg); text-shadow: 0 0 10px var(--text-shadow); }
-    75% { transform: rotate(0deg); text-shadow: 0 0 5px var(--text-shadow); }
-    100% { transform: rotate(1deg); }
+@keyframes added-expression {
+    0% {
+        background: none;
+        border: none;
+        text-shadow: 0 0 10px rgba(0, 0, 0, 0);
+        scale: 1.4;
+    }
+    100% {
+        background: none;
+        border: none;
+        text-shadow: 0 0 0 rgba(0, 0, 0, .5);
+        scale: 1;
+    }
 }
 
 .highlight {
@@ -116,7 +144,7 @@ body {
 }
 
 .hole {
-    border: 1px dashed dimgray;
+    border: var(--drop-target-border);
     background: rgba(0, 0, 0, .2);
     min-width: .7em;
     height: 1em;
@@ -139,8 +167,6 @@ body {
 
 .parenthesis {
     color: rgba(0, 0, 0, .4);
-    /*padding-top: 3px;*/
-    /*padding-bottom: 3px;*/
 
     &:first-child {
         margin-left: -3px;
@@ -235,8 +261,28 @@ ol.collection {
     }
 }
 
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    overflow-y: hidden;
+}
+
+.scroll-container {
+    overflow-y: auto;
+    flex-grow: 1;
+    align-self: stretch;
+}
+
+.logic-system, .expression-editor {
+    max-width: 700px;
+    width: min(100vw, 700px);
+}
+
 .logic-system {
-    margin: 1em;
+    margin: 0 auto;
+    padding-bottom: 1em;
 
     .axioms, .theorems, .theorem-steps {
         list-style-type: none;
@@ -292,7 +338,7 @@ ol.collection {
                 left: 0;
                 font-size: .7em;
                 font-family: 'KaTeX_Math', serif;
-                border: 1px dashed dimgray;
+                border: var(--drop-target-border);
                 border-radius: 4px;
                 padding: 2px 2px 0;
 
@@ -324,6 +370,26 @@ ol.collection {
     .axioms {
         border-bottom: 1px solid gray;
         margin-bottom: 1em;
+    }
+
+    .actions {
+        button + button {
+            position: relative;
+            margin-left: 1em;
+
+            &::before {
+                position: absolute;
+                left: calc(-1em - 2px);
+                top: 0;
+                bottom: 0;
+                content: "·";
+                display: inline-block;
+                width: 1em;
+                text-align: center;
+                align-content: center;
+                scale: 2;
+            }
+        }
     }
 
     .theorems {
@@ -375,9 +441,35 @@ ol.collection {
 }
 
 .expression-editor {
-    display: flex;
     border-top: 1px solid gray;
-    margin: 1em auto 0;
+    background: white;
+
+    &[open] {
+        box-shadow: 0 -4px 4px -5px black;
+        clip-path: inset(-10px 0 0 0);
+
+        summary {
+            border-bottom: 1px solid gray;
+        }
+    }
+
+    summary {
+        cursor: pointer;
+        padding-right: 1em;
+
+        h2 {
+            display: inline;
+
+            &::after {
+                content: ' ✏️ ';
+            }
+        }
+    }
+
+    .editor {
+        display: flex;
+        flex-wrap: nowrap;
+    }
 
     .pallete {
         padding: 0 .5em;
@@ -423,14 +515,13 @@ ol.collection {
             &.enabled-drop-target {
                 display: block;
                 background: rgba(255, 0, 0, .05);
-                border: 1px dashed dimgray;
+                border: var(--drop-target-border);
                 transition: background-color .2s;
                 align-content: center;
 
                 &::after {
                     content: '♻️';
-                    font-family: sans-serif;
-                    font-size: 2em;
+                    font-size: 2.5em;
                     opacity: .5;
                     transition: transform .1s;
                     display: block;
@@ -463,15 +554,14 @@ ol.collection {
 
             &.enabled-drop-target {
                 background: var(--create-green-inactive);
-                border: 1px dashed dimgray;
+                border: var(--drop-target-border);
                 transition: background-color .2s;
 
                 &::after {
                     content: '➕ Nueva expresión';
                     text-align: center;
-                    font-family: sans-serif;
-                    font-size: .5em;
-                    padding-top: 1em;
+                    display: block;
+                    padding: .5em 0;
                     opacity: .5;
                 }
 
