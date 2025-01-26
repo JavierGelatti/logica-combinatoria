@@ -255,7 +255,7 @@ ol.collection {
 
             &:last-child::before {
                 margin-left: .2em;
-                content: 'y';
+                content: 'and';
             }
         }
     }
@@ -562,7 +562,7 @@ main {
                 transition: background-color .2s;
 
                 &::after {
-                    content: '➕ Nueva expresión';
+                    content: '➕ New expression';
                     text-align: center;
                     display: block;
                     padding: .5em 0;

@@ -44,19 +44,19 @@ export class ExpressionEditor {
         return createElement("main", {}, [
             createElement("div", { className: "scroll-container"}, [
                 this._systemElement = createElement("div", {className: "logic-system"}, [
-                    createElement("h2", { textContent: "Axiomas & Teoremas" }),
+                    createElement("h2", { textContent: "Axioms & Theorems" }),
                     this._axiomsList = createElement("ol", {className: "axioms"}),
                     this._theoremsList = createElement("ol", {className: "theorems"}),
                     createElement("div", {className: "actions"}, [
                         this._startProofButton = createElement("button", {
-                            textContent: "Nueva demostración",
+                            textContent: "Start proof",
                             onclick: () => this.startNestedProof()
                         }),
                         this._newVariableButton = createElement("button", {
                             onclick: () => this.addNewVariables()
                         }),
                         this._endProofButton = createElement("button", {
-                            textContent: "Finalizar demostración",
+                            textContent: "Finish proof",
                             onclick: () => this.endCurrentProof()
                         }),
                     ])
@@ -64,13 +64,13 @@ export class ExpressionEditor {
             ]),
             createElement("details", {className: "expression-editor"}, [
                 createElement("summary", {}, [
-                    createElement("h2", { textContent: "Nueva expresión" }),
+                    createElement("h2", { textContent: "Create new expression" }),
                 ]),
                 createElement("div", {className: "editor"}, [
                     this._editorPallete = createElement("div", {className: "pallete"}, [
                         this._deleteExpressionDropTargetElement = createElement("div", {className: "delete-expression-drop-target"}),
                         createElement("button", {
-                            textContent: "Insertar variable",
+                            textContent: "Custom variable",
                             onclick: () => this.insertIdentifierInCanvas()
                         })
                     ]),
@@ -303,9 +303,9 @@ export class ExpressionEditor {
         this._addTheoremWithView(
             newProof,
             createElement("div", {className: "new-binding"}, [
-                "Sea ",
+                "Let ",
                 this._elementFor(newProof.newBoundVariable),
-                " tal que ",
+                " such that ",
                 this._elementWithExistsDropTargetFor(newProof.provenProposition),
             ])
         );
@@ -316,7 +316,7 @@ export class ExpressionEditor {
         this._addTheoremWithView(
             newProof,
             createElement("div", {className: "new-binding"}, [
-                "Sea ",
+                "Let ",
                 this._elementFor(newProof.provenProposition),
             ])
         );
@@ -348,7 +348,7 @@ export class ExpressionEditor {
             proofListItem.prepend(
                 createElement("div", {
                     role: "button",
-                    title: "Colapsar demostración",
+                    title: "Expand/collapse proof",
                     className: "collapse-proof-marker",
                     onclick: collapseProof
                 })
@@ -406,13 +406,13 @@ export class ExpressionEditor {
         return this._currentInteraction?.currentExpression();
     }
 
-    private addNewArbitraryVariables(promptText = "Nombre de las variables", promptInitialValue = ""): void {
+    private addNewArbitraryVariables(promptText = "Variable names", promptInitialValue = ""): void {
         const newBoundVariables = promptIdentifiers(promptText, promptInitialValue);
         if (newBoundVariables === undefined) return;
 
         const knownIdentifier = newBoundVariables.find(identifier => this._system.isKnownObject(identifier));
         if (knownIdentifier !== undefined) return this.addNewArbitraryVariables(
-            `El nombre ${knownIdentifier.toString()} ya está ocupado`,
+            `The name ${knownIdentifier.toString()} is already in use`,
             newBoundVariables.map(identifier => identifier.toString()).join(", ")
         );
 
@@ -421,12 +421,12 @@ export class ExpressionEditor {
         this._updateTheoremHeader();
     }
 
-    private nameExpression(expressionToName: Expression, promptText = "Nombre para la expresión", promptInitialValue = ""): void {
+    private nameExpression(expressionToName: Expression, promptText = "Expression name", promptInitialValue = ""): void {
         const identifier = promptIdentifier(promptText, promptInitialValue);
         if (identifier === undefined) return;
 
         if (this._system.isKnownObject(identifier))
-            return this.nameExpression(expressionToName, "Ese nombre ya está ocupado", identifier.toString());
+            return this.nameExpression(expressionToName, "That name is already in use", identifier.toString());
 
         this._currentInteraction?.finish();
         this._updateViewToNewProofIfNoOngoingProof();
@@ -450,21 +450,21 @@ export class ExpressionEditor {
 
     private _elementsForNewVariables(newBoundVariables: Identifier[]): (Node | string)[] {
         if (newBoundVariables.length === 0) {
-            return ["Nuevo contexto"];
+            return ["New proof context"];
         }
         if (newBoundVariables.length === 1) {
             return [
-                "Sea ",
+                "Let ",
                 this._elementFor(newBoundVariables[0]),
-                " un pájaro cualquiera",
+                " be an arbitrary bird",
             ];
         } else {
             return [
-                "Sean ",
+                "Let ",
                 collectionOf(
                     newBoundVariables.map(variable => this._elementFor(variable))
                 ),
-                " pájaros cualquiera",
+                " be arbitrary birds",
             ];
         }
     }
@@ -475,7 +475,7 @@ export class ExpressionEditor {
     }
 
     private insertIdentifierInCanvas() {
-        const newIdentifier = promptIdentifier("Nombre de la variable");
+        const newIdentifier = promptIdentifier("Variable name");
         if (newIdentifier === undefined) return;
         this.addNewExpressionToCanvas(newIdentifier);
     }
@@ -510,9 +510,9 @@ export class ExpressionEditor {
         this._endProofButton.disabled = !this._system.canFinishCurrentProof();
 
         if (this._canNameCurrentExpression()) {
-            this._newVariableButton.textContent = "Nombrar expresión";
+            this._newVariableButton.textContent = "Name expression";
         } else {
-            this._newVariableButton.textContent = "Nueva variable";
+            this._newVariableButton.textContent = "New variable";
         }
     }
 }
