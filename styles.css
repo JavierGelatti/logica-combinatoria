@@ -277,12 +277,15 @@ main {
 
 .logic-system, .expression-editor {
     max-width: 700px;
-    width: min(100vw, 700px);
 }
 
 .logic-system {
     margin: 0 auto;
-    padding-bottom: 1em;
+    padding: 1em;
+
+    h2:first-of-type {
+        margin-top: 0;
+    }
 
     .axioms, .theorems, .theorem-steps {
         list-style-type: none;
@@ -441,6 +444,7 @@ main {
 }
 
 .expression-editor {
+    width: min(100vw, 700px);
     border-top: 1px solid gray;
     background: white;
 
