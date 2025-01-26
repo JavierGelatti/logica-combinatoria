@@ -31,7 +31,10 @@
 :root {
     --create-green-active:   rgba(34, 139, 34, .2);
     --create-green-inactive: rgba(34, 139, 34, .05);
-    --drop-target-border: 2px dashed dimgray;
+    --drop-target-border-size: 2px;
+    --drop-target-border: var(--drop-target-border-size) dotted dimgray;
+    --separator-color: gray;
+    --separator-border: 1px solid var(--separator-color);
 
     font-size: 18px;
     font-family: "Source Serif 4", serif;
@@ -52,6 +55,11 @@ h1, h2, h3, h4, h5, h6 {
     font-style: italic;
 }
 
+/* Top-level expressions */
+*:not(.expression, .full-binder) > .expression {
+    position: relative;
+}
+
 .expression, .full-binder {
     font-family: 'KaTeX_Size1', serif;
     display: flex;
@@ -63,7 +71,7 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 4px;
     user-select: none;
     margin: 0;
-    border: 1px solid transparent;
+    border: var(--drop-target-border-size) solid transparent;
     font-size: 1.25em;
 
     & & {
@@ -89,13 +97,13 @@ h1, h2, h3, h4, h5, h6 {
     &[draggable="true"]:hover {
         &:not(:has(&)):not(:has(.active-drop-target)):not(:has(.full-binder:hover)) {
             background: rgba(255, 0, 0, .1);
-            border-bottom: 1px solid red;
+            border-bottom: var(--drop-target-border-size) solid red;
         }
     }
 
     &.grabbed {
         background: rgba(255, 0, 0, .1);
-        border-bottom: 1px solid red;
+        border-bottom: var(--drop-target-border-size) solid red;
         box-shadow: 0 0 5px red;
     }
 
@@ -117,13 +125,13 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes added-expression {
     0% {
         background: none;
-        border: none;
+        border-color: transparent;
         text-shadow: 0 0 10px rgba(0, 0, 0, 0);
         scale: 1.4;
     }
     100% {
         background: none;
-        border: none;
+        border-color: transparent;
         text-shadow: 0 0 0 rgba(0, 0, 0, .5);
         scale: 1;
     }
@@ -188,7 +196,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .forall > :last-child,
 .exists > :last-child {
-    margin-left: var(--separation-margin);
+    padding-left: 0;
 }
 
 .binder {
@@ -333,45 +341,41 @@ main {
             }
         }
 
-        .expression {
-            position: relative;
+        .exists-drop-target {
+            position: absolute;
+            left: 0;
+            font-size: .7em;
+            font-family: 'KaTeX_Math', serif;
+            border: var(--drop-target-border);
+            border-radius: 4px;
+            padding: 2px 2px 0;
 
-            .exists-drop-target {
-                position: absolute;
-                left: 0;
-                font-size: .7em;
-                font-family: 'KaTeX_Math', serif;
-                border: var(--drop-target-border);
-                border-radius: 4px;
-                padding: 2px 2px 0;
+            --displacementX: calc(-100% - 5px);
+            transform: translateX(var(--displacementX));
+            transform-origin: calc(var(--displacementX)/2) 50%;
+            scale: 0;
+            transition: scale .2s;
 
-                --displacementX: calc(-100% - 5px);
-                transform: translateX(var(--displacementX));
-                transform-origin: calc(var(--displacementX)/2) 50%;
-                scale: 0;
-                transition: scale .2s;
+            &.enabled-drop-target {
+                scale: 1;
+                background-color: white;
+                background-image: linear-gradient(
+                        var(--create-green-inactive),
+                        var(--create-green-inactive)
+                );
 
-                &.enabled-drop-target {
-                    scale: 1;
-                    background-color: white;
+                &.active-drop-target {
                     background-image: linear-gradient(
-                            var(--create-green-inactive),
-                            var(--create-green-inactive)
+                            var(--create-green-active),
+                            var(--create-green-active)
                     );
-
-                    &.active-drop-target {
-                        background-image: linear-gradient(
-                                var(--create-green-active),
-                                var(--create-green-active)
-                        );
-                    }
                 }
             }
         }
     }
 
     .axioms {
-        border-bottom: 1px solid gray;
+        border-bottom: var(--separator-border);
         margin-bottom: 1em;
     }
 
@@ -408,7 +412,7 @@ main {
 
         .theorem-steps {
             margin-left: 2em;
-            border-left: 1px solid gray;
+            border-left: var(--separator-border);
 
             & > li.theorem-header {
                 min-height: 32px;
@@ -445,7 +449,7 @@ main {
 
 .expression-editor {
     width: min(100vw, 700px);
-    border-top: 1px solid gray;
+    border-top: var(--separator-border);
     background: white;
 
     &[open] {
@@ -453,7 +457,7 @@ main {
         clip-path: inset(-10px 0 0 0);
 
         summary {
-            border-bottom: 1px solid gray;
+            border-bottom: var(--separator-border);
         }
     }
 
@@ -491,7 +495,7 @@ main {
         position: relative;
 
         &::before {
-            background: gray;
+            background: var(--separator-color);
             content: ' ';
             width: 1px;
             position: absolute;
