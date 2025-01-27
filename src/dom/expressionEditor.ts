@@ -333,7 +333,12 @@ export class ExpressionEditor {
                         return createElement("a", {
                             href: `#${propositionId}`,
                             textContent: propositionId,
-                            onclick: () => animateWith(document.getElementById(propositionId)!, "highlight"),
+                            onclick: event => {
+                                const referencedPropositionElement = document.getElementById(propositionId)!;
+                                referencedPropositionElement.scrollIntoView({ behavior: "smooth" });
+                                animateWith(referencedPropositionElement, "highlight");
+                                event.preventDefault();
+                            },
                         });
                     }),
             ], {className: "theorem-reference"}),
