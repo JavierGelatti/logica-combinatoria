@@ -62,11 +62,9 @@ h1, h2, h3, h4, h5, h6 {
 
 .expression, .full-binder {
     font-family: 'KaTeX_Size1', serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    line-height: 1em;
-    height: calc(1em + 10px);
+    display: inline;
+    line-height: 1.5em;
+    vertical-align: middle;
     padding: 0 1px 0;
     border-radius: 4px;
     user-select: none;
@@ -152,6 +150,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hole {
+    display: inline-block;
     border: var(--drop-target-border);
     background: rgba(0, 0, 0, .2);
     min-width: .7em;
@@ -174,6 +173,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .parenthesis {
+    display: inline;
     color: rgba(0, 0, 0, .4);
 
     &:first-child {
@@ -185,9 +185,16 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
-.equality > .operator {
-    transform: translateY(2px);
-    margin: 0 var(--separation-margin);
+.equality {
+    > .expression {
+        padding-bottom: 5px;
+        padding-top: 5px;
+    }
+    & > .operator {
+        display: inline-block;
+        transform: translateY(2px);
+        margin: 0 var(--separation-margin);
+    }
 }
 
 .application > *:not(.parenthesis) + *:not(.parenthesis) {
@@ -246,14 +253,11 @@ h1, h2, h3, h4, h5, h6 {
 ol.collection {
     list-style-type: none;
     padding: 0;
-    display: flex;
     margin-left: .2em;
     margin-right: .2em;
 
     & > li {
-        display: flex;
-        align-items: center;
-
+        display: inline;
         & + & {
             &::before {
                 color: black;
@@ -302,7 +306,7 @@ main {
         & > li {
             position: relative;
             display: flex;
-            align-items: center;
+            align-items: baseline;
             margin-left: .5em;
             margin-bottom: .2em;
 
@@ -314,12 +318,9 @@ main {
 
             &::before {
                 content: var(--item-name);
+                margin-top: calc(3 * var(--drop-target-border-size));
                 padding-right: .5em;
-            }
-
-            & > .expression {
-                justify-content: left;
-                width: fit-content;
+                align-self: start;
             }
 
             & > .collapse-proof-marker {
@@ -343,8 +344,10 @@ main {
 
         .exists-drop-target {
             position: absolute;
+            line-height: 1.5em;
+            top: 0;
             left: 0;
-            font-size: .7em;
+            font-size: .8em;
             font-family: 'KaTeX_Math', serif;
             border: var(--drop-target-border);
             border-radius: 4px;
@@ -402,7 +405,8 @@ main {
     .theorems {
         .theorem-header, .new-binding {
             display: flex;
-            align-items: center;
+            align-items: baseline;
+            flex-wrap: wrap;
 
             & > .expression {
                 margin-left: .2em;
@@ -421,9 +425,9 @@ main {
             }
         }
 
-        .proof-reference {
+        .theorem-reference {
             display: flex;
-            flex-grow: 1;
+            flex: 1 1 0;
             justify-content: flex-end;
             align-content: center;
 
@@ -559,6 +563,7 @@ main {
         display: flex;
         flex-direction: column;
         align-items: stretch;
+        text-align: center;
 
         .new-expression-drop-target {
             align-self: stretch;

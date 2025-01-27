@@ -336,7 +336,7 @@ export class ExpressionEditor {
                             onclick: () => animateWith(document.getElementById(propositionId)!, "highlight"),
                         });
                     }),
-            ], {className: "proof-reference"}),
+            ], {className: "theorem-reference"}),
         ]);
 
         if (steps !== undefined) {
