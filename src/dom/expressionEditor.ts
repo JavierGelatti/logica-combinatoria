@@ -396,14 +396,14 @@ export class ExpressionEditor {
 
     private addNewVariables() {
         if (this._canNameCurrentExpression()) {
-            this.nameExpression(this._selectedExpression()!);
+            this.nameExpression(this._selectedExpression()!.copy());
         } else {
             this.addNewArbitraryVariables();
         }
     }
 
     private _canNameCurrentExpression() {
-        const currentExpression = this._selectedExpression();
+        const currentExpression = this._selectedExpression()?.copy();
         return currentExpression !== undefined && this._system.canNameTerm(currentExpression);
     }
 
