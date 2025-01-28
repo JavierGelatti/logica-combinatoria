@@ -324,6 +324,7 @@ main {
             }
 
             & > .collapse-proof-marker {
+                margin-top: calc(3 * var(--drop-target-border-size));
                 position: absolute;
                 left: 0;
                 translate: calc(-100%) 0;
