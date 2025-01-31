@@ -64,12 +64,13 @@ h1, h2, h3, h4, h5, h6 {
     font-family: 'KaTeX_Size1', serif;
     display: inline;
     line-height: 1.5em;
-    vertical-align: middle;
+    vertical-align: top;
     padding: 0 1px 0;
     border-radius: 4px;
     user-select: none;
     margin: 0;
     border: var(--drop-target-border-size) solid transparent;
+    border-top: none;
     font-size: 1.25em;
 
     & & {
@@ -80,8 +81,9 @@ h1, h2, h3, h4, h5, h6 {
 
     --separation-margin: 3px;
 
-    .identifier {
-        height: 1em;
+    &.identifier {
+        display: inline-block;
+        height: 1.2em;
     }
 
     &[draggable="true"], &[draggable="true"] * {
@@ -113,6 +115,7 @@ h1, h2, h3, h4, h5, h6 {
 
     &.enabled-drop-target {
         background: rgba(255, 255, 0, .1);
+        margin-top: calc(-1 * var(--drop-target-border-size));
         border: var(--drop-target-border);
     }
     &.active-drop-target:not(:has(.active-drop-target)) {
@@ -173,7 +176,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .parenthesis {
-    display: inline;
+    display: inline-block;
     color: rgba(0, 0, 0, .4);
 
     &:first-child {
@@ -187,8 +190,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .equality {
     > .expression:not(.hole) {
-        padding-bottom: 5px;
-        padding-top: 5px;
+        padding-bottom: 2px;
     }
     & > .operator {
         display: inline-block;
@@ -222,6 +224,11 @@ h1, h2, h3, h4, h5, h6 {
         background: var(--create-green-active);
     }
 }
+
+.full-binder, .application {
+    display: inline-block;
+}
+
 
 .identifier {
     padding: 0;
@@ -306,7 +313,6 @@ main {
         & > li {
             position: relative;
             display: flex;
-            align-items: baseline;
             margin-left: .5em;
             margin-bottom: .2em;
 
@@ -318,8 +324,8 @@ main {
 
             &::before {
                 content: var(--item-name);
-                margin-top: calc(3 * var(--drop-target-border-size));
-                padding-right: .5em;
+                margin-top: calc(2 * var(--drop-target-border-size));
+                padding-right: .2em;
                 align-self: start;
             }
 
@@ -408,6 +414,7 @@ main {
             display: flex;
             align-items: baseline;
             flex-wrap: wrap;
+            padding-left: .2em;
 
             & > .expression {
                 margin-left: .2em;
@@ -436,8 +443,9 @@ main {
                 content: " ";
                 border-bottom: 1px dotted lightgray;
                 flex-grow: 1;
+                align-self: center;
                 min-width: 10px;
-                transform: translateX(-.3em);
+                translate: -.3em .2em;
             }
 
             a {
@@ -558,13 +566,14 @@ main {
     }
 
     .canvas {
-        padding: .5em 0;
+        padding: .5em .5em .5em 0;
         margin: .5em 0 .5em .5em;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
         align-items: stretch;
         text-align: center;
+        overflow-x: hidden;
 
         .new-expression-drop-target {
             align-self: stretch;

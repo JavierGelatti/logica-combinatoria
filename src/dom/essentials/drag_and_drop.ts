@@ -158,6 +158,7 @@ export function makeDropTargetExpecting(
     }
 
     function endInteraction() {
+        deactivateDropTarget();
         dropTargetElement.classList.remove("enabled-drop-target");
         abortController.abort();
     }
