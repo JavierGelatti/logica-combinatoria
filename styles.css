@@ -87,8 +87,6 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     &[draggable="true"], &[draggable="true"] * {
-        touch-action: none;
-
         &:not(.grabbed) {
             cursor: grab;
         }
