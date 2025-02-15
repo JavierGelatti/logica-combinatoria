@@ -127,7 +127,7 @@ export class Identifier extends AtomicExpression<Value> {
         }
     }
 
-    rewriteWith(bindings: Map<Identifier, Expression>) {
+    rewriteWith(bindings: Map<Identifier, Expression>): Expression<Value> {
         const replacement = bindings.get(this);
         if (replacement === undefined) return this.copy();
 
