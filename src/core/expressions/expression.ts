@@ -65,7 +65,7 @@ export abstract class Expression<T extends ExpressionType = any> {
     abstract freeVariables(): Set<Identifier>
 
     freeVariablesContain(aVariable: Identifier) {
-        return this.freeVariables().values()
+        return [...this.freeVariables().values()]
             .some(freeVariable => freeVariable.equals(aVariable));
     }
 
